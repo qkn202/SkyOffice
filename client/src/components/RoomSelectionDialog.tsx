@@ -2,18 +2,11 @@ import React, { useEffect, useState } from 'react'
 import logo from '../images/logo.png'
 import styled from 'styled-components'
 import Button from '@mui/material/Button'
-import IconButton from '@mui/material/IconButton'
-import Tooltip from '@mui/material/Tooltip'
 import LinearProgress from '@mui/material/LinearProgress'
 import Alert from '@mui/material/Alert'
 import Snackbar from '@mui/material/Snackbar'
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
-import { CustomRoomTable } from './CustomRoomTable'
-import { CreateRoomForm } from './CreateRoomForm'
 import { useAppSelector } from '../hooks'
-
 import phaserGame from '../PhaserGame'
 import Bootstrap from '../scenes/Bootstrap'
 
@@ -30,73 +23,68 @@ const Backdrop = styled.div`
 
 const Wrapper = styled.div`
   box-sizing: border-box;
-  width: min(650px, calc(100vw - 24px));
+  width: min(520px, calc(100vw - 24px));
   max-height: calc(100dvh - 24px);
   overflow: auto;
   background: #222639;
   border-radius: 16px;
-  padding: 36px 60px;
-  box-shadow: 0px 0px 5px #0000006f;
+  padding: 36px 48px;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 215, 0, 0.25);
 
   @media (max-width: 650px) {
     padding: 24px 18px;
   }
 `
 
-const CustomRoomWrapper = styled.div`
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  align-items: center;
-  justify-content: center;
-
-  .tip {
-    font-size: 18px;
-  }
-`
-
-const TitleWrapper = styled.div`
-  display: grid;
-  width: 100%;
-
-  .back-button {
-    grid-column: 1;
-    grid-row: 1;
-    justify-self: start;
-    align-self: center;
-  }
-
-  h1 {
-    grid-column: 1;
-    grid-row: 1;
-    justify-self: center;
-    align-self: center;
-  }
-`
-
 const Title = styled.h1`
-  font-size: 24px;
-  color: #eee;
+  font-size: 26px;
+  color: #ffd700;
   text-align: center;
+  font-family: 'Cinzel', serif, Georgia;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.5px;
+`
+
+const Subtitle = styled.p`
+  font-size: 14px;
+  color: #a0a0c0;
+  text-align: center;
+  margin: 0 0 20px 0;
 `
 
 const Content = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin: 20px 0;
+  gap: 24px;
+  margin: 10px 0;
   align-items: center;
   justify-content: center;
 
-  @media (max-width: 650px) {
-    flex-direction: column;
-    gap: 18px;
-  }
-
   img {
-    border-radius: 8px;
+    border-radius: 12px;
     height: 120px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+`
+
+const EnterButton = styled(Button)`
+  && {
+    width: 100%;
+    max-width: 320px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+    text-transform: none;
+
+    &:hover {
+      background: linear-gradient(135deg, #6d28d9 0%, #4338ca 100%);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
+    }
   }
 `
 
@@ -117,8 +105,6 @@ const ProgressBar = styled(LinearProgress)`
 `
 
 export default function RoomSelectionDialog() {
-  const [showCustomRoom, setShowCustomRoom] = useState(false)
-  const [showCreateRoomForm, setShowCreateRoomForm] = useState(false)
   const [showSnackbar, setShowSnackbar] = useState(false)
   const [connecting, setConnecting] = useState(false)
   const [connectionTimedOut, setConnectionTimedOut] = useState(false)
@@ -169,7 +155,6 @@ export default function RoomSelectionDialog() {
         <Alert
           severity="error"
           variant="outlined"
-          // overwrites the dark theme on render
           style={{ background: '#fdeded', color: '#7d4747' }}
         >
           {snackbarMessage}
@@ -177,61 +162,18 @@ export default function RoomSelectionDialog() {
       </Snackbar>
       <Backdrop>
         <Wrapper>
-          {showCreateRoomForm ? (
-            <CustomRoomWrapper>
-              <TitleWrapper>
-                <IconButton className="back-button" onClick={() => setShowCreateRoomForm(false)}>
-                  <ArrowBackIcon />
-                </IconButton>
-                <Title>Tạo phòng riêng</Title>
-              </TitleWrapper>
-              <CreateRoomForm />
-            </CustomRoomWrapper>
-          ) : showCustomRoom ? (
-            <CustomRoomWrapper>
-              <TitleWrapper>
-                <IconButton className="back-button" onClick={() => setShowCustomRoom(false)}>
-                  <ArrowBackIcon />
-                </IconButton>
-                <Title>
-                  Phòng riêng
-                  <Tooltip
-                    title="Danh sách phòng được cập nhật trực tiếp, không cần tải lại."
-                    placement="top"
-                  >
-                    <IconButton>
-                      <HelpOutlineIcon className="tip" />
-                    </IconButton>
-                  </Tooltip>
-                </Title>
-              </TitleWrapper>
-              <CustomRoomTable />
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={() => setShowCreateRoomForm(true)}
-              >
-                Tạo phòng mới
-              </Button>
-            </CustomRoomWrapper>
-          ) : (
-            <>
-              <Title>Hogwarts SkyOffice</Title>
-              <Content>
-                <img src={logo} alt="logo" />
-                <Button variant="contained" color="secondary" onClick={handleConnect} disabled={connecting}>
-                  {connecting ? 'Đang vào phòng…' : 'Vào Đại Sảnh công khai'}
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  onClick={() => (lobbyJoined ? setShowCustomRoom(true) : setShowSnackbar(true))}
-                >
-                  Tạo hoặc tìm phòng riêng
-                </Button>
-              </Content>
-            </>
-          )}
+          <Title>Hogwarts SkyOffice</Title>
+          <Subtitle>Không gian học tập & nhập vai thế giới mở Hogwarts</Subtitle>
+          <Content>
+            <img src={logo} alt="logo" />
+            <EnterButton
+              variant="contained"
+              onClick={handleConnect}
+              disabled={connecting}
+            >
+              {connecting ? 'Đang vào phòng…' : 'Vào Đại Sảnh Hogwarts'}
+            </EnterButton>
+          </Content>
         </Wrapper>
         {!lobbyJoined && (
           <ProgressBarWrapper>

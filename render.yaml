@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: skyoffice-server
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install && npm run build:server
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    healthCheckPath: /health

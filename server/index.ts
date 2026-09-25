@@ -1,7 +1,7 @@
 import http from 'http'
 import express from 'express'
 import cors from 'cors'
-import { Server } from 'colyseus'
+import { Server, LobbyRoom } from 'colyseus'
 import { WebSocketTransport } from '@colyseus/ws-transport'
 import { monitor } from '@colyseus/monitor'
 import { RoomType } from '../types/Rooms'
@@ -30,11 +30,14 @@ const gameServer = new Server({
 })
 
 // register room handlers
+gameServer.define(RoomType.LOBBY, LobbyRoom)
 gameServer.define(RoomType.PUBLIC, SkyOffice, {
   name: 'Đại Sảnh công khai',
   description: 'Gặp gỡ bạn mới và làm quen với cách điều khiển',
+  password: null,
   autoDispose: false,
 })
+gameServer.define(RoomType.CUSTOM, SkyOffice).enableRealtimeListing()
 
 /**
  * Register @colyseus/social routes

@@ -1,9 +1,18 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import logo from '../images/logo.png'
 import styled from 'styled-components'
 import Button from '@mui/material/Button'
+import IconButton from '@mui/material/IconButton'
+import Tooltip from '@mui/material/Tooltip'
+import LinearProgress from '@mui/material/LinearProgress'
 import Alert from '@mui/material/Alert'
 import Snackbar from '@mui/material/Snackbar'
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+
+import { CustomRoomTable } from './CustomRoomTable'
+import { CreateRoomForm } from './CreateRoomForm'
+import { useAppSelector } from '../hooks'
 
 import phaserGame from '../PhaserGame'
 import Bootstrap from '../scenes/Bootstrap'
@@ -34,6 +43,38 @@ const Wrapper = styled.div`
   }
 `
 
+const CustomRoomWrapper = styled.div`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+
+  .tip {
+    font-size: 18px;
+  }
+`
+
+const TitleWrapper = styled.div`
+  display: grid;
+  width: 100%;
+
+  .back-button {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+    align-self: center;
+  }
+
+  h1 {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: center;
+    align-self: center;
+  }
+`
+
 const Title = styled.h1`
   font-size: 24px;
   color: #eee;
@@ -59,10 +100,40 @@ const Content = styled.div`
   }
 `
 
+const ProgressBarWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(460px, calc(100vw - 32px));
+  text-align: center;
+
+  h3 {
+    color: #33ac96;
+  }
+`
+
+const ProgressBar = styled(LinearProgress)`
+  width: min(360px, calc(100vw - 48px));
+`
+
 export default function RoomSelectionDialog() {
+  const [showCustomRoom, setShowCustomRoom] = useState(false)
+  const [showCreateRoomForm, setShowCreateRoomForm] = useState(false)
   const [showSnackbar, setShowSnackbar] = useState(false)
   const [connecting, setConnecting] = useState(false)
+  const [connectionTimedOut, setConnectionTimedOut] = useState(false)
   const [snackbarMessage, setSnackbarMessage] = useState('Chưa kết nối được máy chủ. Vui lòng chờ một chút rồi thử lại.')
+  const lobbyJoined = useAppSelector((state) => state.room.lobbyJoined)
+  const connectionError = useAppSelector((state) => state.room.lobbyConnectionError)
+
+  useEffect(() => {
+    if (lobbyJoined) {
+      setConnectionTimedOut(false)
+      return
+    }
+    const timeout = window.setTimeout(() => setConnectionTimedOut(true), 12_000)
+    return () => window.clearTimeout(timeout)
+  }, [lobbyJoined])
 
   const handleConnect = async () => {
     const bootstrap = ((window as any).game?.scene?.keys?.bootstrap ||
@@ -106,14 +177,78 @@ export default function RoomSelectionDialog() {
       </Snackbar>
       <Backdrop>
         <Wrapper>
-          <Title>Hogwarts SkyOffice</Title>
-          <Content>
-            <img src={logo} alt="logo" />
-            <Button variant="contained" color="secondary" onClick={handleConnect} disabled={connecting}>
-              {connecting ? 'Đang vào Đại Sảnh…' : 'Vào Đại Sảnh chung'}
-            </Button>
-          </Content>
+          {showCreateRoomForm ? (
+            <CustomRoomWrapper>
+              <TitleWrapper>
+                <IconButton className="back-button" onClick={() => setShowCreateRoomForm(false)}>
+                  <ArrowBackIcon />
+                </IconButton>
+                <Title>Tạo phòng riêng</Title>
+              </TitleWrapper>
+              <CreateRoomForm />
+            </CustomRoomWrapper>
+          ) : showCustomRoom ? (
+            <CustomRoomWrapper>
+              <TitleWrapper>
+                <IconButton className="back-button" onClick={() => setShowCustomRoom(false)}>
+                  <ArrowBackIcon />
+                </IconButton>
+                <Title>
+                  Phòng riêng
+                  <Tooltip
+                    title="Danh sách phòng được cập nhật trực tiếp, không cần tải lại."
+                    placement="top"
+                  >
+                    <IconButton>
+                      <HelpOutlineIcon className="tip" />
+                    </IconButton>
+                  </Tooltip>
+                </Title>
+              </TitleWrapper>
+              <CustomRoomTable />
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={() => setShowCreateRoomForm(true)}
+              >
+                Tạo phòng mới
+              </Button>
+            </CustomRoomWrapper>
+          ) : (
+            <>
+              <Title>Hogwarts SkyOffice</Title>
+              <Content>
+                <img src={logo} alt="logo" />
+                <Button variant="contained" color="secondary" onClick={handleConnect} disabled={connecting}>
+                  {connecting ? 'Đang vào phòng…' : 'Vào Đại Sảnh công khai'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={() => (lobbyJoined ? setShowCustomRoom(true) : setShowSnackbar(true))}
+                >
+                  Tạo hoặc tìm phòng riêng
+                </Button>
+              </Content>
+            </>
+          )}
         </Wrapper>
+        {!lobbyJoined && (
+          <ProgressBarWrapper>
+            <h3 role="status">{connectionError || (connectionTimedOut ? 'Máy chủ chưa phản hồi' : 'Đang kết nối máy chủ…')}</h3>
+            {connectionTimedOut || connectionError ? (
+              <Button size="small" variant="contained" color="secondary" onClick={() => {
+                const bootstrap = ((window as any).game?.scene?.keys?.bootstrap ||
+                  phaserGame?.scene?.keys?.bootstrap) as Bootstrap | undefined
+                bootstrap?.network?.retryLobbyConnection()
+              }}>
+                Thử kết nối lại
+              </Button>
+            ) : (
+              <ProgressBar color="secondary" />
+            )}
+          </ProgressBarWrapper>
+        )}
       </Backdrop>
     </>
   )

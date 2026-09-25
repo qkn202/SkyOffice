@@ -1,13 +1,22 @@
 import { Client, Room } from 'colyseus.js'
 import { IComputer, IOfficeState, IPlayer, IWhiteboard } from '../../../types/IOfficeState'
 import { Message } from '../../../types/Messages'
-import { RoomType } from '../../../types/Rooms'
+import { IRoomData, RoomType } from '../../../types/Rooms'
 import { ItemType } from '../../../types/Items'
 import WebRTC from '../web/WebRTC'
 import { phaserEvents, Event } from '../events/EventCenter'
 import store from '../stores'
 import { setSessionId, setPlayerNameMap, removePlayerNameMap } from '../stores/UserStore'
-import { setConnectionLost, setReconnecting, setJoinedRoomData } from '../stores/RoomStore'
+import {
+  setLobbyJoined,
+  setLobbyConnectionError,
+  setConnectionLost,
+  setReconnecting,
+  setJoinedRoomData,
+  setAvailableRooms,
+  addAvailableRooms,
+  removeAvailableRooms,
+} from '../stores/RoomStore'
 import {
   pushChatMessage,
   pushPlayerJoinedMessage,
@@ -19,8 +28,12 @@ import { setOnlineProfiles, setSocialEvents, type OnlineProfile, type SocialEven
 export default class Network {
   private client: Client
   private room?: Room<IOfficeState>
+  private lobby!: Room
   webRTC?: WebRTC
   private lastOnlineProfileSyncAt = 0
+  private lobbyConnecting = false
+  private lobbyRetryTimer?: number
+  private lobbyRetryAttempt = 0
   private intentionalLeave = false
 
   mySessionId!: string
@@ -47,15 +60,94 @@ export default class Network {
       (isVercel ? defaultVercelEndpoint : `${protocol}//${host}:2567`)
 
     this.client = new Client(endpoint)
+    void this.connectLobby()
 
     phaserEvents.on(Event.MY_PLAYER_NAME_CHANGE, this.updatePlayerName, this)
     phaserEvents.on(Event.MY_PLAYER_TEXTURE_CHANGE, this.updatePlayer, this)
     phaserEvents.on(Event.PLAYER_DISCONNECTED, this.playerStreamDisconnect, this)
   }
 
-  // All players join the same public Great Hall room.
+  retryLobbyConnection() {
+    window.clearTimeout(this.lobbyRetryTimer)
+    this.lobbyRetryTimer = undefined
+    void this.connectLobby()
+  }
+
+  private scheduleLobbyRetry() {
+    if (this.room || this.lobbyRetryTimer !== undefined) return
+    const delay = Math.min(1000 * 2 ** Math.min(this.lobbyRetryAttempt++, 4), 10_000)
+    this.lobbyRetryTimer = window.setTimeout(() => {
+      this.lobbyRetryTimer = undefined
+      void this.connectLobby()
+    }, delay)
+  }
+
+  private async connectLobby() {
+    if (this.room || this.lobbyConnecting || store.getState().room.lobbyJoined) return
+    this.lobbyConnecting = true
+    try {
+      await this.joinLobbyRoom()
+      this.lobbyRetryAttempt = 0
+      store.dispatch(setLobbyConnectionError(''))
+      store.dispatch(setLobbyJoined(true))
+    } catch (error) {
+      store.dispatch(setLobbyJoined(false))
+      store.dispatch(setLobbyConnectionError('Chưa kết nối được máy chủ. Hệ thống đang tự thử lại…'))
+      this.scheduleLobbyRetry()
+    } finally {
+      this.lobbyConnecting = false
+    }
+  }
+
+  /**
+   * method to join Colyseus' built-in LobbyRoom, which automatically notifies
+   * connected clients whenever rooms with "realtime listing" have updates
+   */
+  async joinLobbyRoom() {
+    this.lobby = await this.client.joinOrCreate(RoomType.LOBBY)
+
+    this.lobby.onLeave(() => {
+      store.dispatch(setLobbyJoined(false))
+      if (this.room) return // Leaving the lobby to enter a game is intentional.
+      store.dispatch(setAvailableRooms([]))
+      store.dispatch(setLobbyConnectionError('Mất kết nối máy chủ. Hệ thống đang tự thử lại…'))
+      this.scheduleLobbyRetry()
+    })
+
+    this.lobby.onMessage('rooms', (rooms) => {
+      store.dispatch(setAvailableRooms(rooms))
+    })
+
+    this.lobby.onMessage('+', ([roomId, room]) => {
+      store.dispatch(addAvailableRooms({ roomId, room }))
+    })
+
+    this.lobby.onMessage('-', (roomId) => {
+      store.dispatch(removeAvailableRooms(roomId))
+    })
+  }
+
+  // method to join the public lobby
   async joinOrCreatePublic() {
     this.room = await this.client.joinOrCreate(RoomType.PUBLIC)
+    this.initialize()
+  }
+
+  // method to join a custom room
+  async joinCustomById(roomId: string, password: string | null) {
+    this.room = await this.client.joinById(roomId, { password })
+    this.initialize()
+  }
+
+  // method to create a custom room
+  async createCustom(roomData: IRoomData) {
+    const { name, description, password, autoDispose } = roomData
+    this.room = await this.client.create(RoomType.CUSTOM, {
+      name,
+      description,
+      password,
+      autoDispose,
+    })
     this.initialize()
   }
 
@@ -63,6 +155,8 @@ export default class Network {
   initialize() {
     if (!this.room) return
 
+    window.clearTimeout(this.lobbyRetryTimer)
+    this.lobbyRetryTimer = undefined
     store.dispatch(setConnectionLost(false))
     store.dispatch(setReconnecting({ isReconnecting: false }))
     const roomId = this.room.id
@@ -98,14 +192,14 @@ export default class Network {
       store.dispatch(setReconnecting({ isReconnecting: false }))
       store.dispatch(setConnectionLost(true))
     })
+    void this.lobby.leave().catch(() => {})
     this.mySessionId = this.room.sessionId
     store.dispatch(setSessionId(this.room.sessionId))
     // WebRTC disabled for pure text & multiplayer mode
     // this.webRTC = new WebRTC(this.mySessionId, this)
 
-    // Observe players in the initial snapshot as well as future joins. The
-    // room state may already contain players before initialize() runs.
-    const observePlayer = (player: IPlayer, key: string) => {
+    // new instance added to the players MapSchema
+    this.room.state.players.onAdd = (player: IPlayer, key: string) => {
       // If player already has a name when added (joined before us or already named):
       if (key !== this.mySessionId && player.name && player.name !== '') {
         phaserEvents.emit(Event.PLAYER_JOINED, player, key)
@@ -131,8 +225,9 @@ export default class Network {
       this.syncOnlineProfiles(true)
     }
 
-    this.room.state.players.onAdd = observePlayer
-    this.room.state.players.forEach(observePlayer)
+    this.room.state.players.forEach((player: IPlayer, key: string) => {
+      this.room?.state.players.onAdd?.(player, key)
+    })
 
     // an instance removed from the players MapSchema
     this.room.state.players.onRemove = (player: IPlayer, key: string) => {

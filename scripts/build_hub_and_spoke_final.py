@@ -9,6 +9,7 @@ Build Hub & Spoke Hogwarts Castle World Map (3600 x 2400 px) - Compact & Unified
 
 import os
 import math
+from collections import deque
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 import numpy as np
 
@@ -34,21 +35,44 @@ rav_x, rav_y = 2020, 320
 huf_x, huf_y = 2020, 1520
 
 def get_clean_room(img, is_white=False):
-    """Generates an accurate RGBA image with transparent background (no black/white boxes)."""
+    """Generates an accurate RGBA image with transparent background (no black/white boxes).
+    Uses border-connected BFS flood fill to guarantee zero holes inside dark furniture/shadows."""
     rgba = img.convert('RGBA')
     arr = np.array(rgba)
+    h, w, _ = arr.shape
     
     if is_white:
-        # Slytherin room has white background [220..255]
-        mask = ~((arr[:, :, 0] > 220) & (arr[:, :, 1] > 220) & (arr[:, :, 2] > 220))
+        is_void = (arr[:, :, 0] > 220) & (arr[:, :, 1] > 220) & (arr[:, :, 2] > 220)
     else:
-        # Transparent where dark/black void or existing alpha is 0
-        is_black_void = (arr[:, :, 0] < 20) & (arr[:, :, 1] < 20) & (arr[:, :, 2] < 26)
-        mask = ~is_black_void
+        is_void = (arr[:, :, 0] < 18) & (arr[:, :, 1] < 18) & (arr[:, :, 2] < 18)
         if arr.shape[2] == 4:
-            mask = mask & (arr[:, :, 3] > 30)
-        
-    mask_im = Image.fromarray((mask * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.0))
+            is_void = is_void | (arr[:, :, 3] < 30)
+
+    visited = np.zeros((h, w), dtype=bool)
+    q = deque()
+
+    for y in range(h):
+        for x in (0, w - 1):
+            if is_void[y, x] and not visited[y, x]:
+                visited[y, x] = True
+                q.append((y, x))
+    for x in range(w):
+        for y in (0, h - 1):
+            if is_void[y, x] and not visited[y, x]:
+                visited[y, x] = True
+                q.append((y, x))
+
+    while q:
+        cy, cx = q.popleft()
+        for dy, dx in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            ny, nx = cy + dy, cx + dx
+            if 0 <= ny < h and 0 <= nx < w:
+                if not visited[ny, nx] and is_void[ny, nx]:
+                    visited[ny, nx] = True
+                    q.append((ny, nx))
+
+    alpha = (~visited * 255).astype(np.uint8)
+    mask_im = Image.fromarray(alpha).filter(ImageFilter.GaussianBlur(0.8))
     rgba.putalpha(mask_im)
     return rgba
 
@@ -233,7 +257,7 @@ def build_map():
 
     gh_clean = get_clean_room(gh_raw)
     gry_s = get_clean_room(gry_raw).resize((RW_SUB, RH_SUB), Image.Resampling.LANCZOS)
-    sly_s = get_clean_room(sly_raw, is_white=True).resize((RW_SUB, RH_SUB), Image.Resampling.LANCZOS)
+    sly_s = get_clean_room(sly_raw, is_white=False).resize((RW_SUB, RH_SUB), Image.Resampling.LANCZOS)
     rav_s = get_clean_room(rav_raw).resize((RW_SUB, RH_SUB), Image.Resampling.LANCZOS)
     huf_s = get_clean_room(huf_raw).resize((RW_SUB, RH_SUB), Image.Resampling.LANCZOS)
 

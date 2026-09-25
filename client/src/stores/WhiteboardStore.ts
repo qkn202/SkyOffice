@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-import phaserGame from '../PhaserGame'
-import Game from '../scenes/Game'
+import type Game from '../scenes/Game'
 
 interface WhiteboardState {
   whiteboardDialogOpen: boolean
@@ -24,15 +23,16 @@ export const whiteboardSlice = createSlice({
     openWhiteboardDialog: (state, action: PayloadAction<string>) => {
       state.whiteboardDialogOpen = true
       state.whiteboardId = action.payload
-      const url = state.urls.get(action.payload)
-      if (url) state.whiteboardUrl = url
-      const game = phaserGame.scene.keys.game as Game
-      game.disableKeys()
+      state.whiteboardUrl = 'https://sketchclash-game.vercel.app'
+      const game = (window as any).game?.scene?.keys?.game as Game | undefined
+      game?.disableKeys()
     },
     closeWhiteboardDialog: (state) => {
-      const game = phaserGame.scene.keys.game as Game
-      game.enableKeys()
-      game.network.disconnectFromWhiteboard(state.whiteboardId!)
+      const game = (window as any).game?.scene?.keys?.game as Game | undefined
+      game?.enableKeys()
+      if (state.whiteboardId && game?.network) {
+        game.network.disconnectFromWhiteboard(state.whiteboardId)
+      }
       state.whiteboardDialogOpen = false
       state.whiteboardId = null
       state.whiteboardUrl = null
@@ -40,7 +40,7 @@ export const whiteboardSlice = createSlice({
     setWhiteboardUrls: (state, action: PayloadAction<{ whiteboardId: string; roomId: string }>) => {
       state.urls.set(
         action.payload.whiteboardId,
-        `https://wbo.ophir.dev/boards/sky-office-${action.payload.roomId}`
+        'https://sketchclash-game.vercel.app'
       )
     },
   },

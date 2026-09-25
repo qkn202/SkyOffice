@@ -8,12 +8,15 @@ import { RoomType } from '../types/Rooms'
 // import socialRoutes from "@colyseus/social/express"
 
 import { SkyOffice } from './rooms/SkyOffice'
+import { registerHousePointRoutes } from './housePoints'
 
 const port = Number(process.env.PORT || 2567)
 const app = express()
 
 app.use(cors())
 app.use(express.json())
+app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'skyoffice' }))
+registerHousePointRoutes(app)
 // app.use(express.static('dist'))
 
 const server = http.createServer(app)
@@ -24,8 +27,8 @@ const gameServer = new Server({
 // register room handlers
 gameServer.define(RoomType.LOBBY, LobbyRoom)
 gameServer.define(RoomType.PUBLIC, SkyOffice, {
-  name: 'Public Lobby',
-  description: 'For making friends and familiarizing yourself with the controls',
+  name: 'Đại Sảnh công khai',
+  description: 'Gặp gỡ bạn mới và làm quen với cách điều khiển',
   password: null,
   autoDispose: false,
 })
@@ -42,5 +45,9 @@ gameServer.define(RoomType.CUSTOM, SkyOffice).enableRealtimeListing()
 // register colyseus monitor AFTER registering your room handlers
 app.use('/colyseus', monitor())
 
-gameServer.listen(port)
-console.log(`Listening on ws://localhost:${port}`)
+gameServer.listen(port).then(() => {
+  console.log(`Listening on ws://localhost:${port}`)
+}).catch((error) => {
+  console.error('Could not start SkyOffice server:', error)
+  process.exit(1)
+})

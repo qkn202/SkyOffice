@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { IChatMessage } from '../../../types/IOfficeState'
-import phaserGame from '../PhaserGame'
-import Game from '../scenes/Game'
+import type Game from '../scenes/Game'
 
 export enum MessageType {
   PLAYER_JOINED,
@@ -14,7 +13,7 @@ export const chatSlice = createSlice({
   initialState: {
     chatMessages: new Array<{ messageType: MessageType; chatMessage: IChatMessage }>(),
     focused: false,
-    showChat: true,
+    showChat: false,
   },
   reducers: {
     pushChatMessage: (state, action: PayloadAction<IChatMessage>) => {
@@ -44,8 +43,10 @@ export const chatSlice = createSlice({
       })
     },
     setFocused: (state, action: PayloadAction<boolean>) => {
-      const game = phaserGame.scene.keys.game as Game
-      action.payload ? game.disableKeys() : game.enableKeys()
+      const game = (window as any).game?.scene?.keys?.game as Game | undefined
+      if (game) {
+        action.payload ? game.disableKeys() : game.enableKeys()
+      }
       state.focused = action.payload
     },
     setShowChat: (state, action: PayloadAction<boolean>) => {

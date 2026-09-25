@@ -20,7 +20,12 @@ import { ItemType } from '../../../types/Items'
 
 import store from '../stores'
 import { setFocused, setShowChat } from '../stores/ChatStore'
+import { openSortingCeremony, setNearSortingHat } from '../stores/SortingStore'
 import { NavKeys, Keyboard } from '../../../types/KeyboardState'
+import { phaserEvents, Event } from '../events/EventCenter'
+import { WandSpellSystem } from './WandSpellSystem'
+import { HogwartsRoomManager, HogwartsRoomId } from './HogwartsRoomManager'
+import { HogwartsLightingEffects } from './hogwarts/HogwartsLightingEffects'
 
 export default class Game extends Phaser.Scene {
   network!: Network
@@ -29,11 +34,17 @@ export default class Game extends Phaser.Scene {
   private keyR!: Phaser.Input.Keyboard.Key
   private map!: Phaser.Tilemaps.Tilemap
   myPlayer!: MyPlayer
-  private playerSelector!: Phaser.GameObjects.Zone
+  private playerSelector!: PlayerSelector
   private otherPlayers!: Phaser.Physics.Arcade.Group
   private otherPlayerMap = new Map<string, OtherPlayer>()
   computerMap = new Map<string, Computer>()
+  private allChairs: Chair[] = []
   private whiteboardMap = new Map<string, Whiteboard>()
+  private lightingEffects!: HogwartsLightingEffects
+  private sortingHatNear = false
+  private readonly sortingHatPosition = { x: 1692, y: 1326 }
+  private wandSpellSystem?: WandSpellSystem
+  public roomManager!: HogwartsRoomManager
 
   constructor() {
     super('game')
@@ -56,6 +67,19 @@ export default class Game extends Phaser.Scene {
     this.input.keyboard.on('keydown-ESC', (event) => {
       store.dispatch(setShowChat(false))
     })
+    this.input.keyboard.on('keydown-T', () => {
+      if (this.sortingHatNear && !store.getState().user.assignedHouse) {
+        store.dispatch(openSortingCeremony())
+      }
+    })
+    this.input.keyboard.on('keydown-H', () => {
+      if (!store.getState().chat.focused) this.sendWave()
+    })
+    this.input.keyboard.on('keydown-F', () => {
+      if (!store.getState().chat.focused) {
+        window.dispatchEvent(new CustomEvent('skyoffice:toggle-floo-modal'))
+      }
+    })
   }
 
   disableKeys() {
@@ -75,78 +99,41 @@ export default class Game extends Phaser.Scene {
 
     createCharacterAnims(this.anims)
 
-    this.map = this.make.tilemap({ key: 'tilemap' })
-    const FloorAndGround = this.map.addTilesetImage('FloorAndGround', 'tiles_wall')
+    // 1. Tấm nền đồ hoạ 2.5D Toàn Cảnh Lâu Đài Hogwarts (Hub & Spoke: 3600 x 2400)
+    const mapW = 3600
+    const mapH = 2400
+    this.physics.world.setBounds(0, 0, mapW, mapH)
+    this.cameras.main.setBounds(0, 0, mapW, mapH)
+    this.cameras.main.zoom = 1.0
 
-    const groundLayer = this.map.createLayer('Ground', FloorAndGround)
-    groundLayer.setCollisionByProperty({ collides: true })
-
-    // debugDraw(groundLayer, this)
-
-    this.myPlayer = this.add.myPlayer(705, 500, 'adam', this.network.mySessionId)
-    this.playerSelector = new PlayerSelector(this, 0, 0, 16, 16)
-
-    // import chair objects from Tiled map to Phaser
-    const chairs = this.physics.add.staticGroup({ classType: Chair })
-    const chairLayer = this.map.getObjectLayer('Chair')
-    chairLayer.objects.forEach((chairObj) => {
-      const item = this.addObjectFromTiled(chairs, chairObj, 'chairs', 'chair') as Chair
-      // custom properties[0] is the object direction specified in Tiled
-      item.itemDirection = chairObj.properties[0].value
-    })
-
-    // import computers objects from Tiled map to Phaser
-    const computers = this.physics.add.staticGroup({ classType: Computer })
-    const computerLayer = this.map.getObjectLayer('Computer')
-    computerLayer.objects.forEach((obj, i) => {
-      const item = this.addObjectFromTiled(computers, obj, 'computers', 'computer') as Computer
-      item.setDepth(item.y + item.height * 0.27)
-      const id = `${i}`
-      item.id = id
-      this.computerMap.set(id, item)
-    })
-
-    // import whiteboards objects from Tiled map to Phaser
-    const whiteboards = this.physics.add.staticGroup({ classType: Whiteboard })
-    const whiteboardLayer = this.map.getObjectLayer('Whiteboard')
-    whiteboardLayer.objects.forEach((obj, i) => {
-      const item = this.addObjectFromTiled(
-        whiteboards,
-        obj,
-        'whiteboards',
-        'whiteboard'
-      ) as Whiteboard
-      const id = `${i}`
-      item.id = id
-      this.whiteboardMap.set(id, item)
-    })
-
-    // import vending machine objects from Tiled map to Phaser
-    const vendingMachines = this.physics.add.staticGroup({ classType: VendingMachine })
-    const vendingMachineLayer = this.map.getObjectLayer('VendingMachine')
-    vendingMachineLayer.objects.forEach((obj, i) => {
-      this.addObjectFromTiled(vendingMachines, obj, 'vendingmachines', 'vendingmachine')
-    })
-
-    // import other objects from Tiled map to Phaser
-    this.addGroupFromTiled('Wall', 'tiles_wall', 'FloorAndGround', false)
-    this.addGroupFromTiled('Objects', 'office', 'Modern_Office_Black_Shadow', false)
-    this.addGroupFromTiled('ObjectsOnCollide', 'office', 'Modern_Office_Black_Shadow', true)
-    this.addGroupFromTiled('GenericObjects', 'generic', 'Generic', false)
-    this.addGroupFromTiled('GenericObjectsOnCollide', 'generic', 'Generic', true)
-    this.addGroupFromTiled('Basement', 'basement', 'Basement', true)
+    // 2. Spawn nhân vật ở lối đi trung tâm Đại Sảnh (giữa Nhà Ravenclaw và Gryffindor)
+    this.myPlayer = this.add.myPlayer(1800, 1450, 'adam', this.network.mySessionId)
+    this.playerSelector = new PlayerSelector(this, 0, 0, 48, 48)
 
     this.otherPlayers = this.physics.add.group({ classType: OtherPlayer })
 
-    this.cameras.main.zoom = 1.5
-    this.cameras.main.startFollow(this.myPlayer, true)
+    // 3. Khởi tạo Quản lý Toàn Cảnh Lâu Đài Hogwarts & 4 Phòng Sinh Hoạt Chung
+    this.roomManager = new HogwartsRoomManager(this, this.myPlayer, this.otherPlayerMap, this.network)
+    this.roomManager.init('great_hall')
 
-    this.physics.add.collider([this.myPlayer, this.myPlayer.playerContainer], groundLayer)
-    this.physics.add.collider([this.myPlayer, this.myPlayer.playerContainer], vendingMachines)
+    this.cameras.main.startFollow(this.myPlayer, true, 0.08, 0.08)
+
+    this.physics.add.collider(
+      [this.myPlayer, this.myPlayer.playerContainer],
+      this.roomManager.collidersGroup
+    )
+
+    // 4. Khởi tạo nến bay ma thuật và ánh sáng Chiaroscuro Hogwarts
+    this.lightingEffects = new HogwartsLightingEffects(this)
+    this.lightingEffects.init()
+
+    // 5. Khởi tạo các nhân vật Hogwarts (NPC Giáo sư)
+    this.setupGreatHallNPCs()
+    this.setupSortingHat()
 
     this.physics.add.overlap(
       this.playerSelector,
-      [chairs, computers, whiteboards, vendingMachines],
+      this.roomManager.chairsGroup,
       this.handleItemSelectorOverlap,
       undefined,
       this
@@ -169,6 +156,45 @@ export default class Game extends Phaser.Scene {
     this.network.onItemUserAdded(this.handleItemUserAdded, this)
     this.network.onItemUserRemoved(this.handleItemUserRemoved, this)
     this.network.onChatMessageAdded(this.handleChatMessageAdded, this)
+    this.network.onPlayerEmote(this.handlePlayerEmote, this)
+
+    // 7. Khởi tạo hệ thống vung đũa vẽ bùa phép (Wand Gesture Drawing Spell System)
+    this.wandSpellSystem = new WandSpellSystem(this, this.myPlayer, this.otherPlayerMap, this.network)
+    phaserEvents.on(Event.CAST_SPELL, this.handleSpellCast, this)
+    phaserEvents.on(Event.ROOM_CHANGED, this.handleRoomChanged, this)
+
+    const onRoomChanged = (e: any) => {
+      this.updateGreatHallEntitiesVisibility(e.detail?.roomId)
+    }
+    window.addEventListener('skyoffice:room-changed', onRoomChanged)
+
+    this.events.on('shutdown', () => {
+      phaserEvents.off(Event.CAST_SPELL, this.handleSpellCast, this)
+      phaserEvents.off(Event.ROOM_CHANGED, this.handleRoomChanged, this)
+      window.removeEventListener('skyoffice:room-changed', onRoomChanged)
+      this.wandSpellSystem?.destroy()
+      this.roomManager?.destroy()
+      this.lightingEffects?.destroy()
+    })
+  }
+
+  sendProximityChat(content: string) {
+    const message = content.trim().slice(0, 120)
+    if (!message || !this.myPlayer || !this.network) return
+    this.myPlayer.updateDialogBubble(message)
+    this.network.addChatMessage(message)
+  }
+
+  sendWave(fromButton = false) {
+    if (!this.myPlayer || !this.network || (!fromButton && store.getState().chat.focused)) return
+    this.sendSocialEmote('wave')
+  }
+
+  sendSocialEmote(emote: string) {
+    const symbols: Record<string, string> = { wave: '👋', clap: '👏', heart: '❤️', laugh: '😂', magic: '✨' }
+    if (!this.myPlayer || !this.network || !symbols[emote]) return
+    this.myPlayer.showEmote(symbols[emote])
+    this.network.sendEmote(emote)
   }
 
   private handleItemSelectorOverlap(playerSelector, selectionItem) {
@@ -188,42 +214,72 @@ export default class Game extends Phaser.Scene {
     selectionItem.onOverlapDialog()
   }
 
-  private addObjectFromTiled(
+  private addStaticZoneCollider(
     group: Phaser.Physics.Arcade.StaticGroup,
-    object: Phaser.Types.Tilemaps.TiledObject,
-    key: string,
-    tilesetName: string
+    x: number,
+    y: number,
+    w: number,
+    h: number
   ) {
-    const actualX = object.x! + object.width! * 0.5
-    const actualY = object.y! - object.height! * 0.5
-    const obj = group
-      .get(actualX, actualY, key, object.gid! - this.map.getTileset(tilesetName).firstgid)
-      .setDepth(actualY)
-    return obj
+    const zone = this.add.zone(x, y, w, h)
+    this.physics.add.existing(zone, true)
+    group.add(zone)
   }
 
-  private addGroupFromTiled(
-    objectLayerName: string,
-    key: string,
-    tilesetName: string,
-    collidable: boolean
-  ) {
-    const group = this.physics.add.staticGroup()
-    const objectLayer = this.map.getObjectLayer(objectLayerName)
-    objectLayer.objects.forEach((object) => {
-      const actualX = object.x! + object.width! * 0.5
-      const actualY = object.y! - object.height! * 0.5
-      group
-        .get(actualX, actualY, key, object.gid! - this.map.getTileset(tilesetName).firstgid)
-        .setDepth(actualY)
-    })
-    if (this.myPlayer && collidable)
-      this.physics.add.collider([this.myPlayer, this.myPlayer.playerContainer], group)
+  findClosestChair(x: number, y: number, maxDist: number = 55): Chair | undefined {
+    let closest: Chair | undefined
+    let minDist = maxDist
+    for (const chair of this.roomManager?.activeChairs || []) {
+      const dist = Phaser.Math.Distance.Between(x, y, chair.x, chair.y)
+      if (dist < minDist) {
+        minDist = dist
+        closest = chair
+      }
+    }
+    return closest
+  }
+
+  private greatHallEntities: Phaser.GameObjects.GameObject[] = []
+
+  private setupGreatHallNPCs() {
+    const addSeatedCharacter = (
+      x: number,
+      y: number,
+      texture: string,
+      scale: number = 0.038,
+      flipX: boolean = true
+    ) => {
+      const img = this.add
+        .image(x, y, texture)
+        .setOrigin(0.5, 1)
+        .setScale(scale)
+        .setFlipX(flipX)
+        .setDepth(y)
+      this.greatHallEntities.push(img)
+      return img
+    }
+
+    // High Table Dais (Ban Giám Hiệu Hogwarts ngồi trên ghế danh dự phía sau Bàn Trưởng Sảnh)
+    addSeatedCharacter(1887, 1186, 'mcgonagall_seated', 0.038, true)
+    addSeatedCharacter(1942, 1211, 'dumbledore_seated', 0.038, true)
+    addSeatedCharacter(2017, 1246, 'snape_seated', 0.038, true)
+  }
+
+  public updateGreatHallEntitiesVisibility(roomId: HogwartsRoomId) {
+    // In continuous castle world, entities are naturally positioned in their rooms
+    for (const obj of this.greatHallEntities) {
+      if (obj && 'setVisible' in obj) {
+        ;(obj as any).setVisible(true)
+      }
+    }
   }
 
   // function to add new player to the otherPlayer group
   private handlePlayerJoined(newPlayer: IPlayer, id: string) {
-    const otherPlayer = this.add.otherPlayer(newPlayer.x, newPlayer.y, 'adam', id, newPlayer.name)
+    const houseSuffix = newPlayer.house ? `_${newPlayer.house.toLowerCase()}` : ''
+    const texture = `${newPlayer.texture || 'adam'}${houseSuffix}`
+    const otherPlayer = this.add.otherPlayer(newPlayer.x, newPlayer.y, texture, id, newPlayer.name)
+    otherPlayer.setHouseBadge(newPlayer.house)
     this.otherPlayers.add(otherPlayer)
     this.otherPlayerMap.set(id, otherPlayer)
   }
@@ -253,7 +309,9 @@ export default class Game extends Phaser.Scene {
   }
 
   private handlePlayersOverlap(myPlayer, otherPlayer) {
-    otherPlayer.makeCall(myPlayer, this.network?.webRTC)
+    if (this.network?.webRTC) {
+      otherPlayer.makeCall(myPlayer, this.network.webRTC)
+    }
   }
 
   private handleItemUserAdded(playerId: string, itemId: string, itemType: ItemType) {
@@ -281,10 +339,83 @@ export default class Game extends Phaser.Scene {
     otherPlayer?.updateDialogBubble(content)
   }
 
+  private handlePlayerEmote(playerId: string, emote: string) {
+    const symbols: Record<string, string> = { wave: '👋', clap: '👏', heart: '❤️', laugh: '😂', magic: '✨' }
+    if (!symbols[emote]) return
+    this.otherPlayerMap.get(playerId)?.showEmote(symbols[emote])
+  }
+
+  private handleSpellCast(clientId: string, spell: string, x?: number, y?: number, dir?: string) {
+    if (clientId === this.myPlayer?.playerId) return
+    this.wandSpellSystem?.executeSpell(spell, clientId, x ?? 0, y ?? 0, dir ?? 'down')
+  }
+
+  private handleRoomChanged(clientId: string, roomId: HogwartsRoomId) {
+    this.roomManager?.handleOtherPlayerRoomChange(clientId, roomId)
+  }
+
   update(t: number, dt: number) {
+    this.wandSpellSystem?.update()
+    this.roomManager?.update(t, dt)
     if (this.myPlayer && this.network) {
+      const nearSortingHat = Phaser.Math.Distance.Between(
+        this.myPlayer.x,
+        this.myPlayer.y,
+        this.sortingHatPosition.x,
+        this.sortingHatPosition.y
+      ) < 76
+      if (nearSortingHat !== this.sortingHatNear) {
+        this.sortingHatNear = nearSortingHat
+        store.dispatch(setNearSortingHat(nearSortingHat))
+      }
       this.playerSelector.update(this.myPlayer, this.cursors)
+      if (
+        nearSortingHat &&
+        !store.getState().user.assignedHouse &&
+        this.playerSelector.selectedItem?.itemType === ItemType.CHAIR
+      ) {
+        this.playerSelector.selectedItem.clearDialogBox()
+        this.playerSelector.selectedItem = undefined
+      }
       this.myPlayer.update(this.playerSelector, this.cursors, this.keyE, this.keyR, this.network)
     }
+
+    this.lightingEffects?.update(t)
+  }
+
+  private setupSortingHat() {
+    const { x, y } = this.sortingHatPosition
+    const hat = this.add.graphics().setPosition(x, y).setDepth(601)
+    hat.fillStyle(0x5a3a20, 1)
+    hat.beginPath()
+    hat.moveTo(-19, -3)
+    hat.lineTo(-12, -23)
+    hat.lineTo(-3, -16)
+    hat.lineTo(10, -31)
+    hat.lineTo(12, -12)
+    hat.lineTo(22, -4)
+    hat.closePath()
+    hat.fillPath()
+    hat.fillStyle(0x9b6b32, 1)
+    hat.fillEllipse(0, -4, 47, 10)
+    hat.lineStyle(2, 0x2e2017, 0.9)
+    hat.strokeEllipse(0, -4, 47, 10)
+
+    const stool = this.add.graphics().setPosition(x, y + 10).setDepth(590)
+    stool.fillStyle(0x65451f, 1)
+    stool.fillRoundedRect(-17, 0, 34, 8, 2)
+    stool.fillRect(-13, 7, 4, 16)
+    stool.fillRect(9, 7, 4, 16)
+    const hatText = this.add
+      .text(x, y + 31, 'Chiếc Nón Phân Loại', {
+        fontFamily: 'Georgia, serif',
+        fontSize: '13px',
+        color: '#f4d98b',
+        stroke: '#23180f',
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5, 0)
+    this.greatHallEntities.push(hat, stool, hatText)
   }
 }
+

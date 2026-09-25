@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import logo from '../images/logo.png'
 import styled from 'styled-components'
 import Button from '@mui/material/Button'
@@ -24,15 +24,23 @@ const Backdrop = styled.div`
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
-  gap: 60px;
+  gap: 28px;
   align-items: center;
 `
 
 const Wrapper = styled.div`
+  box-sizing: border-box;
+  width: min(650px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
   background: #222639;
   border-radius: 16px;
   padding: 36px 60px;
   box-shadow: 0px 0px 5px #0000006f;
+
+  @media (max-width: 650px) {
+    padding: 24px 18px;
+  }
 `
 
 const CustomRoomWrapper = styled.div`
@@ -81,6 +89,11 @@ const Content = styled.div`
   align-items: center;
   justify-content: center;
 
+  @media (max-width: 650px) {
+    flex-direction: column;
+    gap: 18px;
+  }
+
   img {
     border-radius: 8px;
     height: 120px;
@@ -91,6 +104,8 @@ const ProgressBarWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: min(460px, calc(100vw - 32px));
+  text-align: center;
 
   h3 {
     color: #33ac96;
@@ -98,24 +113,46 @@ const ProgressBarWrapper = styled.div`
 `
 
 const ProgressBar = styled(LinearProgress)`
-  width: 360px;
+  width: min(360px, calc(100vw - 48px));
 `
 
 export default function RoomSelectionDialog() {
   const [showCustomRoom, setShowCustomRoom] = useState(false)
   const [showCreateRoomForm, setShowCreateRoomForm] = useState(false)
   const [showSnackbar, setShowSnackbar] = useState(false)
+  const [connecting, setConnecting] = useState(false)
+  const [connectionTimedOut, setConnectionTimedOut] = useState(false)
+  const [snackbarMessage, setSnackbarMessage] = useState('Chưa kết nối được máy chủ. Vui lòng chờ một chút rồi thử lại.')
   const lobbyJoined = useAppSelector((state) => state.room.lobbyJoined)
+  const connectionError = useAppSelector((state) => state.room.lobbyConnectionError)
 
-  const handleConnect = () => {
+  useEffect(() => {
     if (lobbyJoined) {
-      const bootstrap = phaserGame.scene.keys.bootstrap as Bootstrap
-      bootstrap.network
-        .joinOrCreatePublic()
-        .then(() => bootstrap.launchGame())
-        .catch((error) => console.error(error))
-    } else {
+      setConnectionTimedOut(false)
+      return
+    }
+    const timeout = window.setTimeout(() => setConnectionTimedOut(true), 12_000)
+    return () => window.clearTimeout(timeout)
+  }, [lobbyJoined])
+
+  const handleConnect = async () => {
+    const bootstrap = ((window as any).game?.scene?.keys?.bootstrap ||
+      phaserGame?.scene?.keys?.bootstrap) as Bootstrap | undefined
+    if (!bootstrap?.network) {
+      setSnackbarMessage('Đang khởi tạo hệ thống đồ họa và mạng. Vui lòng thử lại sau giây lát…')
       setShowSnackbar(true)
+      return
+    }
+    setConnecting(true)
+    try {
+      await bootstrap.network.joinOrCreatePublic()
+      bootstrap.launchGame()
+    } catch (error: any) {
+      console.error('Lỗi kết nối phòng công khai:', error)
+      setSnackbarMessage(`Lỗi kết nối máy chủ: ${error?.message || 'Chưa thể vào phòng'}`)
+      setShowSnackbar(true)
+    } finally {
+      setConnecting(false)
     }
   }
 
@@ -124,7 +161,7 @@ export default function RoomSelectionDialog() {
       <Snackbar
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         open={showSnackbar}
-        autoHideDuration={3000}
+        autoHideDuration={4000}
         onClose={() => {
           setShowSnackbar(false)
         }}
@@ -135,7 +172,7 @@ export default function RoomSelectionDialog() {
           // overwrites the dark theme on render
           style={{ background: '#fdeded', color: '#7d4747' }}
         >
-          Trying to connect to server, please try again!
+          {snackbarMessage}
         </Alert>
       </Snackbar>
       <Backdrop>
@@ -146,7 +183,7 @@ export default function RoomSelectionDialog() {
                 <IconButton className="back-button" onClick={() => setShowCreateRoomForm(false)}>
                   <ArrowBackIcon />
                 </IconButton>
-                <Title>Create Custom Room</Title>
+                <Title>Tạo phòng riêng</Title>
               </TitleWrapper>
               <CreateRoomForm />
             </CustomRoomWrapper>
@@ -157,9 +194,9 @@ export default function RoomSelectionDialog() {
                   <ArrowBackIcon />
                 </IconButton>
                 <Title>
-                  Custom Rooms
+                  Phòng riêng
                   <Tooltip
-                    title="We update the results in realtime, no refresh needed!"
+                    title="Danh sách phòng được cập nhật trực tiếp, không cần tải lại."
                     placement="top"
                   >
                     <IconButton>
@@ -174,23 +211,23 @@ export default function RoomSelectionDialog() {
                 color="secondary"
                 onClick={() => setShowCreateRoomForm(true)}
               >
-                Create new room
+                Tạo phòng mới
               </Button>
             </CustomRoomWrapper>
           ) : (
             <>
-              <Title>Welcome to SkyOffice</Title>
+              <Title>Hogwarts SkyOffice</Title>
               <Content>
                 <img src={logo} alt="logo" />
-                <Button variant="contained" color="secondary" onClick={handleConnect}>
-                  Connect to public lobby
+                <Button variant="contained" color="secondary" onClick={handleConnect} disabled={connecting}>
+                  {connecting ? 'Đang vào phòng…' : 'Vào Đại Sảnh công khai'}
                 </Button>
                 <Button
                   variant="outlined"
                   color="secondary"
                   onClick={() => (lobbyJoined ? setShowCustomRoom(true) : setShowSnackbar(true))}
                 >
-                  Create/find custom rooms
+                  Tạo hoặc tìm phòng riêng
                 </Button>
               </Content>
             </>
@@ -198,8 +235,18 @@ export default function RoomSelectionDialog() {
         </Wrapper>
         {!lobbyJoined && (
           <ProgressBarWrapper>
-            <h3> Connecting to server...</h3>
-            <ProgressBar color="secondary" />
+            <h3 role="status">{connectionError || (connectionTimedOut ? 'Máy chủ chưa phản hồi' : 'Đang kết nối máy chủ…')}</h3>
+            {connectionTimedOut || connectionError ? (
+              <Button size="small" variant="contained" color="secondary" onClick={() => {
+                const bootstrap = ((window as any).game?.scene?.keys?.bootstrap ||
+                  phaserGame?.scene?.keys?.bootstrap) as Bootstrap | undefined
+                bootstrap?.network?.retryLobbyConnection()
+              }}>
+                Thử kết nối lại
+              </Button>
+            ) : (
+              <ProgressBar color="secondary" />
+            )}
           </ProgressBarWrapper>
         )}
       </Backdrop>

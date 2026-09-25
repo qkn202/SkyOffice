@@ -3,8 +3,10 @@ import { configureStore } from '@reduxjs/toolkit'
 import userReducer from './UserStore'
 import computerReducer from './ComputerStore'
 import whiteboardReducer from './WhiteboardStore'
+import sortingReducer from './SortingStore'
 import chatReducer from './ChatStore'
 import roomReducer from './RoomStore'
+import socialReducer from './SocialStore'
 
 enableMapSet()
 
@@ -13,8 +15,10 @@ const store = configureStore({
     user: userReducer,
     computer: computerReducer,
     whiteboard: whiteboardReducer,
+    sorting: sortingReducer,
     chat: chatReducer,
     room: roomReducer,
+    social: socialReducer,
   },
   // Temporary disable serialize check for redux as we store MediaStream in ComputerStore.
   // https://stackoverflow.com/a/63244831

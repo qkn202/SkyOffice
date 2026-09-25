@@ -25,7 +25,7 @@ export default class OtherPlayer extends Player {
     super(scene, x, y, texture, id, frame)
     this.targetPosition = [x, y]
 
-    this.playerName.setText(name)
+    this.setPlayerDisplayName(name)
     this.playContainerBody = this.playerContainer.body as Phaser.Physics.Arcade.Body
   }
 
@@ -50,7 +50,7 @@ export default class OtherPlayer extends Player {
     switch (field) {
       case 'name':
         if (typeof value === 'string') {
-          this.playerName.setText(value)
+          this.setPlayerDisplayName(value)
         }
         break
 
@@ -69,6 +69,29 @@ export default class OtherPlayer extends Player {
       case 'anim':
         if (typeof value === 'string') {
           this.anims.play(value, true)
+        }
+        break
+
+      case 'house':
+        if (typeof value === 'string') {
+          this.setHouseBadge(value)
+          const baseTexture = this.playerTexture.split('_')[0]
+          const texture = value ? `${baseTexture}_${value.toLowerCase()}` : baseTexture
+          this.playerTexture = texture
+          this.setTexture(texture)
+          this.anims.play(`${texture}_idle_down`, true)
+        }
+        break
+
+      case 'texture':
+        if (typeof value === 'string') {
+          const houseSuffix = this.playerTexture.includes('_')
+            ? `_${this.playerTexture.split('_')[1]}`
+            : ''
+          const texture = `${value}${houseSuffix}`
+          this.playerTexture = texture
+          this.setTexture(texture)
+          this.anims.play(`${texture}_idle_down`, true)
         }
         break
 
@@ -109,10 +132,9 @@ export default class OtherPlayer extends Player {
 
     this.lastUpdateTimestamp = t
     this.setDepth(this.y) // change player.depth based on player.y
-    const animParts = this.anims.currentAnim.key.split('_')
-    const animState = animParts[1]
-    if (animState === 'sit') {
-      const animDir = animParts[2]
+    const sittingAnimation = this.anims.currentAnim?.key.match(/_sit_(right|up|left|down)$/)
+    if (sittingAnimation) {
+      const animDir = sittingAnimation[1]
       const sittingShift = sittingShiftData[animDir]
       if (sittingShift) {
         // set hardcoded depth (differs between directions) if player sits down

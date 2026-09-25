@@ -14,4 +14,7 @@ export enum Event {
   ITEM_USER_ADDED = 'item-user-added',
   ITEM_USER_REMOVED = 'item-user-removed',
   UPDATE_DIALOG_BUBBLE = 'update-dialog-bubble',
+  PLAYER_EMOTE = 'player-emote',
+  CAST_SPELL = 'cast-spell',
+  ROOM_CHANGED = 'room-changed',
 }

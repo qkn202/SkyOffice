@@ -9,6 +9,8 @@ import store from '../stores'
 import { setSessionId, setPlayerNameMap, removePlayerNameMap } from '../stores/UserStore'
 import {
   setLobbyJoined,
+  setLobbyConnectionError,
+  setConnectionLost,
   setJoinedRoomData,
   setAvailableRooms,
   addAvailableRooms,
@@ -20,29 +22,66 @@ import {
   pushPlayerLeftMessage,
 } from '../stores/ChatStore'
 import { setWhiteboardUrls } from '../stores/WhiteboardStore'
+import { setOnlineProfiles, setSocialEvents, type OnlineProfile, type SocialEvent } from '../stores/SocialStore'
 
 export default class Network {
   private client: Client
   private room?: Room<IOfficeState>
   private lobby!: Room
   webRTC?: WebRTC
+  private lastOnlineProfileSyncAt = 0
+  private lobbyConnecting = false
+  private lobbyRetryTimer?: number
+  private lobbyRetryAttempt = 0
 
   mySessionId!: string
 
   constructor() {
     const protocol = window.location.protocol.replace('http', 'ws')
+    const host =
+      !window.location.hostname || window.location.hostname === '0.0.0.0'
+        ? 'localhost'
+        : window.location.hostname
     const endpoint =
-      process.env.NODE_ENV === 'production'
-        ? import.meta.env.VITE_SERVER_URL
-        : `${protocol}//${window.location.hostname}:2567`
+      import.meta.env.VITE_SERVER_URL || `${protocol}//${host}:2567`
     this.client = new Client(endpoint)
-    this.joinLobbyRoom().then(() => {
-      store.dispatch(setLobbyJoined(true))
-    })
+    void this.connectLobby()
 
     phaserEvents.on(Event.MY_PLAYER_NAME_CHANGE, this.updatePlayerName, this)
     phaserEvents.on(Event.MY_PLAYER_TEXTURE_CHANGE, this.updatePlayer, this)
     phaserEvents.on(Event.PLAYER_DISCONNECTED, this.playerStreamDisconnect, this)
+  }
+
+  retryLobbyConnection() {
+    window.clearTimeout(this.lobbyRetryTimer)
+    this.lobbyRetryTimer = undefined
+    void this.connectLobby()
+  }
+
+  private scheduleLobbyRetry() {
+    if (this.room || this.lobbyRetryTimer !== undefined) return
+    const delay = Math.min(1000 * 2 ** Math.min(this.lobbyRetryAttempt++, 4), 10_000)
+    this.lobbyRetryTimer = window.setTimeout(() => {
+      this.lobbyRetryTimer = undefined
+      void this.connectLobby()
+    }, delay)
+  }
+
+  private async connectLobby() {
+    if (this.room || this.lobbyConnecting || store.getState().room.lobbyJoined) return
+    this.lobbyConnecting = true
+    try {
+      await this.joinLobbyRoom()
+      this.lobbyRetryAttempt = 0
+      store.dispatch(setLobbyConnectionError(''))
+      store.dispatch(setLobbyJoined(true))
+    } catch (error) {
+      store.dispatch(setLobbyJoined(false))
+      store.dispatch(setLobbyConnectionError('Chưa kết nối được máy chủ. Hệ thống đang tự thử lại…'))
+      this.scheduleLobbyRetry()
+    } finally {
+      this.lobbyConnecting = false
+    }
   }
 
   /**
@@ -51,6 +90,14 @@ export default class Network {
    */
   async joinLobbyRoom() {
     this.lobby = await this.client.joinOrCreate(RoomType.LOBBY)
+
+    this.lobby.onLeave(() => {
+      store.dispatch(setLobbyJoined(false))
+      if (this.room) return // Leaving the lobby to enter a game is intentional.
+      store.dispatch(setAvailableRooms([]))
+      store.dispatch(setLobbyConnectionError('Mất kết nối máy chủ. Hệ thống đang tự thử lại…'))
+      this.scheduleLobbyRetry()
+    })
 
     this.lobby.onMessage('rooms', (rooms) => {
       store.dispatch(setAvailableRooms(rooms))
@@ -93,19 +140,25 @@ export default class Network {
   initialize() {
     if (!this.room) return
 
-    this.lobby.leave()
+    window.clearTimeout(this.lobbyRetryTimer)
+    this.lobbyRetryTimer = undefined
+    store.dispatch(setConnectionLost(false))
+    this.room.onLeave(() => {
+      store.dispatch(setConnectionLost(true))
+    })
+    void this.lobby.leave().catch(() => {})
     this.mySessionId = this.room.sessionId
     store.dispatch(setSessionId(this.room.sessionId))
-    this.webRTC = new WebRTC(this.mySessionId, this)
+    // WebRTC disabled for pure text & multiplayer mode
+    // this.webRTC = new WebRTC(this.mySessionId, this)
 
     // new instance added to the players MapSchema
     this.room.state.players.onAdd = (player: IPlayer, key: string) => {
-      if (key === this.mySessionId) return
-
       // track changes on every child object inside the players MapSchema
       player.onChange = (changes) => {
         changes.forEach((change) => {
           const { field, value } = change
+          if (key === this.mySessionId) return
           phaserEvents.emit(Event.PLAYER_UPDATED, field, value, key)
 
           // when a new player finished setting up player name
@@ -115,7 +168,9 @@ export default class Network {
             store.dispatch(pushPlayerJoinedMessage(value))
           }
         })
+        this.syncOnlineProfiles()
       }
+      this.syncOnlineProfiles(true)
     }
 
     // an instance removed from the players MapSchema
@@ -125,6 +180,7 @@ export default class Network {
       this.webRTC?.deleteOnCalledVideoStream(key)
       store.dispatch(pushPlayerLeftMessage(player.name))
       store.dispatch(removePlayerNameMap(key))
+      this.syncOnlineProfiles(true)
     }
 
     // new instance added to the computers MapSchema
@@ -170,6 +226,45 @@ export default class Network {
       phaserEvents.emit(Event.UPDATE_DIALOG_BUBBLE, clientId, content)
     })
 
+    this.room.onMessage(Message.PLAYER_EMOTE, ({ clientId, emote }) => {
+      phaserEvents.emit(Event.PLAYER_EMOTE, clientId, emote)
+    })
+
+    this.room.onMessage(Message.CAST_SPELL, ({ clientId, spell, x, y, dir }) => {
+      phaserEvents.emit(Event.CAST_SPELL, clientId, spell, x, y, dir)
+    })
+
+    this.room.onMessage(Message.CHANGE_ROOM, ({ clientId, roomId }) => {
+      phaserEvents.emit(Event.ROOM_CHANGED, clientId, roomId)
+    })
+
+    this.room.onMessage(Message.MINIGAME_INVITE, (invite) => {
+      window.dispatchEvent(new CustomEvent('skyoffice:minigame-invite', { detail: invite }))
+    })
+
+    this.room.onMessage(Message.MINIGAME_READY_STATE, (state) => {
+      window.dispatchEvent(new CustomEvent('skyoffice:minigame-ready-state', { detail: state }))
+    })
+
+    this.room.onMessage(Message.MINIGAME_START, (state) => {
+      window.dispatchEvent(new CustomEvent('skyoffice:minigame-start', { detail: state }))
+    })
+
+    this.room.onMessage(Message.MINIGAME_CANCEL, () => {
+      window.dispatchEvent(new CustomEvent('skyoffice:minigame-cancel'))
+    })
+
+    this.room.onMessage(Message.COMMUNITY_EVENT_SNAPSHOT, (snapshot: { events: SocialEvent[] }) => {
+      store.dispatch(setSocialEvents(snapshot.events || []))
+    })
+
+    this.room.onMessage(Message.COMMUNITY_EVENT_RESULT, (result) => {
+      window.dispatchEvent(new CustomEvent('skyoffice:community-event-result', { detail: result }))
+    })
+
+    this.syncOnlineProfiles()
+    this.room.send(Message.REQUEST_SOCIAL_STATE)
+
     // when a peer disconnects with myPeer
     this.room.onMessage(Message.DISCONNECT_STREAM, (clientId: string) => {
       this.webRTC?.deleteOnCalledVideoStream(clientId)
@@ -185,6 +280,53 @@ export default class Network {
   // method to register event listener and call back function when a item user added
   onChatMessageAdded(callback: (playerId: string, content: string) => void, context?: any) {
     phaserEvents.on(Event.UPDATE_DIALOG_BUBBLE, callback, context)
+  }
+
+  onPlayerEmote(callback: (playerId: string, emote: string) => void, context?: any) {
+    phaserEvents.on(Event.PLAYER_EMOTE, callback, context)
+  }
+
+  inviteMiniGame(gameId: 'seven-potters' | 'undercover-hogwarts', roomCode: string) {
+    this.room?.send(Message.MINIGAME_INVITE, { gameId, roomCode })
+  }
+
+  setMiniGameReady(ready: boolean) {
+    this.room?.send(Message.MINIGAME_READY, { ready })
+  }
+
+  startMiniGame() {
+    this.room?.send(Message.MINIGAME_START)
+  }
+
+  cancelMiniGameLobby() {
+    this.room?.send(Message.MINIGAME_CANCEL)
+  }
+
+  createCommunityEvent(title: string, description: string, startsAt: number) {
+    this.room?.send(Message.COMMUNITY_EVENT_CREATE, { title, description, startsAt })
+  }
+
+  toggleCommunityEventAttendance(eventId: string) {
+    this.room?.send(Message.COMMUNITY_EVENT_RSVP, { eventId })
+  }
+
+  private syncOnlineProfiles(force = false) {
+    if (!this.room) return
+    const now = Date.now()
+    if (!force && now - this.lastOnlineProfileSyncAt < 1000) return
+    this.lastOnlineProfileSyncAt = now
+    const profiles: OnlineProfile[] = []
+    this.room.state.players.forEach((player, sessionId) => {
+      profiles.push({
+        sessionId,
+        name: player.name || 'Phù thủy mới',
+        house: player.house || '',
+        texture: player.texture || 'adam',
+        x: player.x,
+        y: player.y,
+      })
+    })
+    store.dispatch(setOnlineProfiles(profiles))
   }
 
   // method to register event listener and call back function when a item user added
@@ -241,6 +383,10 @@ export default class Network {
     this.room?.send(Message.UPDATE_PLAYER_NAME, { name: currentName })
   }
 
+  updatePlayerAppearance(house: string, texture: string) {
+    this.room?.send(Message.UPDATE_PLAYER_APPEARANCE, { house, texture })
+  }
+
   // method to send ready-to-connect signal to Colyseus server
   readyToConnect() {
     this.room?.send(Message.READY_TO_CONNECT)
@@ -280,6 +426,18 @@ export default class Network {
   }
 
   addChatMessage(content: string) {
-    this.room?.send(Message.ADD_CHAT_MESSAGE, { content: content })
+    this.room?.send(Message.ADD_CHAT_MESSAGE, { content })
+  }
+
+  sendEmote(emote: string) {
+    this.room?.send(Message.PLAYER_EMOTE, { emote })
+  }
+
+  castSpell(spell: string, x?: number, y?: number, dir?: string) {
+    this.room?.send(Message.CAST_SPELL, { spell, x, y, dir })
+  }
+
+  changeRoom(roomId: string) {
+    this.room?.send(Message.CHANGE_ROOM, { roomId })
   }
 }

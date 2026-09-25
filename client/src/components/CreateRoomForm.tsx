@@ -58,21 +58,21 @@ export const CreateRoomForm = () => {
   return (
     <CreateRoomFormWrapper onSubmit={handleSubmit}>
       <TextField
-        label="Name"
+        label="Tên phòng"
         variant="outlined"
         color="secondary"
         autoFocus
         error={nameFieldEmpty}
-        helperText={nameFieldEmpty && 'Name is required'}
+        helperText={nameFieldEmpty && 'Vui lòng nhập tên phòng'}
         onChange={handleChange('name')}
       />
 
       <TextField
-        label="Description"
+        label="Mô tả"
         variant="outlined"
         color="secondary"
         error={descriptionFieldEmpty}
-        helperText={descriptionFieldEmpty && 'Description is required'}
+        helperText={descriptionFieldEmpty && 'Vui lòng nhập mô tả phòng'}
         multiline
         rows={4}
         onChange={handleChange('description')}
@@ -80,14 +80,14 @@ export const CreateRoomForm = () => {
 
       <TextField
         type={showPassword ? 'text' : 'password'}
-        label="Password (optional)"
+        label="Mật khẩu (không bắt buộc)"
         onChange={handleChange('password')}
         color="secondary"
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
               <IconButton
-                aria-label="toggle password visibility"
+                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                 onClick={() => setShowPassword(!showPassword)}
                 edge="end"
               >
@@ -98,7 +98,7 @@ export const CreateRoomForm = () => {
         }}
       />
       <Button variant="contained" color="secondary" type="submit">
-        Create
+        Tạo phòng
       </Button>
     </CreateRoomFormWrapper>
   )

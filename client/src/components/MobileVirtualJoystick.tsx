@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import JoystickItem from './Joystick'
 
 import phaserGame from '../PhaserGame'
-import Game from '../scenes/Game'
+import type Game from '../scenes/Game'
 
 import { useAppSelector } from '../hooks'
 import { JoystickMovement } from './Joystick'

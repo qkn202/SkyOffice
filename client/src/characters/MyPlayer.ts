@@ -10,7 +10,7 @@ import Whiteboard from '../items/Whiteboard'
 
 import { phaserEvents, Event } from '../events/EventCenter'
 import store from '../stores'
-import { pushPlayerJoinedMessage } from '../stores/ChatStore'
+import { pushPlayerJoinedMessage, setShowChat, setFocused } from '../stores/ChatStore'
 import { ItemType } from '../../../types/Items'
 import { NavKeys } from '../../../types/KeyboardState'
 import { JoystickMovement } from '../components/Joystick'
@@ -19,6 +19,8 @@ import { openURL } from '../utils/helpers'
 export default class MyPlayer extends Player {
   private playContainerBody: Phaser.Physics.Arcade.Body
   private chairOnSit?: Chair
+  private baseCharacterTexture: string
+  private house = ''
   public joystickMovement?: JoystickMovement
   constructor(
     scene: Phaser.Scene,
@@ -29,19 +31,38 @@ export default class MyPlayer extends Player {
     frame?: string | number
   ) {
     super(scene, x, y, texture, id, frame)
+    this.baseCharacterTexture = texture
     this.playContainerBody = this.playerContainer.body as Phaser.Physics.Arcade.Body
   }
 
   setPlayerName(name: string) {
-    this.playerName.setText(name)
+    this.setPlayerDisplayName(name)
     phaserEvents.emit(Event.MY_PLAYER_NAME_CHANGE, name)
     store.dispatch(pushPlayerJoinedMessage(name))
   }
 
   setPlayerTexture(texture: string) {
-    this.playerTexture = texture
-    this.anims.play(`${this.playerTexture}_idle_down`, true)
+    this.baseCharacterTexture = texture
+    this.applyHouseTexture()
     phaserEvents.emit(Event.MY_PLAYER_TEXTURE_CHANGE, this.x, this.y, this.anims.currentAnim.key)
+  }
+
+  setHouse(house: string, network: Network) {
+    this.house = house.toUpperCase()
+    this.setHouseBadge(this.house)
+    this.applyHouseTexture()
+    network.updatePlayerAppearance(this.house, this.baseCharacterTexture)
+    network.updatePlayer(this.x, this.y, this.anims.currentAnim.key)
+  }
+
+  private applyHouseTexture() {
+    const suffix = this.house ? `_${this.house.toLowerCase()}` : ''
+    this.playerTexture = `${this.baseCharacterTexture}${suffix}`
+    this.setTexture(this.playerTexture)
+
+    const currentKey = this.anims.currentAnim?.key || ''
+    const action = currentKey.match(/(idle|run|sit)_(right|up|left|down)$/)?.[0] || 'idle_down'
+    this.anims.play(`${this.playerTexture}_${action}`, true)
   }
 
   handleJoystickMovement(movement: JoystickMovement) {
@@ -58,8 +79,14 @@ export default class MyPlayer extends Player {
     if (!cursors) return
 
     const item = playerSelector.selectedItem
+    const isJustDownE = Phaser.Input.Keyboard.JustDown(keyE)
+    const isJustDownR = Phaser.Input.Keyboard.JustDown(keyR)
 
-    if (Phaser.Input.Keyboard.JustDown(keyR)) {
+    if (
+      isJustDownR ||
+      (isJustDownE &&
+        (item?.itemType === ItemType.WHITEBOARD || item?.itemType === ItemType.VENDINGMACHINE))
+    ) {
       switch (item?.itemType) {
         case ItemType.COMPUTER:
           const computer = item as Computer
@@ -70,9 +97,8 @@ export default class MyPlayer extends Player {
           whiteboard.openDialog(network)
           break
         case ItemType.VENDINGMACHINE:
-          // hacky and hard-coded, but leaving it as is for now
-          const url = 'https://www.buymeacoffee.com/skyoffice'
-          openURL(url)
+          store.dispatch(setShowChat(true))
+          store.dispatch(setFocused(true))
           break
       }
     }
@@ -80,7 +106,7 @@ export default class MyPlayer extends Player {
     switch (this.playerBehavior) {
       case PlayerBehavior.IDLE:
         // if press E in front of selected chair
-        if (Phaser.Input.Keyboard.JustDown(keyE) && item?.itemType === ItemType.CHAIR) {
+        if (isJustDownE && item?.itemType === ItemType.CHAIR) {
           const chairItem = item as Chair
           /**
            * move player to the chair and play sit animation
@@ -170,12 +196,12 @@ export default class MyPlayer extends Player {
         } else if (vy < 0) {
           this.play(`${this.playerTexture}_run_up`, true)
         } else {
-          const parts = this.anims.currentAnim.key.split('_')
-          parts[1] = 'idle'
-          const newAnim = parts.join('_')
+          const direction =
+            this.anims.currentAnim.key.match(/_(right|up|left|down)$/)?.[1] || 'down'
+          const newAnim = `${this.playerTexture}_idle_${direction}`
           // this prevents idle animation keeps getting called
           if (this.anims.currentAnim.key !== newAnim) {
-            this.play(parts.join('_'), true)
+            this.play(newAnim, true)
             // send new location and anim to server
             network.updatePlayer(this.x, this.y, this.anims.currentAnim.key)
           }
@@ -183,13 +209,24 @@ export default class MyPlayer extends Player {
         break
 
       case PlayerBehavior.SITTING:
-        // back to idle if player press E while sitting
-        if (Phaser.Input.Keyboard.JustDown(keyE)) {
-          const parts = this.anims.currentAnim.key.split('_')
-          parts[1] = 'idle'
-          this.play(parts.join('_'), true)
+        // back to idle if player press E or movement key while sitting
+        const hasMovement =
+          cursors.left?.isDown ||
+          cursors.right?.isDown ||
+          cursors.up?.isDown ||
+          cursors.down?.isDown ||
+          cursors.A?.isDown ||
+          cursors.D?.isDown ||
+          cursors.W?.isDown ||
+          cursors.S?.isDown ||
+          this.joystickMovement?.isMoving
+        if (isJustDownE || hasMovement) {
+          const direction =
+            this.anims.currentAnim.key.match(/_(right|up|left|down)$/)?.[1] || 'down'
+          this.play(`${this.playerTexture}_idle_${direction}`, true)
           this.playerBehavior = PlayerBehavior.IDLE
           this.chairOnSit?.clearDialogBox()
+          this.chairOnSit = undefined
           playerSelector.setPosition(this.x, this.y)
           playerSelector.update(this, cursors)
           network.updatePlayer(this.x, this.y, this.anims.currentAnim.key)

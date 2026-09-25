@@ -21,6 +21,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   playerContainer: Phaser.GameObjects.Container
   private playerDialogBubble: Phaser.GameObjects.Container
   private timeoutID?: number
+  private displayName = ''
+  private houseForBadge = ''
+  private emoteText?: Phaser.GameObjects.Text
 
   constructor(
     scene: Phaser.Scene,
@@ -59,6 +62,48 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     playContainerBody
       .setSize(this.width * collisionScale[0], this.height * collisionScale[1])
       .setOffset(-8, this.height * (1 - collisionScale[1]) + 6)
+  }
+
+  setPlayerDisplayName(name: string) {
+    this.displayName = name
+    this.renderPlayerLabel()
+  }
+
+  setHouseBadge(house: string) {
+    this.houseForBadge = house.toUpperCase()
+    this.renderPlayerLabel()
+  }
+
+  showEmote(emoji: string) {
+    this.emoteText?.destroy()
+    const text = this.scene.add
+      .text(0, -28, emoji, { fontFamily: 'Arial', fontSize: '26px' })
+      .setOrigin(0.5)
+      .setDepth(5001)
+    this.emoteText = text
+    this.playerContainer.add(text)
+    this.scene.tweens.add({
+      targets: text,
+      y: -56,
+      alpha: 0,
+      duration: 900,
+      onComplete: () => {
+        if (this.emoteText === text) this.emoteText = undefined
+        text.destroy()
+      },
+    })
+  }
+
+  private renderPlayerLabel() {
+    const badges: Record<string, string> = {
+      GRYFFINDOR: '🦁',
+      SLYTHERIN: '🐍',
+      RAVENCLAW: '🦅',
+      HUFFLEPUFF: '🦡',
+    }
+    const badge = badges[this.houseForBadge]
+    const alreadyHasBadge = badge && this.displayName.includes(badge)
+    this.playerName.setText(badge && !alreadyHasBadge ? `${badge} ${this.displayName}` : this.displayName)
   }
 
   updateDialogBubble(content: string) {

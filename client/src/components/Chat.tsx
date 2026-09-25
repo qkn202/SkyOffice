@@ -1,31 +1,25 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
-import Box from '@mui/material/Box'
 import Fab from '@mui/material/Fab'
 import Tooltip from '@mui/material/Tooltip'
 import IconButton from '@mui/material/IconButton'
-import InputBase from '@mui/material/InputBase'
-import InsertEmoticonIcon from '@mui/icons-material/InsertEmoticon'
+import CircularProgress from '@mui/material/CircularProgress'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import CloseIcon from '@mui/icons-material/Close'
-import 'emoji-mart/css/emoji-mart.css'
-import { Picker } from 'emoji-mart'
+import RefreshIcon from '@mui/icons-material/Refresh'
 
-import phaserGame from '../PhaserGame'
-import Game from '../scenes/Game'
-
-import { getColorByString } from '../util'
 import { useAppDispatch, useAppSelector } from '../hooks'
-import { MessageType, setFocused, setShowChat } from '../stores/ChatStore'
+import { setFocused, setShowChat } from '../stores/ChatStore'
 
-const Backdrop = styled.div`
+const Backdrop = styled.div<{ $isOpen: boolean }>`
   position: fixed;
   bottom: 60px;
   left: 0;
-  height: 400px;
-  width: 500px;
-  max-height: 50%;
-  max-width: 100%;
+  height: ${(props) => (props.$isOpen ? '480px' : 'auto')};
+  width: ${(props) => (props.$isOpen ? '480px' : 'auto')};
+  max-height: 65vh;
+  max-width: calc(100vw - 32px);
+  z-index: 100;
 `
 
 const Wrapper = styled.div`
@@ -42,258 +36,194 @@ const FabWrapper = styled.div`
 
 const ChatHeader = styled.div`
   position: relative;
-  height: 35px;
-  background: #000000a7;
-  border-radius: 10px 10px 0px 0px;
+  height: 38px;
+  background: #141724;
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px 12px 0px 0px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 0 14px;
+  color: #fff;
 
-  h3 {
-    color: #fff;
-    margin: 7px;
-    font-size: 17px;
-    text-align: center;
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
-  .close {
-    position: absolute;
-    top: 0;
-    right: 0;
+  .title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffd875;
+    letter-spacing: 0.5px;
+  }
+
+  .live-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(42, 19, 64, 0.8);
+    border: 1px solid rgba(255, 216, 117, 0.3);
+    font-size: 10px;
+    font-family: monospace;
+    color: #ffd875;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #34d399;
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 `
 
-const ChatBox = styled(Box)`
-  height: 100%;
+const ChatBox = styled.div`
+  flex: 1;
   width: 100%;
-  overflow: auto;
-  background: #2c2c2c;
-  border: 1px solid #00000029;
-`
+  height: calc(100% - 38px);
+  background: #0f172a;
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-top: none;
+  border-radius: 0px 0px 12px 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 
-const MessageWrapper = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  padding: 0px 2px;
-
-  p {
-    margin: 3px;
-    text-shadow: 0.3px 0.3px black;
-    font-size: 15px;
-    font-weight: bold;
-    line-height: 1.4;
-    overflow-wrap: anywhere;
-  }
-
-  span {
-    color: white;
-    font-weight: normal;
-  }
-
-  .notification {
-    color: grey;
-    font-weight: normal;
-  }
-
-  :hover {
-    background: #3a3a3a;
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #0a0312;
+    display: block;
   }
 `
 
-const InputWrapper = styled.form`
-  box-shadow: 10px 10px 10px #00000018;
-  border: 1px solid #42eacb;
-  border-radius: 0px 0px 10px 10px;
-  display: flex;
-  flex-direction: row;
-  background: linear-gradient(180deg, #000000c1, #242424c0);
-`
-
-const InputTextField = styled(InputBase)`
-  border-radius: 0px 0px 10px 10px;
-  input {
-    padding: 5px;
-  }
-`
-
-const EmojiPickerWrapper = styled.div`
+const LoadingOverlay = styled.div`
   position: absolute;
-  bottom: 54px;
-  right: 16px;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #12061c;
+  color: #ffd875;
+  gap: 12px;
+  z-index: 5;
+  font-size: 13px;
 `
-
-const dateFormatter = new Intl.DateTimeFormat('en', {
-  timeStyle: 'short',
-  dateStyle: 'short',
-})
-
-const Message = ({ chatMessage, messageType }) => {
-  const [tooltipOpen, setTooltipOpen] = useState(false)
-
-  return (
-    <MessageWrapper
-      onMouseEnter={() => {
-        setTooltipOpen(true)
-      }}
-      onMouseLeave={() => {
-        setTooltipOpen(false)
-      }}
-    >
-      <Tooltip
-        open={tooltipOpen}
-        title={dateFormatter.format(chatMessage.createdAt)}
-        placement="right"
-        arrow
-      >
-        {messageType === MessageType.REGULAR_MESSAGE ? (
-          <p
-            style={{
-              color: getColorByString(chatMessage.author),
-            }}
-          >
-            {chatMessage.author}: <span>{chatMessage.content}</span>
-          </p>
-        ) : (
-          <p className="notification">
-            {chatMessage.author} {chatMessage.content}
-          </p>
-        )}
-      </Tooltip>
-    </MessageWrapper>
-  )
-}
 
 export default function Chat() {
-  const [inputValue, setInputValue] = useState('')
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const [readyToSubmit, setReadyToSubmit] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const chatMessages = useAppSelector((state) => state.chat.chatMessages)
-  const focused = useAppSelector((state) => state.chat.focused)
+  const [isLoading, setIsLoading] = useState(true)
+  const [iframeKey, setIframeKey] = useState(0)
   const showChat = useAppSelector((state) => state.chat.showChat)
   const dispatch = useAppDispatch()
-  const game = phaserGame.scene.keys.game as Game
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(event.target.value)
+  const handleClose = () => {
+    dispatch(setShowChat(false))
+    dispatch(setFocused(false))
   }
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Escape') {
-      // move focus back to the game
-      inputRef.current?.blur()
-      dispatch(setShowChat(false))
-    }
+  const handleOpen = () => {
+    dispatch(setShowChat(true))
+    dispatch(setFocused(true))
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    // this is added because without this, 2 things happen at the same
-    // time when Enter is pressed, (1) the inputRef gets focus (from
-    // useEffect) and (2) the form gets submitted (right after the input
-    // gets focused)
-    if (!readyToSubmit) {
-      setReadyToSubmit(true)
-      return
-    }
-    // move focus back to the game
-    inputRef.current?.blur()
-
-    const val = inputValue.trim()
-    setInputValue('')
-    if (val) {
-      game.network.addChatMessage(val)
-      game.myPlayer.updateDialogBubble(val)
-    }
+  const handleReload = () => {
+    setIsLoading(true)
+    setIframeKey((prev) => prev + 1)
   }
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
+  // Handle ESC key globally
   useEffect(() => {
-    if (focused) {
-      inputRef.current?.focus()
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showChat) {
+        handleClose()
+      }
     }
-  }, [focused])
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showChat])
 
+  // Sync key lock when showChat changes
   useEffect(() => {
-    scrollToBottom()
-  }, [chatMessages, showChat])
+    if (showChat) {
+      dispatch(setFocused(true))
+    }
+  }, [showChat, dispatch])
 
   return (
-    <Backdrop>
+    <Backdrop $isOpen={showChat}>
       <Wrapper>
         {showChat ? (
           <>
             <ChatHeader>
-              <h3>Chat</h3>
-              <IconButton
-                aria-label="close dialog"
-                className="close"
-                onClick={() => dispatch(setShowChat(false))}
-                size="small"
-              >
-                <CloseIcon />
-              </IconButton>
+              <div className="title-group">
+                <span className="title">Mạng Floo · Chat HPVN</span>
+                <span className="live-tag">
+                  <span className="live-dot" />
+                  Live
+                </span>
+              </div>
+              <div className="actions">
+                <Tooltip title="Tải lại Mạng Floo">
+                  <IconButton
+                    aria-label="reload chat"
+                    onClick={handleReload}
+                    size="small"
+                    sx={{ color: '#ffd875', padding: '4px', '&:hover': { color: '#fff' } }}
+                  >
+                    <RefreshIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Đóng chat (ESC)">
+                  <IconButton
+                    aria-label="close chat"
+                    onClick={handleClose}
+                    size="small"
+                    sx={{ color: '#ffd875', padding: '4px', '&:hover': { color: '#fff' } }}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </div>
             </ChatHeader>
             <ChatBox>
-              {chatMessages.map(({ messageType, chatMessage }, index) => (
-                <Message chatMessage={chatMessage} messageType={messageType} key={index} />
-              ))}
-              <div ref={messagesEndRef} />
-              {showEmojiPicker && (
-                <EmojiPickerWrapper>
-                  <Picker
-                    theme="dark"
-                    showSkinTones={false}
-                    showPreview={false}
-                    onSelect={(emoji) => {
-                      setInputValue(inputValue + emoji.native)
-                      setShowEmojiPicker(!showEmojiPicker)
-                      dispatch(setFocused(true))
-                    }}
-                    exclude={['recent', 'flags']}
-                  />
-                </EmojiPickerWrapper>
+              {isLoading && (
+                <LoadingOverlay>
+                  <CircularProgress size={28} sx={{ color: '#ffd875' }} />
+                  <span>Đang kết nối Mạng Floo...</span>
+                </LoadingOverlay>
               )}
-            </ChatBox>
-            <InputWrapper onSubmit={handleSubmit}>
-              <InputTextField
-                inputRef={inputRef}
-                autoFocus={focused}
-                fullWidth
-                placeholder="Press Enter to chat"
-                value={inputValue}
-                onKeyDown={handleKeyDown}
-                onChange={handleChange}
-                onFocus={() => {
-                  if (!focused) {
-                    dispatch(setFocused(true))
-                    setReadyToSubmit(true)
-                  }
-                }}
-                onBlur={() => {
-                  dispatch(setFocused(false))
-                  setReadyToSubmit(false)
-                }}
+              <iframe
+                key={iframeKey}
+                src="/api/floo-embed"
+                title="Mạng Floo HPVN Shoutbox"
+                allow="clipboard-write; autoplay; fullscreen"
+                onLoad={() => setIsLoading(false)}
               />
-              <IconButton aria-label="emoji" onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
-                <InsertEmoticonIcon />
-              </IconButton>
-            </InputWrapper>
+            </ChatBox>
           </>
         ) : (
           <FabWrapper>
-            <Fab
-              color="secondary"
-              aria-label="showChat"
-              onClick={() => {
-                dispatch(setShowChat(true))
-                dispatch(setFocused(true))
-              }}
-            >
-              <ChatBubbleOutlineIcon />
-            </Fab>
+            <Tooltip title="Mở Chat Mạng Floo (Nhấn Enter)">
+              <Fab
+                color="secondary"
+                aria-label="showChat"
+                onClick={handleOpen}
+              >
+                <ChatBubbleOutlineIcon />
+              </Fab>
+            </Tooltip>
           </FabWrapper>
         )}
       </Wrapper>

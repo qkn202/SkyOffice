@@ -122,7 +122,7 @@ export const CustomRoomTable = () => {
   }
 
   return availableRooms.length === 0 ? (
-    <MessageText>There are no custom rooms now, create one or join the public lobby.</MessageText>
+    <MessageText>Chưa có phòng riêng nào. Hãy tạo phòng hoặc vào Đại Sảnh công khai.</MessageText>
   ) : (
     <>
       <CustomRoomTableContainer component={Paper}>
@@ -130,9 +130,9 @@ export const CustomRoomTable = () => {
           <TableHead>
             <TableRow>
               <TableCell></TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>ID</TableCell>
+          <TableCell>Tên phòng</TableCell>
+          <TableCell>Mô tả</TableCell>
+          <TableCell>Mã phòng</TableCell>
               <TableCell align="center">
                 <PeopleAltIcon />
               </TableCell>

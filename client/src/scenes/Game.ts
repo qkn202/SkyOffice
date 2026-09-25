@@ -42,7 +42,7 @@ export default class Game extends Phaser.Scene {
   private whiteboardMap = new Map<string, Whiteboard>()
   private lightingEffects!: HogwartsLightingEffects
   private sortingHatNear = false
-  private readonly sortingHatPosition = { x: 1692, y: 1326 }
+  private readonly sortingHatPosition = { x: 1822, y: 1392 }
   private wandSpellSystem?: WandSpellSystem
   public roomManager!: HogwartsRoomManager
 
@@ -68,7 +68,12 @@ export default class Game extends Phaser.Scene {
       store.dispatch(setShowChat(false))
     })
     this.input.keyboard.on('keydown-T', () => {
-      if (this.sortingHatNear && !store.getState().user.assignedHouse) {
+      if (this.sortingHatNear && !store.getState().chat.focused) {
+        store.dispatch(openSortingCeremony())
+      }
+    })
+    this.input.keyboard.on('keydown-E', () => {
+      if (this.sortingHatNear && !store.getState().chat.focused && !this.playerSelector.selectedItem) {
         store.dispatch(openSortingCeremony())
       }
     })
@@ -371,7 +376,6 @@ export default class Game extends Phaser.Scene {
       this.playerSelector.update(this.myPlayer, this.cursors)
       if (
         nearSortingHat &&
-        !store.getState().user.assignedHouse &&
         this.playerSelector.selectedItem?.itemType === ItemType.CHAIR
       ) {
         this.playerSelector.selectedItem.clearDialogBox()
@@ -385,7 +389,7 @@ export default class Game extends Phaser.Scene {
 
   private setupSortingHat() {
     const { x, y } = this.sortingHatPosition
-    const hat = this.add.graphics().setPosition(x, y).setDepth(601)
+    const hat = this.add.graphics().setPosition(x, y).setDepth(y + 20)
     hat.fillStyle(0x5a3a20, 1)
     hat.beginPath()
     hat.moveTo(-19, -3)
@@ -401,11 +405,22 @@ export default class Game extends Phaser.Scene {
     hat.lineStyle(2, 0x2e2017, 0.9)
     hat.strokeEllipse(0, -4, 47, 10)
 
-    const stool = this.add.graphics().setPosition(x, y + 10).setDepth(590)
+    const stool = this.add.graphics().setPosition(x, y + 10).setDepth(y + 15)
     stool.fillStyle(0x65451f, 1)
     stool.fillRoundedRect(-17, 0, 34, 8, 2)
     stool.fillRect(-13, 7, 4, 16)
     stool.fillRect(9, 7, 4, 16)
+
+    // Tương tác trực tiếp bằng click chuột hoặc chạm màn hình vào nón
+    const hitZone = this.add
+      .zone(x, y + 10, 60, 60)
+      .setOrigin(0.5, 0.5)
+      .setDepth(y + 25)
+      .setInteractive({ useHandCursor: true })
+    hitZone.on('pointerdown', () => {
+      store.dispatch(openSortingCeremony())
+    })
+
     const hatText = this.add
       .text(x, y + 31, 'Chiếc Nón Phân Loại', {
         fontFamily: 'Georgia, serif',
@@ -415,7 +430,13 @@ export default class Game extends Phaser.Scene {
         strokeThickness: 3,
       })
       .setOrigin(0.5, 0)
-    this.greatHallEntities.push(hat, stool, hatText)
+      .setDepth(y + 25)
+      .setInteractive({ useHandCursor: true })
+    hatText.on('pointerdown', () => {
+      store.dispatch(openSortingCeremony())
+    })
+
+    this.greatHallEntities.push(hat, stool, hitZone, hatText)
   }
 }
 

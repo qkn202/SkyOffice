@@ -206,20 +206,37 @@ export default function SortingCeremony() {
   }, [profileHouse, loggedIn, game, dispatch])
 
   useEffect(() => {
-    const open = loggedIn && ceremonyOpen && !dismissed && !profileHouse
+    const open = loggedIn && ceremonyOpen
     if (!open || !game) return
     game.disableKeys()
     return () => game.enableKeys()
-  }, [loggedIn, ceremonyOpen, dismissed, profileHouse, game])
+  }, [loggedIn, ceremonyOpen, game])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && ceremonyOpen) {
+        dispatch(closeSortingCeremony())
+        setQuestionIndex(-1)
+        setRevealedHouse('')
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [ceremonyOpen, dispatch])
 
   if (!loggedIn) return null
-  if (dismissed) {
-    if (!activeHouse) return null
-    const badge = getHouseBadge(activeHouse)
-    return <HousePill $color={badge.color}>{badge.badge} Nhà {badge.name}</HousePill>
+
+  const start = () => {
+    setQuestionIndex(0)
+    setScores({
+      GRYFFINDOR: 0,
+      SLYTHERIN: 0,
+      RAVENCLAW: 0,
+      HUFFLEPUFF: 0,
+    })
+    setRevealedHouse('')
   }
 
-  const start = () => setQuestionIndex(0)
   const choose = (house: House) => {
     const nextScores = { ...scores, [house]: scores[house] + 1 }
     setScores(nextScores)
@@ -238,75 +255,117 @@ export default function SortingCeremony() {
     dispatch(setAssignedHouse(winner))
     game?.myPlayer?.setHouse(winner, game.network)
     setRevealedHouse(winner)
+    setQuestionIndex(-1)
   }
 
-  if (revealedHouse) {
-    const result = getHouseBadge(revealedHouse)
-    return (
-      <Backdrop>
-        <Card $color={result.color}>
-          <Hat>{result.badge}</Hat>
-          <h1>Nhà {result.name}!</h1>
-          <p>
-            Chiếc Nón đã quyết định. Áo choàng của bạn đổi màu theo Nhà {result.name}; hãy bước
-            xuống Đại Sảnh và bắt đầu hành trình.
-          </p>
-          <Primary
-            $color={result.color}
-            onClick={() => {
-              dispatch(closeSortingCeremony())
-              setDismissed(true)
-            }}
-          >
-            Bước vào Đại Sảnh
-          </Primary>
-        </Card>
-      </Backdrop>
-    )
-  }
-
-  if (activeHouse) {
-    const badge = getHouseBadge(activeHouse)
-    return <HousePill $color={badge.color}>{badge.badge} Nhà {badge.name}</HousePill>
-  }
-
-  if (!ceremonyOpen) {
-    if (!nearHat) return null
-    return (
-      <Prompt onClick={() => dispatch(openSortingCeremony())}>
-        🎩 Đến gần và nhấn T hoặc chạm để đội Chiếc Nón Phân Loại
-      </Prompt>
-    )
+  const handleClose = () => {
+    dispatch(closeSortingCeremony())
+    setQuestionIndex(-1)
+    setRevealedHouse('')
   }
 
   return (
-    <Backdrop>
-      <Card>
-        <Hat>🎩</Hat>
-        {questionIndex < 0 ? (
-          <>
-            <h1>Chiếc Nón Phân Loại</h1>
-            <p>
-              Đại Sảnh lặng đi. Chiếc Nón đã sẵn sàng lắng nghe con người bạn — hãy trả lời theo
-              điều bạn thật sự coi trọng.
-            </p>
-            <Primary onClick={start}>Đội Nón Lên</Primary>
-          </>
-        ) : (
-          <>
-            <h1>Chiếc Nón đang suy ngẫm…</h1>
-            <Progress><span style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></Progress>
-            <p>{questions[questionIndex].prompt}</p>
-            <Answers>
-              {questions[questionIndex].choices.map((choice) => (
-                <Answer key={choice.house} onClick={() => choose(choice.house)}>
-                  {choice.text}
-                </Answer>
-              ))}
-            </Answers>
-          </>
-        )}
-      </Card>
-    </Backdrop>
+    <>
+      {activeHouse && (
+        <HousePill $color={getHouseBadge(activeHouse).color}>
+          {getHouseBadge(activeHouse).badge} Nhà {getHouseBadge(activeHouse).name}
+        </HousePill>
+      )}
+
+      {!ceremonyOpen && nearHat && (
+        <Prompt onClick={() => dispatch(openSortingCeremony())}>
+          🎩 {activeHouse ? 'Nhấn E hoặc T (hoặc chạm) để trò chuyện với Chiếc Nón' : 'Đến gần và nhấn E hoặc T (hoặc chạm) để đội Chiếc Nón Phân Loại'}
+        </Prompt>
+      )}
+
+      {ceremonyOpen && (
+        <Backdrop onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}>
+          {revealedHouse ? (
+            <Card $color={getHouseBadge(revealedHouse).color}>
+              <Hat>{getHouseBadge(revealedHouse).badge}</Hat>
+              <h1>Nhà {getHouseBadge(revealedHouse).name}!</h1>
+              <p>
+                Chiếc Nón đã quyết định! Áo choàng của bạn đã đổi sang màu của Nhà{' '}
+                <strong>{getHouseBadge(revealedHouse).name}</strong>. Hãy bước xuống Đại Sảnh và bắt
+                đầu hành trình ma thuật!
+              </p>
+              <Primary $color={getHouseBadge(revealedHouse).color} onClick={handleClose}>
+                Bước vào Đại Sảnh
+              </Primary>
+            </Card>
+          ) : questionIndex < 0 ? (
+            <Card $color={activeHouse ? getHouseBadge(activeHouse).color : undefined}>
+              <Hat>{activeHouse ? getHouseBadge(activeHouse).badge : '🎩'}</Hat>
+              <h1>Chiếc Nón Phân Loại</h1>
+              {activeHouse ? (
+                <>
+                  <p>
+                    "Chào mừng trở lại! Ta nhận ra phong thái của một học viên{' '}
+                    <strong style={{ color: getHouseBadge(activeHouse).color }}>
+                      Nhà {getHouseBadge(activeHouse).name}
+                    </strong>
+                    . Con có muốn ta lắng nghe lại tâm hồn và tiến hành phân loại lại không?"
+                  </p>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 12,
+                      justifyContent: 'center',
+                      flexWrap: 'wrap',
+                      marginTop: 18,
+                    }}
+                  >
+                    <Primary onClick={start}>Phân Loại Lại</Primary>
+                    <button
+                      style={{
+                        border: '1px solid #ffffff44',
+                        borderRadius: 999,
+                        padding: '12px 22px',
+                        background: 'rgba(255,255,255,0.08)',
+                        color: '#f4efe5',
+                        font: 'inherit',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                      onClick={handleClose}
+                    >
+                      Giữ Nguyên Nhà Cũ
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p>
+                    Đại Sảnh lặng đi. Chiếc Nón đã sẵn sàng lắng nghe con người bạn — hãy trả lời theo
+                    điều bạn thật sự coi trọng.
+                  </p>
+                  <Primary onClick={start}>Đội Nón Lên</Primary>
+                </>
+              )}
+            </Card>
+          ) : (
+            <Card>
+              <Hat>🎩</Hat>
+              <h1>Chiếc Nón đang suy ngẫm…</h1>
+              <Progress>
+                <span
+                  style={{
+                    width: `${((questionIndex + 1) / questions.length) * 100}%`,
+                  }}
+                />
+              </Progress>
+              <p>{questions[questionIndex].prompt}</p>
+              <Answers>
+                {questions[questionIndex].choices.map((choice) => (
+                  <Answer key={choice.house} onClick={() => choose(choice.house)}>
+                    {choice.text}
+                  </Answer>
+                ))}
+              </Answers>
+            </Card>
+          )}
+        </Backdrop>
+      )}
+    </>
   )
 }

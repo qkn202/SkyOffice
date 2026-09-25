@@ -91,7 +91,7 @@ export class HogwartsRoomManager {
 
     // 2. Lò sưởi Tháp Gryffindor (Ánh lửa ấm áp)
     const gryLight = this.scene.add
-      .image(800, 410, 'light_halo_warm')
+      .image(1200, 590, 'light_halo_warm')
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(3501)
       .setScale(2.2, 1.8)
@@ -100,7 +100,7 @@ export class HogwartsRoomManager {
 
     // 3. Lò sưởi Hầm Slytherin (Ánh sáng xanh ngọc lục bảo)
     const slyLight = this.scene.add
-      .image(800, 1950, 'light_halo_floo')
+      .image(1200, 1790, 'light_halo_floo')
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(3501)
       .setScale(2.2, 1.8)
@@ -109,7 +109,7 @@ export class HogwartsRoomManager {
 
     // 4. Đèn vòm Tháp Ravenclaw (Ánh sáng xanh thiên văn)
     const ravLight = this.scene.add
-      .image(3080, 410, 'light_halo_warm')
+      .image(2680, 590, 'light_halo_warm')
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(3501)
       .setScale(2.2, 1.8)
@@ -118,7 +118,7 @@ export class HogwartsRoomManager {
 
     // 5. Đèn vòm Tầng Hầm Hufflepuff (Ánh sáng vàng mật ong)
     const hufLight = this.scene.add
-      .image(3080, 1950, 'light_halo_warm')
+      .image(2680, 1790, 'light_halo_warm')
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(3501)
       .setScale(2.2, 1.8)

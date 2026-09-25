@@ -12,17 +12,17 @@ export const HOGWARTS_WORLD_WIDTH = 3600
 export const HOGWARTS_WORLD_HEIGHT = 2400
 
 export const GH_OFFSET = { x: 1112, y: 816 }
-export const GRY_OFFSET = { x: 140, y: 140 }
-export const SLY_OFFSET = { x: 140, y: 1680 }
-export const RAV_OFFSET = { x: 2420, y: 140 }
-export const HUF_OFFSET = { x: 2420, y: 1680 }
+export const GRY_OFFSET = { x: 540, y: 320 }
+export const SLY_OFFSET = { x: 540, y: 1520 }
+export const RAV_OFFSET = { x: 2020, y: 320 }
+export const HUF_OFFSET = { x: 2020, y: 1520 }
 
 export const ROOM_SPAWNS: Record<HogwartsRoomId, { x: number; y: number }> = {
   great_hall: { x: 1800, y: 1450 },
-  gryffindor: { x: 650, y: 550 },
-  slytherin: { x: 650, y: 2090 },
-  ravenclaw: { x: 2930, y: 550 },
-  hufflepuff: { x: 2930, y: 2090 },
+  gryffindor: { x: 1050, y: 730 },
+  slytherin: { x: 1050, y: 1930 },
+  ravenclaw: { x: 2530, y: 730 },
+  hufflepuff: { x: 2530, y: 1930 },
 }
 
 export const ROOM_METADATA: Record<
@@ -37,10 +37,10 @@ export const ROOM_METADATA: Record<
 }
 
 export function getRoomAtPosition(x: number, y: number): HogwartsRoomId {
-  if (x < 1350) {
+  if (x < 1450) {
     return y < 1100 ? 'gryffindor' : 'slytherin'
   }
-  if (x > 2250) {
+  if (x > 2150) {
     return y < 1100 ? 'ravenclaw' : 'hufflepuff'
   }
   return 'great_hall'
@@ -78,17 +78,17 @@ export function setupWorldColliders(m: HogwartsRoomManager) {
   m.addStaticZoneCollider(gx + 690, gy + 560, 180, 14) // Gryffindor
   m.addStaticZoneCollider(gx + 820, gy + 625, 180, 14) // Slytherin
 
-  // 3. Gryffindor Hearth & Walls (Top-Left Wing: 140, 140)
-  m.addStaticZoneCollider(800, 410, 140, 100)
+  // 3. Gryffindor Hearth & Walls (Top-Left Wing: 540, 320)
+  m.addStaticZoneCollider(1200, 590, 140, 100)
 
-  // 4. Slytherin Serpent Hearth & Walls (Bottom-Left Wing: 140, 1680)
-  m.addStaticZoneCollider(800, 1950, 140, 100)
+  // 4. Slytherin Serpent Hearth & Walls (Bottom-Left Wing: 540, 1520)
+  m.addStaticZoneCollider(1200, 1790, 140, 100)
 
-  // 5. Ravenclaw Statue & Walls (Top-Right Wing: 2420, 140)
-  m.addStaticZoneCollider(3080, 410, 140, 100)
+  // 5. Ravenclaw Statue & Walls (Top-Right Wing: 2020, 320)
+  m.addStaticZoneCollider(2680, 590, 140, 100)
 
-  // 6. Hufflepuff Barrel Hearth & Walls (Bottom-Right Wing: 2420, 1680)
-  m.addStaticZoneCollider(3080, 1950, 140, 100)
+  // 6. Hufflepuff Barrel Hearth & Walls (Bottom-Right Wing: 2020, 1520)
+  m.addStaticZoneCollider(2680, 1790, 140, 100)
 }
 
 export function setupWorldChairs(m: HogwartsRoomManager) {
@@ -132,18 +132,18 @@ export function setupWorldChairs(m: HogwartsRoomManager) {
   ghChairs.forEach((p) => m.addInteractiveChair(p.x, p.y, p.dir, p.depth))
 
   // Gryffindor Armchairs
-  m.addInteractiveChair(830, 600, 'left', 600)
-  m.addInteractiveChair(920, 640, 'up', 640)
+  m.addInteractiveChair(1230, 780, 'left', 780)
+  m.addInteractiveChair(1320, 820, 'up', 820)
 
   // Slytherin Leather Chairs
-  m.addInteractiveChair(830, 2140, 'left', 2140)
-  m.addInteractiveChair(920, 2180, 'up', 2180)
+  m.addInteractiveChair(1230, 1980, 'left', 1980)
+  m.addInteractiveChair(1320, 2020, 'up', 2020)
 
   // Ravenclaw Library Chairs
-  m.addInteractiveChair(2750, 600, 'right', 600)
-  m.addInteractiveChair(2660, 640, 'up', 640)
+  m.addInteractiveChair(2350, 780, 'right', 780)
+  m.addInteractiveChair(2260, 820, 'up', 820)
 
   // Hufflepuff Hearth Chairs
-  m.addInteractiveChair(2750, 2140, 'right', 2140)
-  m.addInteractiveChair(2660, 2180, 'up', 2180)
+  m.addInteractiveChair(2350, 1980, 'right', 1980)
+  m.addInteractiveChair(2260, 2020, 'up', 2020)
 }

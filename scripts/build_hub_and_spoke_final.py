@@ -1,9 +1,10 @@
 """
-Build Hub & Spoke Hogwarts Castle World Map (3600 x 2400 px)
-- Floor & architecture: 100% unified with Great Hall & 4 House Common Rooms (sampled directly from castle stone).
-- Removed all corridor candles/torches per user request.
-- Clean medieval gothic stone balustrades, carved stone pillars & finials.
-- Fully connected: corridors penetrate deeply into each room, zero black voids.
+Build Hub & Spoke Hogwarts Castle World Map (3600 x 2400 px) - Compact & Unified
+- Floor: Authentic medieval flagstone stone slabs (clean, zero table/bench artifacts).
+- Distances between 4 Houses and Great Hall narrowed down by ~50% for fast navigation.
+- Removed all candles/torches per user request.
+- Clean gothic stone balustrades with carved limestone finials.
+- Corridors penetrate deeply into each room, zero gaps, zero black cuts.
 """
 
 import os
@@ -25,11 +26,12 @@ SCALE = 0.75
 RW_SUB = int(1376 * SCALE)  # 1032
 RH_SUB = int(768 * SCALE)   # 576
 
-# 4 House Wings (Spokes)
-gry_x, gry_y = 140, 140
-sly_x, sly_y = 140, 1680
-rav_x, rav_y = 2420, 140
-huf_x, huf_y = 2420, 1680
+# 4 House Wings (Brought significantly closer to Great Hall)
+# Shifted towards center: delta_x = 400px, delta_y = 180px
+gry_x, gry_y = 540, 320
+sly_x, sly_y = 540, 1520
+rav_x, rav_y = 2020, 320
+huf_x, huf_y = 2020, 1520
 
 def get_clean_room(img, is_white=False):
     """Generates an accurate RGBA image with transparent background (no black/white boxes)."""
@@ -49,8 +51,33 @@ def get_clean_room(img, is_white=False):
     rgba.putalpha(mask_im)
     return rgba
 
+def generate_clean_flagstone_tile():
+    """Generates an authentic medieval castle stone flagstone tile (64x64) with zero artifacts."""
+    tile = Image.new('RGBA', (64, 64), (48, 36, 30, 255))
+    draw = ImageDraw.Draw(tile)
+    
+    # 4 distinct interlocking rectangular castle flagstones matching Great Hall floor palette
+    stones = [
+        (1, 1, 30, 29, (108, 82, 70)),
+        (33, 1, 62, 31, (98, 74, 62)),
+        (1, 32, 31, 62, (114, 86, 74)),
+        (34, 34, 62, 62, (104, 78, 66)),
+    ]
+    for x0, y0, x1, y1, col in stones:
+        draw.rectangle([x0, y0, x1, y1], fill=(*col, 255))
+        # Bevel highlight (top & left)
+        hl = (min(255, col[0] + 24), min(255, col[1] + 24), min(255, col[2] + 24), 255)
+        draw.line([x0, y0, x1, y0], fill=hl)
+        draw.line([x0, y0, x0, y1], fill=hl)
+        # Bevel shadow (bottom & right)
+        sh = (max(0, col[0] - 24), max(0, col[1] - 24), max(0, col[2] - 24), 255)
+        draw.line([x0, y1, x1, y1], fill=sh)
+        draw.line([x1, y0, x1, y1], fill=sh)
+        
+    return tile
+
 def build_map():
-    print(f"Building Unified Hogwarts Castle Map ({CW} x {CH} px)...")
+    print(f"Building Compact & Unified Hogwarts Castle Map ({CW} x {CH} px)...")
 
     # 1. Base Canvas with Starry Night Sky
     bg_night_path = os.path.join(BASE_DIR, 'client/public/assets/background/backdrop_night.png')
@@ -67,10 +94,8 @@ def build_map():
         alpha = int(min(255, (y - 700) / 600 * 240 + 15))
         draw.rectangle([0, y, CW, y + 1], fill=(12, 10, 18, alpha))
 
-    # 2. Sample Authentic Stone Floor Directly from Great Hall
-    gh_raw = Image.open(os.path.join(BASE_DIR, 'client/public/assets/map/great_hall_25d.png')).convert('RGBA')
-    # 64x64 clean stone flagstone tile from Great Hall floor
-    gh_tile = gh_raw.crop((540, 580, 604, 644)).convert('RGBA')
+    # 2. Pure Clean Castle Stone Flagstone Tile (Zero tables/benches/cloth)
+    gh_tile = generate_clean_flagstone_tile()
 
     # Load TrueType font for Vietnamese support
     font_path = '/System/Library/Fonts/Supplemental/Arial.ttf'
@@ -79,7 +104,7 @@ def build_map():
     font_banner = ImageFont.truetype(font_path, 16)
 
     # 3. Draw Grand Castle Corridors (Stone balustrades, NO CANDLES, authentic castle stone floor)
-    def draw_grand_corridor(p1, p2, width=200, carpet_color=(120, 20, 30), border_color=(210, 160, 40)):
+    def draw_grand_corridor(p1, p2, width=190, carpet_color=(120, 20, 30), border_color=(210, 160, 40)):
         x1, y1 = p1
         x2, y2 = p2
         dx = x2 - x1
@@ -101,11 +126,11 @@ def build_map():
         ]
         
         # 1. Bridge Drop Shadow (deep soft shadow underneath)
-        shadow_offset_y = 65
+        shadow_offset_y = 55
         shadow_pts = [(p[0], p[1] + shadow_offset_y) for p in poly_pts]
         draw.polygon(shadow_pts, fill=(8, 6, 12, 210))
         
-        # 2. Stone Walkway Mask & Textured Flagstone Fill (Identical to Great Hall floor)
+        # 2. Stone Walkway Mask & Textured Flagstone Fill (Identical to Great Hall stone palette)
         corridor_mask = Image.new('L', (CW, CH), 0)
         mask_draw = ImageDraw.Draw(corridor_mask)
         mask_draw.polygon(poly_pts, fill=255)
@@ -130,24 +155,24 @@ def build_map():
             curb_x2 = int(x2 + side * w_curb * nx)
             curb_y2 = int(y2 + side * w_curb * ny)
             
-            # Thick gothic carved limestone rail (matching castle wall stone palette)
+            # Thick gothic carved limestone rail
             draw.line([(curb_x1, curb_y1), (curb_x2, curb_y2)], fill=(42, 34, 28, 255), width=18)
             draw.line([(curb_x1, curb_y1), (curb_x2, curb_y2)], fill=(85, 72, 62, 255), width=10)
             draw.line([(curb_x1, curb_y1 - 2), (curb_x2, curb_y2 - 2)], fill=(128, 112, 100, 255), width=3)
             
-            # Carved stone pillars & baluster caps along the parapet (NO CANDLES/TORCHES)
-            p_steps = max(2, int(dist / 95))
+            # Carved stone pillars & baluster caps along the parapet (NO CANDLES)
+            p_steps = max(2, int(dist / 85))
             for p_s in range(1, p_steps):
                 t = p_s / p_steps
                 px = int(x1 + dx * t + side * w_curb * nx)
                 py = int(y1 + dy * t + side * w_curb * ny)
                 
                 # Stone pillar shaft
-                draw.rounded_rectangle([px - 8, py - 28, px + 8, py + 18], radius=3,
+                draw.rounded_rectangle([px - 8, py - 26, px + 8, py + 16], radius=3,
                                        fill=(75, 64, 55, 255), outline=(38, 30, 24, 255), width=2)
-                # Carved stone top finial cap
-                draw.rectangle([px - 10, py - 32, px + 10, py - 26], fill=(120, 105, 94, 255), outline=(42, 34, 28, 255))
-                draw.ellipse([px - 5, py - 38, px + 5, py - 30], fill=(140, 125, 112, 255), outline=(42, 34, 28, 255))
+                # Carved stone finial cap
+                draw.rectangle([px - 10, py - 30, px + 10, py - 24], fill=(120, 105, 94, 255), outline=(42, 34, 28, 255))
+                draw.ellipse([px - 5, py - 36, px + 5, py - 28], fill=(140, 125, 112, 255), outline=(42, 34, 28, 255))
 
         # C. Velvet Carpet Runner down the corridor center (width = 68px)
         c_half = 34
@@ -166,7 +191,7 @@ def build_map():
         draw.line([carpet_pts[3], carpet_pts[2]], fill=(*border_color, 255), width=4)
         
         # Cross-stripes for rich textile depth
-        stripe_steps = max(2, int(dist / 36))
+        stripe_steps = max(2, int(dist / 32))
         for s in range(1, stripe_steps):
             t = s / stripe_steps
             sx = int(x1 + dx * t)
@@ -179,31 +204,32 @@ def build_map():
             draw.line([(sx1, sy1), (sx2, sy2)], fill=dark_stripe, width=3)
 
     # 4. Draw the 4 Corridors FIRST (Connecting deeply into room floor coordinates)
-    # Spoke 1: Great Hall (1350, 1120) -> Gryffindor Tower (780, 560)
+    # Spoke 1: Great Hall (1350, 1120) -> Gryffindor Tower (1120, 720)
     draw_grand_corridor(
-        (1350, 1120), (780, 560),
-        width=200, carpet_color=(135, 18, 28), border_color=(220, 175, 45)
+        (1350, 1120), (1120, 720),
+        width=190, carpet_color=(135, 18, 28), border_color=(220, 175, 45)
     )
 
-    # Spoke 2: Great Hall (1700, 1450) -> Slytherin Dungeon (750, 1920)
+    # Spoke 2: Great Hall (1700, 1450) -> Slytherin Dungeon (1120, 1690)
     draw_grand_corridor(
-        (1700, 1450), (750, 1920),
-        width=200, carpet_color=(15, 68, 38), border_color=(195, 200, 205)
+        (1700, 1450), (1120, 1690),
+        width=190, carpet_color=(15, 68, 38), border_color=(195, 200, 205)
     )
 
-    # Spoke 3: Great Hall (2250, 1120) -> Ravenclaw Tower (2820, 560)
+    # Spoke 3: Great Hall (2250, 1120) -> Ravenclaw Tower (2280, 720)
     draw_grand_corridor(
-        (2250, 1120), (2820, 560),
-        width=200, carpet_color=(18, 42, 88), border_color=(210, 140, 50)
+        (2250, 1120), (2280, 720),
+        width=190, carpet_color=(18, 42, 88), border_color=(210, 140, 50)
     )
 
-    # Spoke 4: Great Hall (1950, 1450) -> Hufflepuff Basement (2850, 1920)
+    # Spoke 4: Great Hall (1950, 1450) -> Hufflepuff Basement (2280, 1690)
     draw_grand_corridor(
-        (1950, 1450), (2850, 1920),
-        width=200, carpet_color=(195, 145, 18), border_color=(52, 40, 30)
+        (1950, 1450), (2280, 1690),
+        width=190, carpet_color=(195, 145, 18), border_color=(52, 40, 30)
     )
 
     # 5. Load and Process the 5 Rooms with Genuine Alpha Masks
+    gh_raw = Image.open(os.path.join(BASE_DIR, 'client/public/assets/map/great_hall_25d.png')).convert('RGBA')
     gry_raw = Image.open(os.path.join(MAP_V2_DIR, 'gryffindor_common_room_25d.png')).convert('RGBA')
     sly_raw = Image.open(os.path.join(MAP_V2_DIR, 'slytherin_common_room_25d.png')).convert('RGBA')
     rav_raw = Image.open(os.path.join(MAP_V2_DIR, 'ravenclaw_common_room_25d.png')).convert('RGBA')
@@ -226,10 +252,10 @@ def build_map():
 
     # 8. Grand Gothic Portal Archways at Corridor Entrances (NO CANDLES)
     portals = [
-        (1330, 1140, '🦁 THÁP GRYFFINDOR', (135, 18, 28), (220, 175, 45)),
-        (1680, 1460, '🐍 HẦM SLYTHERIN', (15, 68, 38), (195, 200, 205)),
-        (2270, 1140, '🦅 THÁP RAVENCLAW', (18, 42, 88), (210, 140, 50)),
-        (1970, 1460, '🦡 TẦNG HẦM HUFFLEPUFF', (195, 145, 18), (52, 40, 30)),
+        (1250, 940, '🦁 THÁP GRYFFINDOR', (135, 18, 28), (220, 175, 45)),
+        (1450, 1550, '🐍 HẦM SLYTHERIN', (15, 68, 38), (195, 200, 205)),
+        (2260, 940, '🦅 THÁP RAVENCLAW', (18, 42, 88), (210, 140, 50)),
+        (2100, 1550, '🦡 TẦNG HẦM HUFFLEPUFF', (195, 145, 18), (52, 40, 30)),
     ]
 
     for px, py, text, bg_col, border_col in portals:
@@ -256,15 +282,15 @@ def build_map():
 
     # 9. Save Output Map & Previews
     world.convert('RGB').save(OUTPUT_PATH, format='PNG', optimize=True)
-    print(f"Unified Hogwarts Map saved successfully at {OUTPUT_PATH}!")
+    print(f"Compact Hogwarts Map saved successfully at {OUTPUT_PATH}!")
     print(f"File size: {os.path.getsize(OUTPUT_PATH) / (1024 * 1024):.2f} MB")
 
     preview = world.resize((900, 600), Image.Resampling.LANCZOS)
     preview.convert('RGB').save(PREVIEW_PATH)
     print(f"Preview saved to {PREVIEW_PATH}")
 
-    # Zoomed crop around Slytherin corridor (x: 600..1850, y: 1300..2150)
-    crop_sly = world.crop((600, 1300, 1850, 2150)).convert('RGB')
+    # Zoomed crop around Slytherin corridor (x: 500..1800, y: 1300..2100)
+    crop_sly = world.crop((500, 1300, 1800, 2100)).convert('RGB')
     crop_sly.save(CROP_PREVIEW_PATH)
     print(f"Slytherin connection crop saved to {CROP_PREVIEW_PATH}")
 

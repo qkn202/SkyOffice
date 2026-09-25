@@ -42,7 +42,7 @@ export default class Game extends Phaser.Scene {
   private whiteboardMap = new Map<string, Whiteboard>()
   private lightingEffects!: HogwartsLightingEffects
   private sortingHatNear = false
-  private readonly sortingHatPosition = { x: 1822, y: 1392 }
+  private readonly sortingHatPosition = { x: 1920, y: 1300 }
   private wandSpellSystem?: WandSpellSystem
   public roomManager!: HogwartsRoomManager
 

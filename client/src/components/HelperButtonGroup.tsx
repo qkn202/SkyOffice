@@ -10,8 +10,10 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt'
 import MenuBookIcon from '@mui/icons-material/MenuBook'
 import MapIcon from '@mui/icons-material/Map'
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
+import VolumeUpIcon from '@mui/icons-material/VolumeUp'
+import VolumeOffIcon from '@mui/icons-material/VolumeOff'
 
-import { setShowJoystick } from '../stores/UserStore'
+import { setShowJoystick, toggleBgmMuted } from '../stores/UserStore'
 import { useAppSelector, useAppDispatch } from '../hooks'
 import phaserGame from '../PhaserGame'
 import Bootstrap from '../scenes/Bootstrap'
@@ -82,6 +84,7 @@ export default function HelperButtonGroup() {
   const [showWishLantern, setShowWishLantern] = useState(false)
   const [currentRoom, setCurrentRoom] = useState<HogwartsRoomId>('great_hall')
   const showJoystick = useAppSelector((state) => state.user.showJoystick)
+  const bgmMuted = useAppSelector((state) => state.user.bgmMuted)
   const loggedIn = useAppSelector((state) => state.user.loggedIn)
   const roomJoined = useAppSelector((state) => state.room.roomJoined)
   const sessionId = useAppSelector((state) => state.user.sessionId)
@@ -137,6 +140,8 @@ export default function HelperButtonGroup() {
         setShowFlooModal((prev) => !prev)
       } else if (e.key === 'l' || e.key === 'L') {
         setShowWishLantern((prev) => !prev)
+      } else if (e.key === 'n' || e.key === 'N') {
+        dispatch(toggleBgmMuted())
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -226,6 +231,24 @@ export default function HelperButtonGroup() {
         )}
       </div>
       <ButtonGroup>
+        {roomJoined && (
+          <Tooltip title={bgmMuted ? 'Bật nhạc nền (Phím N)' : 'Tắt nhạc nền (Phím N)'}>
+            <StyledFab
+              id="bgm-toggle-button"
+              aria-label={bgmMuted ? 'Bật nhạc nền' : 'Tắt nhạc nền'}
+              size="small"
+              style={{
+                background: bgmMuted ? '#2d1a24' : '#1e1b38',
+                color: bgmMuted ? '#ef4444' : '#ffd700',
+                border: bgmMuted ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(255, 215, 0, 0.65)',
+                boxShadow: bgmMuted ? 'none' : '0 0 10px rgba(255, 215, 0, 0.25)',
+              }}
+              onClick={() => dispatch(toggleBgmMuted())}
+            >
+              {bgmMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+            </StyledFab>
+          </Tooltip>
+        )}
         {roomJoined && (
           <Tooltip title="Thả Thiên Đăng Ước Nguyện Trung Thu (Phím L)">
             <StyledFab

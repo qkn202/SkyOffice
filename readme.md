@@ -21,6 +21,7 @@
 12. [Cấu Trúc Thư Mục (Project Structure)](#-cấu-trúc-thư-mục-project-structure)
 13. [Hướng Dẫn Cài Đặt & Khởi Chạy (Quickstart & Setup)](#-hướng-dẫn-cài-đặt--khởi-chạy-quickstart--setup)
 14. [Quy Trình Tái Tạo Bản Đồ (Map Generation Workflow)](#-quy-trình-tái-tạo-bản-đồ-map-generation-workflow)
+15. [Triển Khai Production 24/7 (Deployment Guide)](#-triển-khai-production-247-deployment-guide)
 
 ---
 
@@ -197,11 +198,15 @@ Nút 🎮 tại thanh công cụ dưới màn hình mở cổng kết nối tớ
 | Phím / Thao Tác | Hành Động | Phạm Vi & Ghi Chú |
 | :--- | :--- | :--- |
 | `W`, `A`, `S`, `D` hoặc `Mũi Tên` | **Di chuyển nhân vật** | Tự do đi bộ xuyên suốt giữa Đại Sảnh và 4 Nhà |
+| **Cần Điều Khiển Ảo (Joystick)** | **Di chuyển trên mobile/chuột** | Cần điều khiển góc dưới bên trái, hỗ trợ chạm cảm ứng hoặc kéo chuột |
 | `E` | **Ngồi xuống ghế** | Hơn 30 ghế quanh các bàn ăn và phòng sinh hoạt |
 | `R` | **Mở máy tính** | Kích hoạt chia sẻ màn hình học nhóm |
 | `T` | **Đội Nón Phân Loại** | Kích hoạt nghi lễ phân Nhà tại bục Đại Sảnh |
 | `M` | **Mở Bản Đồ Đạo Tặc** | Xem toàn cảnh lâu đài và dịch chuyển tức thời |
 | `F` | **Mở Mạng Lưới Floo** | Dịch chuyển nhanh bằng bột Floo qua lò sưởi |
+| `B` | **Sách Thần Chú & Cử Chỉ** | Xem mẫu vẽ cử chỉ ma thuật và danh mục phép thuật |
+| `L` | **Thả Thiên Đăng Ước Nguyện** | Viết lời chúc và thả đèn lồng bay lên trời đêm Trung Thu |
+| `N` | **Bật / Tắt Nhạc Nền (BGM)** | Bật hoặc tắt giai điệu nhạc nền Trung Thu & Hogwarts |
 | `H` | **Vẫy tay chào** | Gửi biểu cảm nhanh tới các phù thủy xung quanh |
 | `Enter` | **Mở khung Chat** | Gửi tin nhắn văn bản toàn sảnh hoặc nội bộ Nhà |
 | `ESC` | **Đóng bảng / Thoát** | Đóng modal đang mở hoặc thoát chế độ ngồi |
@@ -346,6 +351,28 @@ Khi cần tùy biến hoặc trang trí thêm đồ đạc cho các phòng sinh 
    - Ghép 4 phòng sinh hoạt chung 75% scale tại 4 góc cánh lâu đài, bảo toàn kênh Alpha trong suốt.
    - Xuất tệp đồ họa tối ưu về `client/public/assets/map/v2/hogwarts_castle_world.png`.
 3. Trình duyệt đang bật Vite sẽ tự động hot-reload bản đồ mới ngay tức khắc.
+
+---
+
+## 🌐 Triển Khai Production 24/7 (Deployment Guide)
+
+Hệ thống SkyOffice được triển khai theo kiến trúc đám mây hiện đại, hoàn toàn tách biệt giữa Client và Multiplayer Server, vận hành tự động 24/7:
+
+### 1. Kiến Trúc Triển Khai (Cloud Architecture)
+- **Frontend Web (Vercel CDN):**
+  - **Live URL:** [https://hpvn-social.vercel.app](https://hpvn-social.vercel.app)
+  - **Cấu hình:** File `vercel.json` định tuyến SPA, tối ưu cache asset và rewrite các API liên quan.
+  - **Tự động deploy:** Mỗi khi push code lên nhánh `hpvn-social` trên GitHub, Vercel sẽ tự động build và cập nhật phiên bản mới nhất.
+- **Backend Multiplayer Server (Render Cloud):**
+  - **Primary URL:** [https://skyoffice-server-m7o7.onrender.com](https://skyoffice-server-m7o7.onrender.com)
+  - **WebSocket Endpoint:** `wss://skyoffice-server-m7o7.onrender.com`
+  - **Cấu hình:** File `render.yaml` (Render Blueprint), triển khai tự động dạng Node Web Service tại khu vực **Singapore** (độ trễ cực thấp về Việt Nam).
+  - **Health Check:** `https://skyoffice-server-m7o7.onrender.com/health` (trả về `{"status":"ok","service":"skyoffice"}`).
+
+### 2. Ưu Điểm Khi Vận Hành 24/7
+- **Không phụ thuộc máy cá nhân:** Không cần mở terminal hay chạy Node.js trên máy tính ở nhà.
+- **Không cần Cloudflare Tunnel:** Server sở hữu domain HTTPS/WSS cố định trên Render.
+- **Khả năng chịu tải:** Đáp ứng hàng chục đến hàng trăm người chơi đồng thời di chuyển, vung đũa phép và tương tác trong Đại Sảnh mà không phát sinh chi phí tin nhắn realtime.
 
 ---
 

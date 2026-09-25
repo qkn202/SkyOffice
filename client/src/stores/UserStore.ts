@@ -26,7 +26,7 @@ export const userSlice = createSlice({
     loggedIn: false,
     currentPlayerName: '',
     playerNameMap: new Map<string, string>(),
-    showJoystick: window.innerWidth < 650,
+    showJoystick: true,
     hpvnProfile: null as null | IHpvnProfile,
     assignedHouse: '' as House | '',
   },

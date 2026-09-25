@@ -52,7 +52,7 @@ export default class Network {
         : window.location.hostname
 
     const isVercel = window.location.hostname.includes('vercel.app')
-    const defaultVercelEndpoint = 'wss://rapid-word-centuries-levy.trycloudflare.com'
+    const defaultVercelEndpoint = 'wss://skyoffice-server-m7o7.onrender.com'
 
     const endpoint =
       customServer ||

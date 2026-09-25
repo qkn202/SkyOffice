@@ -131,16 +131,26 @@ function buildTemplates(): { spell: SpellResult['spell']; template: Point[]; inc
     }))
   ).flat()
 
-  // 2. INCENDIO: Triangle starting from bottom-left -> peak -> bottom-right -> bottom-left
+  // 2. INCENDIO: Triangle starting from bottom-left -> peak -> bottom-right -> bottom-left (both directions)
   const triangle: Point[] = []
   for (let t = 0; t <= 1; t += 0.1) triangle.push({ x: 20 + 40 * t, y: 100 - 80 * t }) // up to peak
   for (let t = 0; t <= 1; t += 0.1) triangle.push({ x: 60 + 40 * t, y: 20 + 80 * t })  // down to right
   for (let t = 0; t <= 1; t += 0.1) triangle.push({ x: 100 - 80 * t, y: 100 })          // base across
 
-  // 3. PROTEGO: Arch / Inverted V / Shield roof (up to peak, then down)
+  const incendios = [
+    { spell: 'INCENDIO' as const, template: normalizeGesture(triangle), incantation: 'Incendio!', emoji: '🔥' },
+    { spell: 'INCENDIO' as const, template: normalizeGesture(triangle.slice().reverse()), incantation: 'Incendio!', emoji: '🔥' },
+  ]
+
+  // 3. PROTEGO: Arch / Inverted V / Shield roof (up to peak, then down - both directions)
   const arch: Point[] = []
   for (let t = 0; t <= 1; t += 0.08) arch.push({ x: 20 + 40 * t, y: 100 - 70 * t }) // up to peak
   for (let t = 0; t <= 1; t += 0.08) arch.push({ x: 60 + 40 * t, y: 30 + 70 * t })  // down to right
+
+  const protegos = [
+    { spell: 'PROTEGO' as const, template: normalizeGesture(arch), incantation: 'Protego!', emoji: '🛡️' },
+    { spell: 'PROTEGO' as const, template: normalizeGesture(arch.slice().reverse()), incantation: 'Protego!', emoji: '🛡️' },
+  ]
 
   // 4. EXPELLIARMUS: Zigzag / Lightning bolt (right -> down-left -> right)
   const zigzag: Point[] = []
@@ -148,27 +158,83 @@ function buildTemplates(): { spell: SpellResult['spell']; template: Point[]; inc
   for (let t = 0; t <= 1; t += 0.1) zigzag.push({ x: 80 - 60 * t, y: 20 + 40 * t })
   for (let t = 0; t <= 1; t += 0.1) zigzag.push({ x: 20 + 60 * t, y: 60 + 40 * t })
 
+  const expelliarmus = [
+    { spell: 'EXPELLIARMUS' as const, template: normalizeGesture(zigzag), incantation: 'Expelliarmus!', emoji: '⚡' },
+    { spell: 'EXPELLIARMUS' as const, template: normalizeGesture(zigzag.slice().reverse()), incantation: 'Expelliarmus!', emoji: '⚡' },
+  ]
+
   // 5. WINGARDIUM: Swish & flick / Wave (horizontal line with right-end upward flick)
   const wave: Point[] = []
   for (let t = 0; t <= 1; t += 0.08) wave.push({ x: 20 + 60 * t, y: 70 + Math.sin(t * Math.PI) * 10 })
   for (let t = 0; t <= 1; t += 0.1) wave.push({ x: 80 + 20 * t, y: 70 - 50 * t }) // upward flick
 
-  // 6. PATRONUS: Figure 8 / Infinity loop
-  const figure8: Point[] = []
-  for (let t = 0; t <= Math.PI * 2; t += 0.15) {
-    figure8.push({
-      x: 60 + 40 * Math.sin(t),
-      y: 60 + 35 * Math.sin(t) * Math.cos(t),
-    })
+  // 6. PATRONUS: Figure 8 / Infinity loop (∞) / Spiral (Vòng vô cực & Xoắn ốc)
+  // Supports horizontal infinity, vertical figure-8, 16 starting phase offsets, both directions, and spirals!
+  const patronus: { spell: 'PATRONUS'; template: Point[]; incantation: string; emoji: string }[] = []
+
+  // 6a. Horizontal Infinity Loop (16 starting phase angles x 2 directions forward/reverse)
+  for (let start = 0; start < 16; start++) {
+    const phase = (start / 16) * Math.PI * 2
+    for (const dir of [1, -1]) {
+      const pts: Point[] = []
+      for (let i = 0; i <= 32; i++) {
+        const t = phase + dir * (i / 32) * Math.PI * 2
+        pts.push({
+          x: 60 + 50 * Math.sin(t),
+          y: 60 + 35 * Math.sin(t) * Math.cos(t),
+        })
+      }
+      patronus.push({ spell: 'PATRONUS', template: normalizeGesture(pts), incantation: 'Expecto Patronum!', emoji: '🦌' })
+    }
+  }
+
+  // 6b. Vertical Figure-8 (16 starting phase angles x 2 directions forward/reverse)
+  for (let start = 0; start < 16; start++) {
+    const phase = (start / 16) * Math.PI * 2
+    for (const dir of [1, -1]) {
+      const pts: Point[] = []
+      for (let i = 0; i <= 32; i++) {
+        const t = phase + dir * (i / 32) * Math.PI * 2
+        pts.push({
+          x: 60 + 35 * Math.sin(t) * Math.cos(t),
+          y: 60 + 50 * Math.sin(t),
+        })
+      }
+      patronus.push({ spell: 'PATRONUS', template: normalizeGesture(pts), incantation: 'Expecto Patronum!', emoji: '🦌' })
+    }
+  }
+
+  // 6c. Natural 2-circle loop (draw one circle, cross over, draw other circle)
+  for (const dir of [1, -1]) {
+    const pts: Point[] = []
+    for (let a = 0; a <= Math.PI * 2; a += 0.2) {
+      pts.push({ x: 40 + 25 * Math.cos(a), y: 60 + dir * 25 * Math.sin(a) })
+    }
+    for (let a = Math.PI; a <= Math.PI * 3; a += 0.2) {
+      pts.push({ x: 80 + 25 * Math.cos(a), y: 60 - dir * 25 * Math.sin(a) })
+    }
+    patronus.push({ spell: 'PATRONUS', template: normalizeGesture(pts), incantation: 'Expecto Patronum!', emoji: '🦌' })
+    patronus.push({ spell: 'PATRONUS', template: normalizeGesture(pts.slice().reverse()), incantation: 'Expecto Patronum!', emoji: '🦌' })
+  }
+
+  // 6d. Spiral / Vortex (Vòng xoắn ốc triệu hồi thần hộ mệnh)
+  for (const dir of [1, -1]) {
+    const ptsOut: Point[] = []
+    for (let t = 0; t <= Math.PI * 3.5; t += 0.15) {
+      const r = 8 + 12 * t
+      ptsOut.push({ x: 60 + r * Math.cos(dir * t), y: 60 + r * Math.sin(dir * t) })
+    }
+    patronus.push({ spell: 'PATRONUS', template: normalizeGesture(ptsOut), incantation: 'Expecto Patronum!', emoji: '🦌' })
+    patronus.push({ spell: 'PATRONUS', template: normalizeGesture(ptsOut.slice().reverse()), incantation: 'Expecto Patronum!', emoji: '🦌' })
   }
 
   return [
     ...circles,
-    { spell: 'INCENDIO', template: normalizeGesture(triangle), incantation: 'Incendio!', emoji: '🔥' },
-    { spell: 'PROTEGO', template: normalizeGesture(arch), incantation: 'Protego!', emoji: '🛡️' },
-    { spell: 'EXPELLIARMUS', template: normalizeGesture(zigzag), incantation: 'Expelliarmus!', emoji: '⚡' },
+    ...incendios,
+    ...protegos,
+    ...expelliarmus,
     { spell: 'WINGARDIUM', template: normalizeGesture(wave), incantation: 'Wingardium Leviosa!', emoji: '🪶' },
-    { spell: 'PATRONUS', template: normalizeGesture(figure8), incantation: 'Expecto Patronum!', emoji: '🦌' },
+    ...patronus,
   ]
 }
 

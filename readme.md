@@ -354,9 +354,9 @@ Khi cần tùy biến hoặc trang trí thêm đồ đạc cho các phòng sinh 
 
 ---
 
-## 🌐 Triển Khai Production 24/7 (Deployment Guide)
+## 🌐 Triển Khai Production (Deployment Guide)
 
-Hệ thống SkyOffice được triển khai theo kiến trúc đám mây hiện đại, hoàn toàn tách biệt giữa Client và Multiplayer Server, vận hành tự động 24/7:
+Frontend và multiplayer server được triển khai tách biệt. Vercel phục vụ giao diện tĩnh; Render chạy Node.js/Colyseus theo cấu hình trong `render.yaml`.
 
 ### 1. Kiến Trúc Triển Khai (Cloud Architecture)
 - **Frontend Web (Vercel CDN):**
@@ -366,13 +366,17 @@ Hệ thống SkyOffice được triển khai theo kiến trúc đám mây hiện
 - **Backend Multiplayer Server (Render Cloud):**
   - **Primary URL:** [https://skyoffice-server-m7o7.onrender.com](https://skyoffice-server-m7o7.onrender.com)
   - **WebSocket Endpoint:** `wss://skyoffice-server-m7o7.onrender.com`
-  - **Cấu hình:** File `render.yaml` (Render Blueprint), triển khai tự động dạng Node Web Service tại khu vực **Singapore** (độ trễ cực thấp về Việt Nam).
+  - **Cấu hình:** File `render.yaml` (Render Blueprint), Node Web Service gói **Free** tại khu vực Singapore.
   - **Health Check:** `https://skyoffice-server-m7o7.onrender.com/health` (trả về `{"status":"ok","service":"skyoffice"}`).
+  - **Endpoint phía client:** `VITE_SERVER_URL` ghi đè URL mặc định; khi chạy local, mặc định là `ws://localhost:2567`.
+  - **Lưu ý cấu hình production:** Kiểm tra bundle Vercel ngày 2026-09-25 cho thấy `VITE_SERVER_URL` đang được build thành `wss://scholarships-rev-active-byte.trycloudflare.com`, dù `client/.env.production` trỏ tới Render. Vì vậy bản Vercel hiện tại vẫn phụ thuộc vào Cloudflare Tunnel/máy đang chạy tunnel; Render đang phản hồi health check nhưng chưa phải endpoint trong bundle production. Muốn tắt máy cá nhân, đổi biến `VITE_SERVER_URL` trong Vercel Production thành URL Render ở trên rồi deploy lại.
 
-### 2. Ưu Điểm Khi Vận Hành 24/7
-- **Không phụ thuộc máy cá nhân:** Không cần mở terminal hay chạy Node.js trên máy tính ở nhà.
-- **Không cần Cloudflare Tunnel:** Server sở hữu domain HTTPS/WSS cố định trên Render.
-- **Khả năng chịu tải:** Đáp ứng hàng chục đến hàng trăm người chơi đồng thời di chuyển, vung đũa phép và tương tác trong Đại Sảnh mà không phát sinh chi phí tin nhắn realtime.
+### 2. Giới Hạn Cần Biết
+- **Không phụ thuộc máy cá nhân:** Client production kết nối đến server Render; tắt máy phát triển không làm server trên Render dừng.
+- **Render Free không đảm bảo chạy liên tục:** Service ngủ sau 15 phút không nhận traffic vào server. Khi request hoặc kết nối WebSocket mới đánh thức service, cold start có thể mất khoảng một phút. Render cũng có thể khởi động lại instance.
+- **Kết nối có thể bị ngắt:** Sau deploy, restart hoặc sự cố mạng, client cần kết nối lại. Trạng thái phòng Colyseus đang lưu trong bộ nhớ server, nên người chơi có thể phải vào lại và vị trí sẽ về spawn mặc định.
+- **Dữ liệu bền vững:** Firebase Firestore chỉ lưu các dữ liệu được ghi rõ ràng như hồ sơ, điểm Nhà và lịch sử trao thưởng; trạng thái phòng/vị trí nhân vật hiện không được lưu vào Firestore.
+- **Muốn server luôn sẵn sàng:** Dùng compute plan không sleep (có phí) hoặc chuyển Colyseus lên một máy chủ cloud luôn chạy. Render Free phù hợp thử nghiệm/hobby hơn là cam kết uptime 24/7.
 
 ---
 

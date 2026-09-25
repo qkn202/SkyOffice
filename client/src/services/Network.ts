@@ -1,7 +1,7 @@
 import { Client, Room } from 'colyseus.js'
 import { IComputer, IOfficeState, IPlayer, IWhiteboard } from '../../../types/IOfficeState'
 import { Message } from '../../../types/Messages'
-import { IRoomData, RoomType } from '../../../types/Rooms'
+import { RoomType } from '../../../types/Rooms'
 import { ItemType } from '../../../types/Items'
 import WebRTC from '../web/WebRTC'
 import { phaserEvents, Event } from '../events/EventCenter'
@@ -13,9 +13,6 @@ import {
   setConnectionLost,
   setReconnecting,
   setJoinedRoomData,
-  setAvailableRooms,
-  addAvailableRooms,
-  removeAvailableRooms,
 } from '../stores/RoomStore'
 import {
   pushChatMessage,
@@ -109,45 +106,15 @@ export default class Network {
     this.lobby.onLeave(() => {
       store.dispatch(setLobbyJoined(false))
       if (this.room) return // Leaving the lobby to enter a game is intentional.
-      store.dispatch(setAvailableRooms([]))
       store.dispatch(setLobbyConnectionError('Mất kết nối máy chủ. Hệ thống đang tự thử lại…'))
       this.scheduleLobbyRetry()
     })
 
-    this.lobby.onMessage('rooms', (rooms) => {
-      store.dispatch(setAvailableRooms(rooms))
-    })
-
-    this.lobby.onMessage('+', ([roomId, room]) => {
-      store.dispatch(addAvailableRooms({ roomId, room }))
-    })
-
-    this.lobby.onMessage('-', (roomId) => {
-      store.dispatch(removeAvailableRooms(roomId))
-    })
   }
 
   // method to join the public lobby
   async joinOrCreatePublic() {
     this.room = await this.client.joinOrCreate(RoomType.PUBLIC)
-    this.initialize()
-  }
-
-  // method to join a custom room
-  async joinCustomById(roomId: string, password: string | null) {
-    this.room = await this.client.joinById(roomId, { password })
-    this.initialize()
-  }
-
-  // method to create a custom room
-  async createCustom(roomData: IRoomData) {
-    const { name, description, password, autoDispose } = roomData
-    this.room = await this.client.create(RoomType.CUSTOM, {
-      name,
-      description,
-      password,
-      autoDispose,
-    })
     this.initialize()
   }
 

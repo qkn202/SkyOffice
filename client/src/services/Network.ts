@@ -37,13 +37,22 @@ export default class Network {
   mySessionId!: string
 
   constructor() {
+    const urlParams = new URLSearchParams(window.location.search)
+    const customServer = urlParams.get('server')
     const protocol = window.location.protocol.replace('http', 'ws')
     const host =
       !window.location.hostname || window.location.hostname === '0.0.0.0'
         ? 'localhost'
         : window.location.hostname
+
+    const isVercel = window.location.hostname.includes('vercel.app')
+    const defaultVercelEndpoint = 'wss://rapid-word-centuries-levy.trycloudflare.com'
+
     const endpoint =
-      import.meta.env.VITE_SERVER_URL || `${protocol}//${host}:2567`
+      customServer ||
+      import.meta.env.VITE_SERVER_URL ||
+      (isVercel ? defaultVercelEndpoint : `${protocol}//${host}:2567`)
+
     this.client = new Client(endpoint)
     void this.connectLobby()
 

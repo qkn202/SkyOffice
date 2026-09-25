@@ -39,13 +39,14 @@ def get_clean_room(img, is_white=False):
     arr = np.array(rgba)
     
     if is_white:
-        # Slytherin room has white background [225..255]
-        mask = ~((arr[:, :, 0] > 225) & (arr[:, :, 1] > 225) & (arr[:, :, 2] > 225))
+        # Slytherin room has white background [220..255]
+        mask = ~((arr[:, :, 0] > 220) & (arr[:, :, 1] > 220) & (arr[:, :, 2] > 220))
     else:
-        # If alpha already present and non-trivial
-        if arr.shape[2] == 4 and np.any(arr[:, :, 3] == 0):
-            return rgba
-        mask = (arr[:, :, 0] > 14) | (arr[:, :, 1] > 14) | (arr[:, :, 2] > 14)
+        # Transparent where dark/black void or existing alpha is 0
+        is_black_void = (arr[:, :, 0] < 20) & (arr[:, :, 1] < 20) & (arr[:, :, 2] < 26)
+        mask = ~is_black_void
+        if arr.shape[2] == 4:
+            mask = mask & (arr[:, :, 3] > 30)
         
     mask_im = Image.fromarray((mask * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.0))
     rgba.putalpha(mask_im)
@@ -79,20 +80,15 @@ def generate_clean_flagstone_tile():
 def build_map():
     print(f"Building Compact & Unified Hogwarts Castle Map ({CW} x {CH} px)...")
 
-    # 1. Base Canvas with Starry Night Sky
-    bg_night_path = os.path.join(BASE_DIR, 'client/public/assets/background/backdrop_night.png')
-    if os.path.exists(bg_night_path):
-        bg_night = Image.open(bg_night_path).resize((CW, CH), Image.Resampling.LANCZOS)
-        world = bg_night.convert('RGBA')
-    else:
-        world = Image.new('RGBA', (CW, CH), (14, 11, 20, 255))
+    # 1. Base Canvas with Enchanted Wizarding Mid-Autumn Night Sky
+    bg_mid_autumn_path = os.path.join(BASE_DIR, 'client/public/assets/background/wizard_mid_autumn_bg.png')
+    if not os.path.exists(bg_mid_autumn_path):
+        bg_mid_autumn_path = os.path.join(BASE_DIR, 'client/public/assets/background/backdrop_night.png')
+    
+    bg_img = Image.open(bg_mid_autumn_path).resize((CW, CH), Image.Resampling.LANCZOS)
+    world = bg_img.convert('RGBA')
 
     draw = ImageDraw.Draw(world)
-
-    # Castle Foundation Depth Gradient
-    for y in range(700, CH):
-        alpha = int(min(255, (y - 700) / 600 * 240 + 15))
-        draw.rectangle([0, y, CW, y + 1], fill=(12, 10, 18, alpha))
 
     # 2. Pure Clean Castle Stone Flagstone Tile (Zero tables/benches/cloth)
     gh_tile = generate_clean_flagstone_tile()
@@ -125,10 +121,10 @@ def build_map():
             (x1 - w_half * nx, y1 - w_half * ny)
         ]
         
-        # 1. Bridge Drop Shadow (deep soft shadow underneath)
-        shadow_offset_y = 55
+        # 1. Bridge Drop Shadow (soft subtle translucent shadow)
+        shadow_offset_y = 20
         shadow_pts = [(p[0], p[1] + shadow_offset_y) for p in poly_pts]
-        draw.polygon(shadow_pts, fill=(8, 6, 12, 210))
+        draw.polygon(shadow_pts, fill=(12, 8, 28, 60))
         
         # 2. Stone Walkway Mask & Textured Flagstone Fill (Identical to Great Hall stone palette)
         corridor_mask = Image.new('L', (CW, CH), 0)

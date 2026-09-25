@@ -26,6 +26,8 @@ import { phaserEvents, Event } from '../events/EventCenter'
 import { WandSpellSystem } from './WandSpellSystem'
 import { HogwartsRoomManager, HogwartsRoomId } from './HogwartsRoomManager'
 import { HogwartsLightingEffects } from './hogwarts/HogwartsLightingEffects'
+import { MidAutumnParadeNPC } from './hogwarts/MidAutumnParadeNPC'
+import { LanternManager } from './hogwarts/LanternManager'
 
 export default class Game extends Phaser.Scene {
   network!: Network
@@ -42,9 +44,11 @@ export default class Game extends Phaser.Scene {
   private whiteboardMap = new Map<string, Whiteboard>()
   private lightingEffects!: HogwartsLightingEffects
   private sortingHatNear = false
-  private readonly sortingHatPosition = { x: 1942, y: 1280 }
+  private readonly sortingHatPosition = { x: 1850, y: 1240 }
   private wandSpellSystem?: WandSpellSystem
   public roomManager!: HogwartsRoomManager
+  private midAutumnParadeNPC?: MidAutumnParadeNPC
+  public lanternManager!: LanternManager
 
   constructor() {
     super('game')
@@ -83,6 +87,11 @@ export default class Game extends Phaser.Scene {
     this.input.keyboard.on('keydown-F', () => {
       if (!store.getState().chat.focused) {
         window.dispatchEvent(new CustomEvent('skyoffice:toggle-floo-modal'))
+      }
+    })
+    this.input.keyboard.on('keydown-L', () => {
+      if (!store.getState().chat.focused) {
+        window.dispatchEvent(new CustomEvent('skyoffice:toggle-wish-lantern'))
       }
     })
   }
@@ -132,9 +141,10 @@ export default class Game extends Phaser.Scene {
       this.roomManager.collidersGroup
     )
 
-    // 5. Khởi tạo các nhân vật Hogwarts (NPC Giáo sư)
+    // 5. Khởi tạo các nhân vật Hogwarts (NPC Giáo sư & Bé Rước Đèn Trung Thu)
     this.setupGreatHallNPCs()
     this.setupSortingHat()
+    this.midAutumnParadeNPC = new MidAutumnParadeNPC(this, this.myPlayer)
 
     this.physics.add.overlap(
       this.playerSelector,
@@ -168,6 +178,10 @@ export default class Game extends Phaser.Scene {
     phaserEvents.on(Event.CAST_SPELL, this.handleSpellCast, this)
     phaserEvents.on(Event.ROOM_CHANGED, this.handleRoomChanged, this)
 
+    // 8. Khởi tạo hệ thống Thả Thiên Đăng Ước Nguyện Trung Thu (Wish Lanterns)
+    this.lanternManager = new LanternManager(this, this.network)
+    this.lanternManager.init()
+
     const onRoomChanged = (e: any) => {
       this.updateGreatHallEntitiesVisibility(e.detail?.roomId)
     }
@@ -180,6 +194,8 @@ export default class Game extends Phaser.Scene {
       this.wandSpellSystem?.destroy()
       this.roomManager?.destroy()
       this.lightingEffects?.destroy()
+      this.midAutumnParadeNPC?.destroy()
+      this.lanternManager?.destroy()
     })
   }
 
@@ -362,6 +378,7 @@ export default class Game extends Phaser.Scene {
   update(t: number, dt: number) {
     this.wandSpellSystem?.update()
     this.roomManager?.update(t, dt)
+    this.midAutumnParadeNPC?.update(dt / 1000)
     if (this.myPlayer && this.network) {
       const nearSortingHat = Phaser.Math.Distance.Between(
         this.myPlayer.x,
@@ -389,6 +406,22 @@ export default class Game extends Phaser.Scene {
 
   private setupSortingHat() {
     const { x, y } = this.sortingHatPosition
+
+    // Vòng sáng ma thuật huyền bí quanh Chiếc Nón
+    const magicAura = this.add.graphics().setPosition(x, y - 5).setDepth(y + 8)
+    magicAura.fillStyle(0xf4d98b, 0.22)
+    magicAura.fillCircle(0, 0, 28)
+    this.tweens.add({
+      targets: magicAura,
+      alpha: { from: 0.15, to: 0.4 },
+      scaleX: { from: 0.85, to: 1.15 },
+      scaleY: { from: 0.85, to: 1.15 },
+      yoyo: true,
+      repeat: -1,
+      duration: 1800,
+      ease: 'Sine.easeInOut',
+    })
+
     const hat = this.add.graphics().setPosition(x, y).setDepth(y + 20)
     hat.fillStyle(0x5a3a20, 1)
     hat.beginPath()
@@ -415,7 +448,7 @@ export default class Game extends Phaser.Scene {
     const hitZone = this.add
       .zone(x, y + 10, 60, 60)
       .setOrigin(0.5, 0.5)
-      .setDepth(y + 25)
+      .setDepth(5000)
       .setInteractive({ useHandCursor: true })
     hitZone.on('pointerdown', () => {
       store.dispatch(openSortingCeremony())
@@ -430,13 +463,13 @@ export default class Game extends Phaser.Scene {
         strokeThickness: 3,
       })
       .setOrigin(0.5, 0)
-      .setDepth(y + 25)
+      .setDepth(5000)
       .setInteractive({ useHandCursor: true })
     hatText.on('pointerdown', () => {
       store.dispatch(openSortingCeremony())
     })
 
-    this.greatHallEntities.push(hat, stool, hitZone, hatText)
+    this.greatHallEntities.push(magicAura, hat, stool, hitZone, hatText)
   }
 }
 

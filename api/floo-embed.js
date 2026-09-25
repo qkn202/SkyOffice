@@ -10,12 +10,7 @@ export default async function handler(req, res) {
       },
     })
 
-    if (!response.ok) {
-      return res.status(response.status).send(`Lỗi tải Mạng Floo: ${response.status}`)
-    }
-
     let html = await response.text()
-
     if (html.includes('<head>')) {
       html = html.replace('<head>', '<head><base href="https://www.hpvn-archive.net/">')
     } else {
@@ -49,8 +44,8 @@ export default async function handler(req, res) {
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
-    return res.status(200).send(html)
+    res.status(200).send(html)
   } catch (err) {
-    return res.status(500).send(`Không thể kết nối Mạng Floo: ${err?.message || err}`)
+    res.status(500).send(`Lỗi kết nối Mạng Floo: ${err?.message || err}`)
   }
 }

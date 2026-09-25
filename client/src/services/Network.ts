@@ -238,6 +238,11 @@ export default class Network {
       phaserEvents.emit(Event.ROOM_CHANGED, clientId, roomId)
     })
 
+    this.room.onMessage(Message.LANTERN_RELEASED, (lantern) => {
+      phaserEvents.emit(Event.LANTERN_RELEASED, lantern)
+      window.dispatchEvent(new CustomEvent('skyoffice:lantern-released', { detail: lantern }))
+    })
+
     this.room.onMessage(Message.MINIGAME_INVITE, (invite) => {
       window.dispatchEvent(new CustomEvent('skyoffice:minigame-invite', { detail: invite }))
     })
@@ -308,6 +313,19 @@ export default class Network {
 
   toggleCommunityEventAttendance(eventId: string) {
     this.room?.send(Message.COMMUNITY_EVENT_RSVP, { eventId })
+  }
+
+  releaseLantern(data: {
+    text: string
+    color?: string
+    visibility?: 'public' | 'private' | 'direct'
+    recipientSessionId?: string
+    recipientName?: string
+    isAnonymous?: boolean
+    x?: number
+    y?: number
+  }) {
+    this.room?.send(Message.RELEASE_LANTERN, data)
   }
 
   private syncOnlineProfiles(force = false) {

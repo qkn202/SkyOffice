@@ -118,12 +118,18 @@ function normalizeGesture(points: Point[]): Point[] {
 // Generate Canonical Geometric Templates for Harry Potter Spells
 function buildTemplates(): { spell: SpellResult['spell']; template: Point[]; incantation: string; emoji: string }[] {
   // 1. LUMOS: Circle (Clockwise and Counter-clockwise)
-  const circleCW: Point[] = []
-  const circleCCW: Point[] = []
-  for (let a = 0; a <= Math.PI * 2; a += 0.2) {
-    circleCW.push({ x: 50 + 40 * Math.cos(a), y: 50 + 40 * Math.sin(a) })
-    circleCCW.push({ x: 50 + 40 * Math.cos(-a), y: 50 + 40 * Math.sin(-a) })
-  }
+  // A closed circle can start anywhere, including the top shown in the spellbook.
+  const circles = Array.from({ length: 16 }, (_, start) =>
+    [1, -1].map((direction) => ({
+      spell: 'LUMOS' as const,
+      template: normalizeGesture(Array.from({ length: 33 }, (_, step) => {
+        const angle = start * Math.PI / 8 + direction * step * Math.PI / 16
+        return { x: 50 + 40 * Math.cos(angle), y: 50 + 40 * Math.sin(angle) }
+      })),
+      incantation: 'Lumos!',
+      emoji: '✨',
+    }))
+  ).flat()
 
   // 2. INCENDIO: Triangle starting from bottom-left -> peak -> bottom-right -> bottom-left
   const triangle: Point[] = []
@@ -157,8 +163,7 @@ function buildTemplates(): { spell: SpellResult['spell']; template: Point[]; inc
   }
 
   return [
-    { spell: 'LUMOS', template: normalizeGesture(circleCW), incantation: 'Lumos!', emoji: '✨' },
-    { spell: 'LUMOS', template: normalizeGesture(circleCCW), incantation: 'Lumos!', emoji: '✨' },
+    ...circles,
     { spell: 'INCENDIO', template: normalizeGesture(triangle), incantation: 'Incendio!', emoji: '🔥' },
     { spell: 'PROTEGO', template: normalizeGesture(arch), incantation: 'Protego!', emoji: '🛡️' },
     { spell: 'EXPELLIARMUS', template: normalizeGesture(zigzag), incantation: 'Expelliarmus!', emoji: '⚡' },

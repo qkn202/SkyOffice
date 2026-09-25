@@ -17,4 +17,5 @@ export enum Event {
   PLAYER_EMOTE = 'player-emote',
   CAST_SPELL = 'cast-spell',
   ROOM_CHANGED = 'room-changed',
+  LANTERN_RELEASED = 'lantern-released',
 }

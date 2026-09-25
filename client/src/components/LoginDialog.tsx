@@ -97,7 +97,7 @@ const RoomDescription = styled.div`
 `
 
 const SubTitle = styled.h3`
-  width: 160px;
+  width: 100%;
   font-size: 15px;
   color: #ffd875;
   text-align: center;
@@ -119,23 +119,35 @@ const Content = styled.div`
 `
 
 const Left = styled.div`
-  --swiper-navigation-size: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .carousel-wrapper {
+    position: relative;
+    width: 172px;
+  }
 
   .swiper {
-    width: 160px;
-    height: 220px;
-    border-radius: 8px;
+    width: 172px;
+    height: 236px;
+    border-radius: 12px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.35);
+    background: linear-gradient(180deg, #2b3048 0%, #1a1e32 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   }
 
   .swiper-slide {
-    width: 160px;
-    height: 220px;
-    background: #2b3048;
+    width: 172px;
+    height: 236px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    padding: 10px;
+    box-sizing: border-box;
+    user-select: none;
   }
 
   .swiper-slide img {
@@ -143,7 +155,108 @@ const Left = styled.div`
     width: 95px;
     height: 136px;
     object-fit: contain;
-    filter: grayscale(1) brightness(0.92);
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+    transition: transform 0.25s ease;
+  }
+
+  .char-title {
+    color: #ffd700;
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  .char-subtitle {
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 2px;
+    opacity: 0.95;
+  }
+
+  .char-counter {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #ffd875;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 2px 7px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 215, 0, 0.25);
+    z-index: 10;
+  }
+`
+
+const NavArrowButton = styled.button<{ $direction: 'left' | 'right' }>`
+  position: absolute;
+  top: 45%;
+  ${(props) => (props.$direction === 'left' ? 'left: -14px;' : 'right: -14px;')}
+  transform: translateY(-50%);
+  z-index: 30;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #181c2e;
+  border: 1.5px solid #ffd875;
+  color: #ffd875;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 216, 117, 0.4);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover {
+    background: #ffd875;
+    color: #141724;
+    transform: translateY(-50%) scale(1.15);
+    box-shadow: 0 0 16px rgba(255, 216, 117, 0.8);
+  }
+
+  &:active {
+    transform: translateY(-50%) scale(0.92);
+  }
+`
+
+const ThumbnailRow = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  width: 172px;
+`
+
+const ThumbItem = styled.button<{ $active: boolean }>`
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: ${(props) => (props.$active ? 'rgba(255, 216, 117, 0.25)' : 'rgba(255, 255, 255, 0.05)')};
+  border: 1.5px solid ${(props) => (props.$active ? '#ffd875' : 'rgba(255, 255, 255, 0.15)')};
+  padding: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: ${(props) => (props.$active ? '0 0 10px rgba(255, 216, 117, 0.5)' : 'none')};
+
+  &:hover {
+    border-color: #ffd875;
+    transform: translateY(-2px);
+  }
+
+  img {
+    width: 22px;
+    height: 28px;
+    object-fit: contain;
   }
 `
 
@@ -237,17 +350,62 @@ const Bottom = styled.div`
 `
 
 const avatars = [
-  { name: 'adam', title: 'Adam', img: Adam },
-  { name: 'ash', title: 'Ash', img: Ash },
-  { name: 'lucy', title: 'Lucy', img: Lucy },
-  { name: 'nancy', title: 'Nancy', img: Nancy },
+  {
+    name: 'adam',
+    title: 'Adam',
+    subtitle: 'Nam sinh · Gryffindor',
+    badge: '🦁',
+    color: '#ff6b6b',
+    img: Adam,
+  },
+  {
+    name: 'ash',
+    title: 'Ash',
+    subtitle: 'Nam sinh · Slytherin',
+    badge: '🐍',
+    color: '#2ecc71',
+    img: Ash,
+  },
+  {
+    name: 'lucy',
+    title: 'Lucy',
+    subtitle: 'Nữ sinh · Ravenclaw',
+    badge: '🦅',
+    color: '#4dabf7',
+    img: Lucy,
+  },
+  {
+    name: 'nancy',
+    title: 'Nancy',
+    subtitle: 'Nữ sinh · Hufflepuff',
+    badge: '🦡',
+    color: '#ffd43b',
+    img: Nancy,
+  },
 ]
 
 export default function LoginDialog() {
   const [loginMode, setLoginMode] = useState<'hpvn' | 'guest'>('hpvn')
   const [name, setName] = useState<string>('')
   const [avatarIndex, setAvatarIndex] = useState<number>(0)
+  const [swiperInstance, setSwiperInstance] = useState<any>(null)
   const [nameFieldEmpty, setNameFieldEmpty] = useState<boolean>(false)
+
+  const handlePrevAvatar = () => {
+    if (swiperInstance) {
+      swiperInstance.slidePrev()
+    } else {
+      setAvatarIndex((prev) => (prev > 0 ? prev - 1 : avatars.length - 1))
+    }
+  }
+
+  const handleNextAvatar = () => {
+    if (swiperInstance) {
+      swiperInstance.slideNext()
+    } else {
+      setAvatarIndex((prev) => (prev < avatars.length - 1 ? prev + 1 : 0))
+    }
+  }
 
   // HPVN auth states
   const [hpvnAccount, setHpvnAccount] = useState<string>('')
@@ -383,24 +541,69 @@ export default function LoginDialog() {
       <Content>
         <Left>
           <SubTitle>Chọn Ngoại Hình</SubTitle>
-          <Swiper
-            modules={[Navigation]}
-            navigation
-            spaceBetween={0}
-            slidesPerView={1}
-            onSlideChange={(swiper) => {
-              setAvatarIndex(swiper.activeIndex)
-            }}
-          >
-            {avatars.map((avatar) => (
-              <SwiperSlide key={avatar.name}>
+          <div className="carousel-wrapper">
+            <NavArrowButton
+              type="button"
+              $direction="left"
+              onClick={handlePrevAvatar}
+              aria-label="Ngoại hình trước"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </NavArrowButton>
+
+            <NavArrowButton
+              type="button"
+              $direction="right"
+              onClick={handleNextAvatar}
+              aria-label="Ngoại hình tiếp theo"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </NavArrowButton>
+
+            <Swiper
+              spaceBetween={0}
+              slidesPerView={1}
+              onSwiper={setSwiperInstance}
+              onSlideChange={(swiper) => {
+                setAvatarIndex(swiper.activeIndex)
+              }}
+            >
+              {avatars.map((avatar, idx) => (
+                <SwiperSlide key={avatar.name}>
+                  <div className="char-counter">{idx + 1}/{avatars.length}</div>
+                  <img src={avatar.img} alt={avatar.name} />
+                  <div className="char-title">
+                    <span>{avatar.badge}</span>
+                    <span>{avatar.title}</span>
+                  </div>
+                  <div className="char-subtitle" style={{ color: avatar.color }}>
+                    {avatar.subtitle}
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+
+          <ThumbnailRow>
+            {avatars.map((avatar, idx) => (
+              <ThumbItem
+                key={avatar.name}
+                type="button"
+                $active={avatarIndex === idx}
+                onClick={() => {
+                  setAvatarIndex(idx)
+                  swiperInstance?.slideTo(idx)
+                }}
+                title={`${avatar.title} (${avatar.subtitle})`}
+              >
                 <img src={avatar.img} alt={avatar.name} />
-                <div style={{ color: '#ffd700', fontSize: '13px', fontWeight: 600, marginTop: '8px' }}>
-                  {avatar.title}
-                </div>
-              </SwiperSlide>
+              </ThumbItem>
             ))}
-          </Swiper>
+          </ThumbnailRow>
         </Left>
 
         <Right>

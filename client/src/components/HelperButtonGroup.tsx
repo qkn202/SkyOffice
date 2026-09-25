@@ -37,6 +37,7 @@ const SocialHubDialog = lazy(() => import('./SocialHubDialog'))
 const SpellbookModal = lazy(() => import('./SpellbookModal'))
 const MaraudersMap = lazy(() => import('./MaraudersMap'))
 const FlooNetworkModal = lazy(() => import('./FlooNetworkModal'))
+const WishLanternModal = lazy(() => import('./WishLanternModal'))
 
 type MiniGameId = 'seven-potters' | 'undercover-hogwarts'
 type MiniGameInvite = { gameId: MiniGameId; roomCode: string; invitedBy: string; isHost: boolean; readyPlayers: string[]; readySessionIds: string[] } | null
@@ -156,6 +157,7 @@ export default function HelperButtonGroup() {
   const [showSpellbook, setShowSpellbook] = useState(false)
   const [showMaraudersMap, setShowMaraudersMap] = useState(false)
   const [showFlooModal, setShowFlooModal] = useState(false)
+  const [showWishLantern, setShowWishLantern] = useState(false)
   const [currentRoom, setCurrentRoom] = useState<HogwartsRoomId>('great_hall')
   const showJoystick = useAppSelector((state) => state.user.showJoystick)
   const backgroundMode = useAppSelector((state) => state.user.backgroundMode)
@@ -195,8 +197,10 @@ export default function HelperButtonGroup() {
       if (detail?.roomId) setCurrentRoom(detail.roomId)
     }
     const handleToggleFloo = () => setShowFlooModal((prev) => !prev)
+    const handleToggleWishLantern = () => setShowWishLantern((prev) => !prev)
     window.addEventListener('skyoffice:room-changed', handleRoomChanged)
     window.addEventListener('skyoffice:toggle-floo-modal', handleToggleFloo)
+    window.addEventListener('skyoffice:toggle-wish-lantern', handleToggleWishLantern)
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger hotkeys if typing in chat or any input field
@@ -213,6 +217,8 @@ export default function HelperButtonGroup() {
         setShowSpellbook((prev) => !prev)
       } else if (e.key === 'f' || e.key === 'F') {
         setShowFlooModal((prev) => !prev)
+      } else if (e.key === 'l' || e.key === 'L') {
+        setShowWishLantern((prev) => !prev)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -223,6 +229,7 @@ export default function HelperButtonGroup() {
       window.removeEventListener('skyoffice:minigame-cancel', handleCancel)
       window.removeEventListener('skyoffice:room-changed', handleRoomChanged)
       window.removeEventListener('skyoffice:toggle-floo-modal', handleToggleFloo)
+      window.removeEventListener('skyoffice:toggle-wish-lantern', handleToggleWishLantern)
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [])
@@ -258,7 +265,8 @@ export default function HelperButtonGroup() {
         showSocialHub ||
         showSpellbook ||
         showMaraudersMap ||
-        showFlooModal
+        showFlooModal ||
+        showWishLantern
       }
     >
       <Suspense fallback={<div role="status" style={{ position: 'fixed', inset: 0, zIndex: 5000, display: 'grid', placeItems: 'center', color: '#ffd875', background: 'rgba(9, 7, 20, 0.55)' }}>Đang mở tính năng…</div>}>
@@ -271,6 +279,7 @@ export default function HelperButtonGroup() {
             onClose={() => setShowFlooModal(false)}
           />
         )}
+        {showWishLantern && <WishLanternModal onClose={() => setShowWishLantern(false)} />}
         {showMiniGames && (
           <MiniGamesDialog
             invite={miniGameInvite}
@@ -334,6 +343,9 @@ export default function HelperButtonGroup() {
                 <strong>F</strong> để mở Mạng Lưới Lò Sưởi Floo & Di chuyển giữa 4 Phòng Sinh Hoạt Chung
               </li>
               <li>
+                <strong>L</strong> để mở Bảng Thả Thiên Đăng Ước Nguyện Trung Thu (chọn màu đèn, điều ước bí mật hoặc gửi riêng cho bạn bè)
+              </li>
+              <li>
                 <strong>B</strong> để mở Sách Thần Chú & Cử Chỉ Vung Đũa
               </li>
               <li>
@@ -360,12 +372,25 @@ export default function HelperButtonGroup() {
             </ul>
             <p className="tip">
               <LightbulbIcon />
-              Nhấn Enter để mở Mạng Floo.
+              Nhấn phím L để thả thiên đăng Trung Thu bất cứ lúc nào!
             </p>
           </Wrapper>
         )}
       </div>
       <ButtonGroup>
+        {roomJoined && (
+          <Tooltip title="Thả Thiên Đăng Ước Nguyện Trung Thu (Phím L)">
+            <StyledFab
+              id="wish-lantern-button"
+              aria-label="Thả Thiên Đăng Ước Nguyện Trung Thu"
+              size="small"
+              style={{ background: '#3b250e', color: '#ffd700', border: '1px solid #d4af37' }}
+              onClick={() => setShowWishLantern(true)}
+            >
+              <span style={{ fontSize: 18 }}>🏮</span>
+            </StyledFab>
+          </Tooltip>
+        )}
         {roomJoined && (
           <Tooltip title="Mạng Lưới Lò Sưởi Floo (Phím F)">
             <StyledFab
@@ -460,6 +485,7 @@ export default function HelperButtonGroup() {
             <TwitterIcon />
           </StyledFab>
         </Tooltip>
+
         <Tooltip title="Đổi giao diện ngày/đêm">
           <StyledFab size="small" onClick={() => dispatch(toggleBackgroundMode())}>
             {backgroundMode === BackgroundMode.DAY ? <DarkModeIcon /> : <LightModeIcon />}

@@ -146,7 +146,7 @@ Toàn bộ thế giới có kích thước chuẩn **3600 × 2400 px**:
 4. **Nghi Thức Nón Phân Loại (`T`):**
    - Đến gần Chiếc Nón Phân Loại ở giữa Đại Sảnh và bấm `T` để tham gia trả lời câu hỏi và được phân vào Nhà phù hợp.
 5. **Vung Đũa Vẽ Cử Chỉ Phép Thuật (Wand Gesture Drawing System):**
-   - Bấm giữ phím chuột phải và vẽ các nét cử chỉ ma thuật trên màn hình để thi triển bùa chú:
+   - Nhấp chuột trái để hiện đốm sáng; giữ và kéo chuột trái trên bản đồ để vẽ bùa, rồi thả để thi triển. Bấm `B` để xem mẫu nét vẽ:
      - 🌟 **LUMOS:** Vẽ vòng tròn khép kín — Thắp sáng đầu đũa phép, xua tan màn đêm.
      - 🔥 **INCENDIO:** Vẽ hình tam giác nhọn hướng lên — Phun ngọn lửa ma thuật bùng cháy.
      - 🛡️ **PROTEGO:** Vẽ vòng cung bán nguyệt che chở — Tạo khiên chắn phản đòn bảo vệ.
@@ -205,7 +205,7 @@ Nút 🎮 tại thanh công cụ dưới màn hình mở cổng kết nối tớ
 | `H` | **Vẫy tay chào** | Gửi biểu cảm nhanh tới các phù thủy xung quanh |
 | `Enter` | **Mở khung Chat** | Gửi tin nhắn văn bản toàn sảnh hoặc nội bộ Nhà |
 | `ESC` | **Đóng bảng / Thoát** | Đóng modal đang mở hoặc thoát chế độ ngồi |
-| **Giữ Chuột Phải + Rê Vẽ** | **Vung đũa vẽ bùa chú** | Nhận diện cử chỉ bùa chú (Lumos, Incendio, Protego...) |
+| **Giữ Chuột Trái + Rê Vẽ** | **Vung đũa vẽ bùa chú** | Nhận diện cử chỉ bùa chú (Lumos, Incendio, Protego...) |
 
 ---
 

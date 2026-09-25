@@ -39,6 +39,7 @@ export class SkyOffice extends Room<OfficeState> {
   private emoteCooldowns = new Map<string, number>()
   private minigameInviteCooldowns = new Map<string, number>()
   private communityEventCooldowns = new Map<string, number>()
+  private lanternCooldowns = new Map<string, number>()
   private miniGameLobby: MiniGameLobby | null = null
   private communityEvents: CommunityEvent[] = []
   private name: string
@@ -248,6 +249,79 @@ export class SkyOffice extends Room<OfficeState> {
         roomId: message.roomId,
       })
     })
+
+    this.onMessage(
+      Message.RELEASE_LANTERN,
+      (
+        client,
+        message: {
+          text: string
+          color?: string
+          visibility?: 'public' | 'private' | 'direct'
+          recipientSessionId?: string
+          recipientName?: string
+          isAnonymous?: boolean
+          x?: number
+          y?: number
+        }
+      ) => {
+        const player = this.state.players.get(client.sessionId)
+        if (!player) return
+
+        const now = Date.now()
+        const lastRelease = this.lanternCooldowns.get(client.sessionId) || 0
+        if (now - lastRelease < 2500) return
+        this.lanternCooldowns.set(client.sessionId, now)
+
+        const rawText = typeof message?.text === 'string' ? message.text.trim().slice(0, 150) : ''
+        if (!rawText) return
+
+        const validColors = ['gold', 'red', 'green', 'blue', 'star']
+        const color = validColors.includes(message.color || '') ? message.color! : 'gold'
+
+        const validVisibilities = ['public', 'private', 'direct']
+        const visibility = validVisibilities.includes(message.visibility || '')
+          ? message.visibility!
+          : 'public'
+
+        const isAnonymous = Boolean(message.isAnonymous)
+        const senderName = isAnonymous ? 'Ẩn danh' : (player.name || 'Một phù thủy')
+        const recipientSessionId = message.recipientSessionId || ''
+        const recipientName = message.recipientName || ''
+
+        const lanternId = `lantern_${now}_${Math.random().toString(36).substr(2, 6)}`
+        const x = typeof message.x === 'number' ? message.x : player.x
+        const y = typeof message.y === 'number' ? message.y : player.y
+
+        // Broadcast to all clients in room respecting Option 3 privacy
+        this.clients.forEach((cli) => {
+          const isAuthor = cli.sessionId === client.sessionId
+          const isRecipient = visibility === 'direct' && cli.sessionId === recipientSessionId
+
+          let visibleText = rawText
+          if (visibility === 'private' && !isAuthor) {
+            visibleText = ''
+          } else if (visibility === 'direct' && !isAuthor && !isRecipient) {
+            visibleText = ''
+          }
+
+          cli.send(Message.LANTERN_RELEASED, {
+            id: lanternId,
+            text: visibleText,
+            color,
+            visibility,
+            senderSessionId: client.sessionId,
+            senderName,
+            recipientSessionId,
+            recipientName,
+            isAnonymous,
+            x,
+            y,
+            createdAt: now,
+          })
+        })
+      }
+    )
 
     this.onMessage(
       Message.MINIGAME_INVITE,

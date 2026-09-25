@@ -19,17 +19,17 @@ export default class Bootstrap extends Phaser.Scene {
       'assets/background/cloud_day.png',
       'assets/background/cloud_day.json'
     )
-    this.load.image('backdrop_day', 'assets/background/backdrop_day.png')
+    this.load.image('backdrop_day', 'assets/background/backdrop_day.png?v=mid_autumn_v1')
     this.load.atlas(
       'cloud_night',
       'assets/background/cloud_night.png',
       'assets/background/cloud_night.json'
     )
-    this.load.image('backdrop_night', 'assets/background/backdrop_night.png')
+    this.load.image('backdrop_night', 'assets/background/backdrop_night.png?v=mid_autumn_v1')
     this.load.image('sun_moon', 'assets/background/sun_moon.png')
 
     this.load.tilemapTiledJSON('tilemap', 'assets/map/map.json')
-    this.load.image('hogwarts_castle_world', 'assets/map/v2/hogwarts_castle_world.png')
+    this.load.image('hogwarts_castle_world', 'assets/map/v2/hogwarts_castle_world.png?v=mid_autumn_v2')
     this.load.image('great_hall_25d', 'assets/map/v2/great_hall_25d.png')
     this.load.image('gryffindor_common_room_25d', 'assets/map/v2/gryffindor_common_room_25d.png')
     this.load.image('slytherin_common_room_25d', 'assets/map/v2/slytherin_common_room_25d.png')
@@ -47,6 +47,19 @@ export default class Bootstrap extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 32,
     })
+    this.load.image('lantern_star', 'assets/items/lantern_star.png')
+    this.load.image('lantern_red', 'assets/items/lantern_red.png')
+    this.load.image('lantern_gold', 'assets/items/lantern_gold.png')
+    this.load.image('lantern_green', 'assets/items/lantern_green.png')
+    this.load.image('lantern_blue', 'assets/items/lantern_blue.png')
+    this.load.image('lion_head_front', 'assets/npc/lion/lion_head_front.png')
+    this.load.image('lion_head_side', 'assets/npc/lion/lion_head_side.png')
+    this.load.image('lion_head_back', 'assets/npc/lion/lion_head_back.png')
+    this.load.image('lion_body_mid', 'assets/npc/lion/lion_body_mid.png')
+    this.load.image('lion_body_rear', 'assets/npc/lion/lion_body_rear.png')
+    this.load.image('lion_tail', 'assets/npc/lion/lion_tail.png')
+    this.load.image('lion_paw', 'assets/npc/lion/lion_paw.png')
+    this.load.image('ong_dia', 'assets/npc/lion/ong_dia.png')
     this.load.spritesheet('chairs', 'assets/items/chair.png', {
       frameWidth: 32,
       frameHeight: 64,
@@ -75,7 +88,7 @@ export default class Bootstrap extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 32,
     })
-    const charV = 'chibi_v3'
+    const charV = 'chibi_v6'
     this.load.spritesheet('adam', `assets/character/adam.png?v=${charV}`, {
       frameWidth: 32,
       frameHeight: 48,

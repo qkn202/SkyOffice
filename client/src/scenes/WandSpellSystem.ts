@@ -3,6 +3,7 @@ import { recognizeSpell, Point, SpellResult } from '../utils/SpellGestureRecogni
 import MyPlayer from '../characters/MyPlayer'
 import OtherPlayer from '../characters/OtherPlayer'
 import Network from '../services/Network'
+import store from '../stores'
 
 interface ActiveSpell {
   id: string
@@ -18,7 +19,7 @@ export class WandSpellSystem {
 
   private isDrawing = false
   private strokePoints: Point[] = []
-  private strokeScreenPoints: { x: number; y: number }[] = []
+  private drawingPointerId?: number
   private wandGraphics: Phaser.GameObjects.Graphics
   private sparkEmitter?: Phaser.GameObjects.Particles.ParticleEmitter
 
@@ -112,28 +113,60 @@ export class WandSpellSystem {
   }
 
   private initPointerEvents() {
-    this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      // Chỉ nhận diện chuột trái hoặc chạm cảm ứng, bỏ qua nếu click trên UI dialog
-      if (pointer.button !== 0 && !pointer.isDown) return
-      this.startDrawing(pointer)
-    })
+    this.scene.input.on('pointerdown', this.onPointerDown, this)
+    this.scene.input.on('pointermove', this.onPointerMove, this)
+    this.scene.input.on('pointerup', this.onPointerUp, this)
+    this.scene.input.on('pointerupoutside', this.cancelDrawing, this)
+    this.scene.input.on('gameout', this.cancelDrawing, this)
+    this.scene.game.events.on(Phaser.Core.Events.BLUR, this.cancelDrawing, this)
+  }
 
-    this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (!this.isDrawing) return
-      this.continueDrawing(pointer)
-    })
+  private canDraw() {
+    const state = store.getState()
+    return state.user.loggedIn && !state.chat.focused && !state.sorting.ceremonyOpen &&
+      !state.computer.computerDialogOpen && !state.whiteboard.whiteboardDialogOpen &&
+      !state.room.connectionLost
+  }
 
-    this.scene.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-      if (!this.isDrawing) return
-      this.endDrawing(pointer)
-    })
+  private onPointerDown(pointer: Phaser.Input.Pointer, targets: Phaser.GameObjects.GameObject[] = []) {
+    if (this.isDrawing || !this.canDraw() || targets.length > 0) return
+    if (!pointer.wasTouch && pointer.button !== 0) return
+    this.startDrawing(pointer)
+  }
+
+  private onPointerMove(pointer: Phaser.Input.Pointer) {
+    if (!this.isDrawing || pointer.id !== this.drawingPointerId) return
+    if (!pointer.isDown || !this.canDraw()) {
+      this.cancelDrawing()
+      return
+    }
+    this.continueDrawing(pointer)
+  }
+
+  private onPointerUp(pointer: Phaser.Input.Pointer) {
+    if (!this.isDrawing || pointer.id !== this.drawingPointerId) return
+    if (!this.canDraw()) {
+      this.cancelDrawing()
+      return
+    }
+    this.continueDrawing(pointer)
+    this.endDrawing(pointer)
+  }
+
+  private cancelDrawing() {
+    this.isDrawing = false
+    this.drawingPointerId = undefined
+    this.strokePoints = []
+    this.scene.tweens.killTweensOf(this.wandGraphics)
+    this.wandGraphics.clear().setAlpha(1)
   }
 
   private startDrawing(pointer: Phaser.Input.Pointer) {
     this.isDrawing = true
+    this.drawingPointerId = pointer.id
     this.strokePoints = [{ x: pointer.x, y: pointer.y }]
-    this.strokeScreenPoints = [{ x: pointer.x, y: pointer.y }]
-    this.wandGraphics.clear()
+    this.scene.tweens.killTweensOf(this.wandGraphics)
+    this.wandGraphics.clear().setAlpha(1)
     this.renderWandTrail()
   }
 
@@ -143,44 +176,46 @@ export class WandSpellSystem {
     if (dist < 4) return
 
     this.strokePoints.push({ x: pointer.x, y: pointer.y })
-    this.strokeScreenPoints.push({ x: pointer.x, y: pointer.y })
     this.renderWandTrail()
   }
 
   private renderWandTrail() {
-    if (this.strokePoints.length < 2) return
+    if (this.strokePoints.length === 0) return
+
+    // Recognition uses screen coordinates; Phaser draws in world coordinates.
+    const points = this.strokePoints.map(({ x, y }) => this.scene.cameras.main.getWorldPoint(x, y))
 
     this.wandGraphics.clear()
 
     // 1. Lớp hào quang ngoài phát sáng xanh cyan / vàng gold
     this.wandGraphics.lineStyle(8, 0x48dbfb, 0.35)
     this.wandGraphics.beginPath()
-    this.wandGraphics.moveTo(this.strokePoints[0].x, this.strokePoints[0].y)
-    for (let i = 1; i < this.strokePoints.length; i++) {
-      this.wandGraphics.lineTo(this.strokePoints[i].x, this.strokePoints[i].y)
+    this.wandGraphics.moveTo(points[0].x, points[0].y)
+    for (let i = 1; i < points.length; i++) {
+      this.wandGraphics.lineTo(points[i].x, points[i].y)
     }
     this.wandGraphics.strokePath()
 
     // 2. Lớp vệt sáng vàng phép thuật chính
     this.wandGraphics.lineStyle(4, 0xffd32a, 0.85)
     this.wandGraphics.beginPath()
-    this.wandGraphics.moveTo(this.strokePoints[0].x, this.strokePoints[0].y)
-    for (let i = 1; i < this.strokePoints.length; i++) {
-      this.wandGraphics.lineTo(this.strokePoints[i].x, this.strokePoints[i].y)
+    this.wandGraphics.moveTo(points[0].x, points[0].y)
+    for (let i = 1; i < points.length; i++) {
+      this.wandGraphics.lineTo(points[i].x, points[i].y)
     }
     this.wandGraphics.strokePath()
 
     // 3. Lõi trắng tinh khôi ở giữa
     this.wandGraphics.lineStyle(1.8, 0xffffff, 1)
     this.wandGraphics.beginPath()
-    this.wandGraphics.moveTo(this.strokePoints[0].x, this.strokePoints[0].y)
-    for (let i = 1; i < this.strokePoints.length; i++) {
-      this.wandGraphics.lineTo(this.strokePoints[i].x, this.strokePoints[i].y)
+    this.wandGraphics.moveTo(points[0].x, points[0].y)
+    for (let i = 1; i < points.length; i++) {
+      this.wandGraphics.lineTo(points[i].x, points[i].y)
     }
     this.wandGraphics.strokePath()
 
     // Đầu đũa phép (con trỏ hiện tại) tỏa sáng rực rỡ
-    const head = this.strokePoints[this.strokePoints.length - 1]
+    const head = points[points.length - 1]
     this.wandGraphics.fillStyle(0xffffff, 1)
     this.wandGraphics.fillCircle(head.x, head.y, 4.5)
     this.wandGraphics.fillStyle(0xffe066, 0.6)
@@ -189,9 +224,15 @@ export class WandSpellSystem {
 
   private endDrawing(pointer: Phaser.Input.Pointer) {
     this.isDrawing = false
+    this.drawingPointerId = undefined
 
     if (this.strokePoints.length < 6) {
-      this.wandGraphics.clear()
+      this.scene.tweens.add({
+        targets: this.wandGraphics,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => this.wandGraphics.clear().setAlpha(1),
+      })
       return
     }
 
@@ -238,12 +279,13 @@ export class WandSpellSystem {
   }
 
   private playFizzleEffect() {
+    const points = this.strokePoints.map(({ x, y }) => this.scene.cameras.main.getWorldPoint(x, y))
     this.wandGraphics.clear()
     this.wandGraphics.lineStyle(3, 0x888888, 0.5)
     this.wandGraphics.beginPath()
-    this.wandGraphics.moveTo(this.strokePoints[0].x, this.strokePoints[0].y)
-    for (let i = 1; i < this.strokePoints.length; i++) {
-      this.wandGraphics.lineTo(this.strokePoints[i].x, this.strokePoints[i].y)
+    this.wandGraphics.moveTo(points[0].x, points[0].y)
+    for (let i = 1; i < points.length; i++) {
+      this.wandGraphics.lineTo(points[i].x, points[i].y)
     }
     this.wandGraphics.strokePath()
 
@@ -258,7 +300,7 @@ export class WandSpellSystem {
     })
 
     // Hiện text thông báo vẽ lại
-    const head = this.strokePoints[this.strokePoints.length - 1]
+    const head = points[points.length - 1]
     const fizzleText = this.scene.add
       .text(head.x, head.y - 12, '💨 Fizzle... Thử lại!', {
         fontFamily: 'Georgia, serif',
@@ -700,6 +742,10 @@ export class WandSpellSystem {
   }
 
   public update() {
+    if (this.isDrawing) {
+      if (this.canDraw()) this.renderWandTrail()
+      else this.cancelDrawing()
+    }
     // Cập nhật vị trí của Lumos light bám theo người chơi
     for (const [id, light] of this.lumosMap.entries()) {
       const player = id === this.myPlayer.playerId ? this.myPlayer : this.otherPlayerMap.get(id)
@@ -710,6 +756,13 @@ export class WandSpellSystem {
   }
 
   public destroy() {
+    this.scene.input.off('pointerdown', this.onPointerDown, this)
+    this.scene.input.off('pointermove', this.onPointerMove, this)
+    this.scene.input.off('pointerup', this.onPointerUp, this)
+    this.scene.input.off('pointerupoutside', this.cancelDrawing, this)
+    this.scene.input.off('gameout', this.cancelDrawing, this)
+    this.scene.game.events.off(Phaser.Core.Events.BLUR, this.cancelDrawing, this)
+    this.scene.tweens.killTweensOf(this.wandGraphics)
     this.wandGraphics.destroy()
     for (const light of this.lumosMap.values()) light.destroy()
     for (const shield of this.shieldMap.values()) shield.destroy()

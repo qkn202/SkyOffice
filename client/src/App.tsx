@@ -12,11 +12,17 @@ import Chat from './components/Chat'
 import HelperButtonGroup from './components/HelperButtonGroup'
 import MobileVirtualJoystick from './components/MobileVirtualJoystick'
 import ProximityChat from './components/ProximityChat'
+import BackgroundMusic from './components/BackgroundMusic'
 
 const Backdrop = styled.div`
   position: absolute;
   height: 100%;
   width: 100%;
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
 `
 
 function App() {
@@ -54,6 +60,9 @@ function App() {
 
   return (
     <Backdrop>
+      {/* Tự động phát nhạc nền YouTube cố định khi vào game, không có nút chỉnh */}
+      <BackgroundMusic />
+
       <Suspense fallback={<div role="status" style={{ position: 'fixed', inset: 0, zIndex: 5000, display: 'grid', placeItems: 'center', color: '#ffd875', background: 'rgba(9, 7, 20, 0.55)' }}>Đang tải…</div>}>
         {ui}
       </Suspense>

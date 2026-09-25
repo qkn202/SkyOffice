@@ -31,6 +31,8 @@ function App() {
   const whiteboardDialogOpen = useAppSelector((state) => state.whiteboard.whiteboardDialogOpen)
   const roomJoined = useAppSelector((state) => state.room.roomJoined)
   const connectionLost = useAppSelector((state) => state.room.connectionLost)
+  const isReconnecting = useAppSelector((state) => state.room.isReconnecting)
+  const reconnectAttempt = useAppSelector((state) => state.room.reconnectAttempt)
 
   let ui: JSX.Element
   if (loggedIn) {
@@ -73,6 +75,44 @@ function App() {
       )}
       {/* Render HelperButtonGroup if no dialogs are opened. */}
       {!computerDialogOpen && !whiteboardDialogOpen && <HelperButtonGroup />}
+      {isReconnecting && (
+        <div
+          role="status"
+          style={{
+            position: 'fixed',
+            top: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10001,
+            background: 'linear-gradient(135deg, rgba(230, 126, 34, 0.95), rgba(211, 84, 0, 0.95))',
+            color: '#fff',
+            padding: '8px 20px',
+            borderRadius: 30,
+            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4)',
+            fontSize: '14px',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            backdropFilter: 'blur(8px)',
+            pointerEvents: 'none',
+          }}
+        >
+          <span
+            style={{
+              display: 'inline-block',
+              width: 14,
+              height: 14,
+              border: '2px solid #fff',
+              borderTopColor: 'transparent',
+              borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite',
+            }}
+          />
+          Mạng chập chờn, đang tự động kết nối lại (thử {reconnectAttempt}/8)…
+        </div>
+      )}
       {connectionLost && (
         <div role="alertdialog" aria-modal="true" aria-labelledby="connection-lost-title" style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'grid', placeItems: 'center', padding: 20, background: 'rgba(9, 7, 20, 0.85)', color: '#fff' }}>
           <section style={{ maxWidth: 420, padding: 24, borderRadius: 16, background: '#222639', textAlign: 'center' }}>

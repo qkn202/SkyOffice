@@ -452,7 +452,16 @@ export class SkyOffice extends Room<OfficeState> {
     })
   }
 
-  onLeave(client: Client, consented: boolean) {
+  async onLeave(client: Client, consented: boolean) {
+    if (!consented) {
+      try {
+        await this.allowReconnection(client, 40)
+        return
+      } catch (e) {
+        // Did not reconnect within 40s, proceed to clean up
+      }
+    }
+
     this.emoteCooldowns.delete(client.sessionId)
     this.minigameInviteCooldowns.delete(client.sessionId)
     this.communityEventCooldowns.delete(client.sessionId)

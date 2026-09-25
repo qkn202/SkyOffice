@@ -11,6 +11,7 @@ import {
   setLobbyJoined,
   setLobbyConnectionError,
   setConnectionLost,
+  setReconnecting,
   setJoinedRoomData,
   setAvailableRooms,
   addAvailableRooms,
@@ -33,6 +34,7 @@ export default class Network {
   private lobbyConnecting = false
   private lobbyRetryTimer?: number
   private lobbyRetryAttempt = 0
+  private intentionalLeave = false
 
   mySessionId!: string
 
@@ -156,7 +158,38 @@ export default class Network {
     window.clearTimeout(this.lobbyRetryTimer)
     this.lobbyRetryTimer = undefined
     store.dispatch(setConnectionLost(false))
-    this.room.onLeave(() => {
+    store.dispatch(setReconnecting({ isReconnecting: false }))
+    const roomId = this.room.id
+    const sessionId = this.room.sessionId
+
+    this.room.onLeave(async (code) => {
+      console.warn(`[Network] Room left with code ${code}. Attempting automatic reconnect...`)
+      if (this.intentionalLeave) {
+        store.dispatch(setConnectionLost(true))
+        return
+      }
+
+      store.dispatch(setReconnecting({ isReconnecting: true, attempt: 1 }))
+
+      // Automatically retry reconnecting with backoff (up to 8 attempts over ~25s)
+      for (let attempt = 1; attempt <= 8; attempt++) {
+        try {
+          store.dispatch(setReconnecting({ isReconnecting: true, attempt }))
+          const delay = Math.min(1000 + (attempt - 1) * 500, 4000)
+          await new Promise((r) => setTimeout(r, delay))
+          const reconnectedRoom = await this.client.reconnect(roomId, sessionId)
+          this.room = reconnectedRoom as Room<IOfficeState>
+          this.initialize()
+          store.dispatch(setReconnecting({ isReconnecting: false }))
+          store.dispatch(setConnectionLost(false))
+          console.log('[Network] Successfully reconnected to room!')
+          return
+        } catch (e) {
+          console.warn(`[Network] Reconnect attempt ${attempt} failed:`, e)
+        }
+      }
+
+      store.dispatch(setReconnecting({ isReconnecting: false }))
       store.dispatch(setConnectionLost(true))
     })
     void this.lobby.leave().catch(() => {})

@@ -19,6 +19,8 @@ export const roomSlice = createSlice({
     lobbyJoined: false,
     lobbyConnectionError: '',
     connectionLost: false,
+    isReconnecting: false,
+    reconnectAttempt: 0,
     roomJoined: false,
     roomId: '',
     roomName: '',
@@ -34,6 +36,13 @@ export const roomSlice = createSlice({
     },
     setConnectionLost: (state, action: PayloadAction<boolean>) => {
       state.connectionLost = action.payload
+    },
+    setReconnecting: (
+      state,
+      action: PayloadAction<{ isReconnecting: boolean; attempt?: number }>
+    ) => {
+      state.isReconnecting = action.payload.isReconnecting
+      state.reconnectAttempt = action.payload.attempt || 0
     },
     setRoomJoined: (state, action: PayloadAction<boolean>) => {
       state.roomJoined = action.payload
@@ -70,6 +79,7 @@ export const {
   setLobbyJoined,
   setLobbyConnectionError,
   setConnectionLost,
+  setReconnecting,
   setRoomJoined,
   setJoinedRoomData,
   setAvailableRooms,

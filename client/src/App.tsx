@@ -48,7 +48,6 @@ function App() {
         <>
           <Chat />
           <ProximityChat />
-          <MobileVirtualJoystick />
         </>
       )
     }
@@ -72,6 +71,10 @@ function App() {
         <Suspense fallback={null}>
           <SortingCeremony />
         </Suspense>
+      )}
+      {/* Luôn hiển thị cần điều khiển ảo khi đã vào game */}
+      {loggedIn && !computerDialogOpen && !whiteboardDialogOpen && (
+        <MobileVirtualJoystick />
       )}
       {/* Render HelperButtonGroup if no dialogs are opened. */}
       {!computerDialogOpen && !whiteboardDialogOpen && <HelperButtonGroup />}

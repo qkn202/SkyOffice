@@ -1,9 +1,7 @@
-import bcrypt from 'bcrypt'
-import { Room, Client, ServerError } from 'colyseus'
+import { Room, Client } from 'colyseus'
 import { Dispatcher } from '@colyseus/command'
 import { Player, OfficeState, Computer, Whiteboard } from './schema/OfficeState'
 import { Message } from '../../types/Messages'
-import { IRoomData } from '../../types/Rooms'
 import { whiteboardRoomIds } from './schema/OfficeState'
 import PlayerUpdateCommand from './commands/PlayerUpdateCommand'
 import PlayerUpdateNameCommand from './commands/PlayerUpdateNameCommand'
@@ -44,21 +42,12 @@ export class SkyOffice extends Room<OfficeState> {
   private communityEvents: CommunityEvent[] = []
   private name: string
   private description: string
-  private password: string | null = null
-
-  async onCreate(options: IRoomData) {
-    const { name, description, password, autoDispose } = options
+  onCreate(options: { name: string; description: string; autoDispose: boolean }) {
+    const { name, description, autoDispose } = options
     this.name = name
     this.description = description
     this.autoDispose = autoDispose
-
-    let hasPassword = false
-    if (password) {
-      const salt = await bcrypt.genSalt(10)
-      this.password = await bcrypt.hash(password, salt)
-      hasPassword = true
-    }
-    this.setMetadata({ name, description, hasPassword })
+    this.setMetadata({ name, description })
 
     this.setState(new OfficeState())
 
@@ -431,16 +420,6 @@ export class SkyOffice extends Room<OfficeState> {
         if (invite) client.send(Message.MINIGAME_INVITE, invite)
       }
     })
-  }
-
-  async onAuth(client: Client, options: { password: string | null }) {
-    if (this.password) {
-      const validPassword = await bcrypt.compare(options.password, this.password)
-      if (!validPassword) {
-        throw new ServerError(403, 'Password is incorrect!')
-      }
-    }
-    return true
   }
 
   onJoin(client: Client, options: any) {

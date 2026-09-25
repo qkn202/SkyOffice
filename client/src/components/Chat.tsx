@@ -13,13 +13,13 @@ import { setFocused, setShowChat } from '../stores/ChatStore'
 
 const Backdrop = styled.div<{ $isOpen: boolean }>`
   position: fixed;
-  bottom: 60px;
+  bottom: ${(props) => (props.$isOpen ? '60px' : '165px')};
   left: 0;
   height: ${(props) => (props.$isOpen ? '480px' : 'auto')};
   width: ${(props) => (props.$isOpen ? '480px' : 'auto')};
   max-height: 65vh;
   max-width: calc(100vw - 32px);
-  z-index: 100;
+  z-index: ${(props) => (props.$isOpen ? 3000 : 120)};
 `
 
 const Wrapper = styled.div`

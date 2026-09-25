@@ -11,8 +11,10 @@ export class Player extends Schema implements IPlayer {
   @type('string') name = ''
   @type('string') house = ''
   @type('string') texture = 'adam'
-  @type('number') x = 705
-  @type('number') y = 500
+  // Match the Great Hall spawn used by Game.create(). Otherwise stationary
+  // players appear at the legacy office-map coordinates until they move.
+  @type('number') x = 1800
+  @type('number') y = 1450
   @type('string') anim = 'adam_idle_down'
   @type('boolean') readyToConnect = false
   @type('boolean') videoConnected = false

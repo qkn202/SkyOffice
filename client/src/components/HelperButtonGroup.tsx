@@ -1,18 +1,7 @@
 import React, { lazy, Suspense, useEffect, useState } from 'react'
 import styled from 'styled-components'
 import Fab from '@mui/material/Fab'
-import IconButton from '@mui/material/IconButton'
-import Avatar from '@mui/material/Avatar'
 import Tooltip from '@mui/material/Tooltip'
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
-import ShareIcon from '@mui/icons-material/Share'
-import LightModeIcon from '@mui/icons-material/LightMode'
-import DarkModeIcon from '@mui/icons-material/DarkMode'
-import CloseIcon from '@mui/icons-material/Close'
-import LightbulbIcon from '@mui/icons-material/Lightbulb'
-import ArrowRightIcon from '@mui/icons-material/ArrowRight'
-import GitHubIcon from '@mui/icons-material/GitHub'
-import TwitterIcon from '@mui/icons-material/Twitter'
 import VideogameAssetIcon from '@mui/icons-material/VideogameAsset'
 import VideogameAssetOffIcon from '@mui/icons-material/VideogameAssetOff'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
@@ -22,10 +11,8 @@ import MenuBookIcon from '@mui/icons-material/MenuBook'
 import MapIcon from '@mui/icons-material/Map'
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 
-import { BackgroundMode } from '../../../types/BackgroundMode'
-import { setShowJoystick, toggleBackgroundMode } from '../stores/UserStore'
+import { setShowJoystick } from '../stores/UserStore'
 import { useAppSelector, useAppDispatch } from '../hooks'
-import { getAvatarString, getColorByString } from '../util'
 import phaserGame from '../PhaserGame'
 import Bootstrap from '../scenes/Bootstrap'
 import { HogwartsRoomId } from '../scenes/HogwartsRoomManager'
@@ -66,29 +53,6 @@ const Backdrop = styled.div<{ $modalOpen: boolean }>`
   }
 `
 
-const Wrapper = styled.div`
-  position: relative;
-  font-size: 16px;
-  color: #eee;
-  background: #222639;
-  box-shadow: 0px 0px 5px #0000006f;
-  border-radius: 16px;
-  padding: 15px 35px 15px 15px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  .close {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-  }
-
-  .tip {
-    margin-left: 12px;
-  }
-`
-
 const ButtonGroup = styled.div`
   display: flex;
   gap: 10px;
@@ -98,47 +62,7 @@ const ButtonGroup = styled.div`
     justify-content: flex-end;
     gap: 6px;
     min-width: 0;
-
-    a[href*='github.com'],
-    a[href*='twitter.com'] {
-      display: none;
-    }
   }
-`
-
-const Title = styled.h3`
-  font-size: 24px;
-  color: #eee;
-  text-align: center;
-`
-
-const RoomName = styled.div`
-  margin: 10px 20px;
-  max-width: 460px;
-  max-height: 150px;
-  overflow-wrap: anywhere;
-  overflow-y: auto;
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-
-  h3 {
-    font-size: 24px;
-    color: #eee;
-  }
-`
-
-const RoomDescription = styled.div`
-  margin: 0 20px;
-  max-width: 460px;
-  max-height: 150px;
-  overflow-wrap: anywhere;
-  overflow-y: auto;
-  font-size: 16px;
-  color: #c2c2c2;
-  display: flex;
-  justify-content: center;
 `
 
 const StyledFab = styled(Fab)<{ target?: string }>`
@@ -148,8 +72,6 @@ const StyledFab = styled(Fab)<{ target?: string }>`
 `
 
 export default function HelperButtonGroup() {
-  const [showControlGuide, setShowControlGuide] = useState(false)
-  const [showRoomInfo, setShowRoomInfo] = useState(false)
   const [showHousePoints, setShowHousePoints] = useState(false)
   const [miniGameInvite, setMiniGameInvite] = useState<MiniGameInvite>(null)
   const [showMiniGames, setShowMiniGames] = useState(false)
@@ -160,12 +82,8 @@ export default function HelperButtonGroup() {
   const [showWishLantern, setShowWishLantern] = useState(false)
   const [currentRoom, setCurrentRoom] = useState<HogwartsRoomId>('great_hall')
   const showJoystick = useAppSelector((state) => state.user.showJoystick)
-  const backgroundMode = useAppSelector((state) => state.user.backgroundMode)
   const loggedIn = useAppSelector((state) => state.user.loggedIn)
   const roomJoined = useAppSelector((state) => state.room.roomJoined)
-  const roomId = useAppSelector((state) => state.room.roomId)
-  const roomName = useAppSelector((state) => state.room.roomName)
-  const roomDescription = useAppSelector((state) => state.room.roomDescription)
   const sessionId = useAppSelector((state) => state.user.sessionId)
   const hpvnProfile = useAppSelector((state) => state.user.hpvnProfile)
   const assignedHouse = useAppSelector((state) => state.user.assignedHouse)
@@ -306,76 +224,6 @@ export default function HelperButtonGroup() {
             </StyledFab>
           </Tooltip>
         )}
-        {showRoomInfo && (
-          <Wrapper>
-            <IconButton className="close" onClick={() => setShowRoomInfo(false)} size="small">
-              <CloseIcon />
-            </IconButton>
-            <RoomName>
-              <Avatar style={{ background: getColorByString(roomName) }}>
-                {getAvatarString(roomName)}
-              </Avatar>
-              <h3>{roomName}</h3>
-            </RoomName>
-            <RoomDescription>
-              <ArrowRightIcon /> ID: {roomId}
-            </RoomDescription>
-            <RoomDescription>
-              <ArrowRightIcon /> Mô tả: {roomDescription}
-            </RoomDescription>
-            <p className="tip">
-              <LightbulbIcon />
-              Tính năng chia sẻ liên kết sẽ sớm có mặt 😄
-            </p>
-          </Wrapper>
-        )}
-        {showControlGuide && (
-          <Wrapper>
-            <Title>Hướng dẫn điều khiển</Title>
-            <IconButton className="close" onClick={() => setShowControlGuide(false)} size="small">
-              <CloseIcon />
-            </IconButton>
-            <ul>
-              <li>
-                <strong>Chuột trái (kéo vẽ)</strong> để vung đũa vẽ bùa phép Hogwarts (Lumos, Incendio, Protego, Expelliarmus, Wingardium, Patronus)
-              </li>
-              <li>
-                <strong>F</strong> để mở Mạng Lưới Lò Sưởi Floo & Di chuyển giữa 4 Phòng Sinh Hoạt Chung
-              </li>
-              <li>
-                <strong>L</strong> để mở Bảng Thả Thiên Đăng Ước Nguyện Trung Thu (chọn màu đèn, điều ước bí mật hoặc gửi riêng cho bạn bè)
-              </li>
-              <li>
-                <strong>B</strong> để mở Sách Thần Chú & Cử Chỉ Vung Đũa
-              </li>
-              <li>
-                <strong>M</strong> để mở Bản Đồ Đạo Tặc Hogwarts
-              </li>
-              <li>
-                <strong>W, A, S, D hoặc phím mũi tên</strong> để di chuyển
-              </li>
-              <li>
-                <strong>E</strong> để ngồi xuống hoặc đứng dậy khi cạnh ghế
-              </li>
-              <li>
-                <strong>Enter</strong> để mở khung chat
-              </li>
-              <li>
-                <strong>H</strong> để vẫy tay với người ở gần
-              </li>
-              <li>
-                <strong>Chat gần</strong> để gửi tin nhắn cho người ở trong tầm
-              </li>
-              <li>
-                <strong>ESC</strong> để đóng chat hoặc đóng bảng thông tin
-              </li>
-            </ul>
-            <p className="tip">
-              <LightbulbIcon />
-              Nhấn phím L để thả thiên đăng Trung Thu bất cứ lúc nào!
-            </p>
-          </Wrapper>
-        )}
       </div>
       <ButtonGroup>
         {roomJoined && (
@@ -445,52 +293,6 @@ export default function HelperButtonGroup() {
             </StyledFab>
           </Tooltip>
         )}
-        {roomJoined && (
-          <>
-          <Tooltip title="Thông tin phòng">
-              <StyledFab
-                size="small"
-                onClick={() => {
-                  setShowRoomInfo(!showRoomInfo)
-                  setShowControlGuide(false)
-                }}
-              >
-                <ShareIcon />
-              </StyledFab>
-            </Tooltip>
-          <Tooltip title="Hướng dẫn điều khiển">
-              <StyledFab
-                size="small"
-                onClick={() => {
-                  setShowControlGuide(!showControlGuide)
-                  setShowRoomInfo(false)
-                }}
-              >
-                <HelpOutlineIcon />
-              </StyledFab>
-            </Tooltip>
-          </>
-        )}
-        <Tooltip title="Mã nguồn SkyOffice">
-          <StyledFab
-            size="small"
-            href="https://github.com/kevinshen56714/SkyOffice"
-            target="_blank"
-          >
-            <GitHubIcon />
-          </StyledFab>
-        </Tooltip>
-        <Tooltip title="Theo dõi SkyOffice trên X">
-          <StyledFab size="small" href="https://twitter.com/SkyOfficeApp" target="_blank">
-            <TwitterIcon />
-          </StyledFab>
-        </Tooltip>
-
-        <Tooltip title="Đổi giao diện ngày/đêm">
-          <StyledFab size="small" onClick={() => dispatch(toggleBackgroundMode())}>
-            {backgroundMode === BackgroundMode.DAY ? <DarkModeIcon /> : <LightModeIcon />}
-          </StyledFab>
-        </Tooltip>
       </ButtonGroup>
     </Backdrop>
   )

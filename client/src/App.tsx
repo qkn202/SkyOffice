@@ -11,7 +11,6 @@ const SortingCeremony = lazy(() => import('./components/SortingCeremony'))
 import Chat from './components/Chat'
 import HelperButtonGroup from './components/HelperButtonGroup'
 import MobileVirtualJoystick from './components/MobileVirtualJoystick'
-import ProximityChat from './components/ProximityChat'
 import BackgroundMusic from './components/BackgroundMusic'
 
 const Backdrop = styled.div`
@@ -47,7 +46,6 @@ function App() {
         /* Render Chat or VideoConnectionDialog if no dialogs are opened. */
         <>
           <Chat />
-          <ProximityChat />
         </>
       )
     }

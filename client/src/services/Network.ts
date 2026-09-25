@@ -36,6 +36,10 @@ export default class Network {
 
   mySessionId!: string
 
+  get currentRoom(): Room<IOfficeState> | undefined {
+    return this.room
+  }
+
   constructor() {
     const urlParams = new URLSearchParams(window.location.search)
     const customServer = urlParams.get('server')
@@ -163,6 +167,12 @@ export default class Network {
 
     // new instance added to the players MapSchema
     this.room.state.players.onAdd = (player: IPlayer, key: string) => {
+      // If player already has a name when added (joined before us or already named):
+      if (key !== this.mySessionId && player.name && player.name !== '') {
+        phaserEvents.emit(Event.PLAYER_JOINED, player, key)
+        store.dispatch(setPlayerNameMap({ id: key, name: player.name }))
+      }
+
       // track changes on every child object inside the players MapSchema
       player.onChange = (changes) => {
         changes.forEach((change) => {

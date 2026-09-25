@@ -173,6 +173,16 @@ export default class Game extends Phaser.Scene {
     this.network.onChatMessageAdded(this.handleChatMessageAdded, this)
     this.network.onPlayerEmote(this.handlePlayerEmote, this)
 
+    // Spawn any existing players who were already in the room with a set name
+    const currentRoom = this.network?.currentRoom
+    if (currentRoom?.state?.players) {
+      currentRoom.state.players.forEach((player: IPlayer, key: string) => {
+        if (key !== this.network.mySessionId && player.name && player.name !== '') {
+          this.handlePlayerJoined(player, key)
+        }
+      })
+    }
+
     // 7. Khởi tạo hệ thống vung đũa vẽ bùa phép (Wand Gesture Drawing Spell System)
     this.wandSpellSystem = new WandSpellSystem(this, this.myPlayer, this.otherPlayerMap, this.network)
     phaserEvents.on(Event.CAST_SPELL, this.handleSpellCast, this)
@@ -297,6 +307,7 @@ export default class Game extends Phaser.Scene {
 
   // function to add new player to the otherPlayer group
   private handlePlayerJoined(newPlayer: IPlayer, id: string) {
+    if (id === this.network.mySessionId || this.otherPlayerMap.has(id)) return
     const houseSuffix = newPlayer.house ? `_${newPlayer.house.toLowerCase()}` : ''
     const texture = `${newPlayer.texture || 'adam'}${houseSuffix}`
     const otherPlayer = this.add.otherPlayer(newPlayer.x, newPlayer.y, texture, id, newPlayer.name)

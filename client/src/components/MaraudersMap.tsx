@@ -54,8 +54,8 @@ const NPC_LIST: EntityPos[] = [
     id: 'sorting_hat',
     name: 'Chiếc Nón Phân Loại',
     role: 'Bảo vật Hogwarts',
-    x: 770,
-    y: 460,
+    x: 800,
+    y: 455,
     color: '#b8860b',
     room: 'great_hall',
   },
@@ -409,8 +409,8 @@ export default function MaraudersMap({ onClose }: MaraudersMapProps) {
                 <text x="835" y="632" fill="#143b27" fontSize="16" fontWeight="bold" textAnchor="middle">🐍 Dãy Bàn Slytherin</text>
                 <rect x="760" y="430" width="80" height="50" fill="rgba(46, 213, 115, 0.18)" stroke="#1a5336" strokeWidth="2" rx="4" />
                 <text x="800" y="460" fill="#144d2d" fontSize="12" fontWeight="bold" textAnchor="middle">🔥 Lò Sưởi Floo</text>
-                <circle cx="770" cy="460" r="16" fill="rgba(184, 134, 11, 0.3)" stroke="#7a5518" strokeWidth="2" />
-                <text x="770" y="488" fill="#5c3f10" fontSize="12" fontWeight="bold" textAnchor="middle">🎩 Nón Phân Loại</text>
+                <circle cx="800" cy="455" r="16" fill="rgba(184, 134, 11, 0.3)" stroke="#7a5518" strokeWidth="2" />
+                <text x="800" y="483" fill="#5c3f10" fontSize="12" fontWeight="bold" textAnchor="middle">🎩 Nón Phân Loại</text>
                 <text x="688" y="725" fill="#5a3d28" fontSize="15" fontStyle="italic" fontWeight="bold" textAnchor="middle">🚪 Lối Vào Đại Sảnh Đường</text>
               </>
             )}

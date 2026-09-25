@@ -1,4 +1,8 @@
-export default async function handler(req, res) {
+export const config = {
+  runtime: 'edge',
+}
+
+export default async function handler(req) {
   try {
     const upstreamUrl = 'https://www.hpvn-archive.net/floo?hpvn_update=ea7cfe4'
     const response = await fetch(upstreamUrl, {
@@ -42,10 +46,16 @@ export default async function handler(req, res) {
     `
     html = html.replace('</head>', `${customStyle}</head>`)
 
-    res.setHeader('Content-Type', 'text/html; charset=utf-8')
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
-    res.status(200).send(html)
+    return new Response(html, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      },
+    })
   } catch (err) {
-    res.status(500).send(`Lỗi kết nối Mạng Floo: ${err?.message || err}`)
+    return new Response(`Lỗi kết nối Mạng Floo: ${err?.message || err}`, {
+      status: 500,
+    })
   }
 }

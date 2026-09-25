@@ -22,7 +22,7 @@
   resolved "https://registry.npmjs.org/@babel/compat-data/-/compat-data-7.18.13.tgz"
   integrity sha512-5yUzC5LqyTFp2HLmDoxGQelcdYgSpP9xsnMWBphAscOdFrHSAVbLNzWiy32sVNDqJRDiJK6klfDnAgu6PAGSHw==
 
-"@babel/core@^7.18.10":
+"@babel/core@^7.0.0", "@babel/core@^7.0.0-0", "@babel/core@^7.18.10":
   version "7.18.13"
   resolved "https://registry.npmjs.org/@babel/core/-/core-7.18.13.tgz"
   integrity sha512-ZisbOvRRusFktksHSG6pjj1CSvkPkcZq/KHD45LAkVP/oiHJkNBZWfpvlLmX8OtHDG8IuzsFlVRWo08w7Qxn0A==
@@ -247,7 +247,7 @@
     "@babel/helper-validator-identifier" "^7.18.6"
     to-fast-properties "^2.0.0"
 
-"@colyseus/schema@^1.0.22":
+"@colyseus/schema@^1.0.22", "@colyseus/schema@^1.0.28":
   version "1.0.34"
   resolved "https://registry.npmjs.org/@colyseus/schema/-/schema-1.0.34.tgz"
   integrity sha512-2PfCqu9dJlfbkQsxGi9oM+fAmWpPeMLol6tazRdBxb5mj8QykUzRFMY4pipBlUB2tkQ4qidoRMQqjVHj2HznNg==
@@ -298,7 +298,7 @@
   resolved "https://registry.npmjs.org/@emotion/memoize/-/memoize-0.7.5.tgz"
   integrity sha512-igX9a37DR2ZPGYtV6suZ6whr8pTFtyHL3K/oLUotxpSVO2ASaprmAe2Dkq7tBo7CRY7MMDrAa9nuQP9/YG8FxQ==
 
-"@emotion/react@^11.9.0":
+"@emotion/react@^11.0.0-rc.0", "@emotion/react@^11.4.1", "@emotion/react@^11.5.0", "@emotion/react@^11.9.0":
   version "11.9.0"
   resolved "https://registry.npmjs.org/@emotion/react/-/react-11.9.0.tgz"
   integrity sha512-lBVSF5d0ceKtfKCDQJveNAtkC7ayxpVlgOohLgXqRwqWr9bOf4TZAFFyIcNngnV6xK6X4x2ZeXq7vliHkoVkxQ==
@@ -327,7 +327,7 @@
   resolved "https://registry.npmjs.org/@emotion/sheet/-/sheet-1.1.0.tgz"
   integrity sha512-u0AX4aSo25sMAygCuQTzS+HsImZFuS8llY8O7b9MDRzbJM0kVJlAz6KNDqcG7pOuQZJmj/8X/rAW+66kMnMW+g==
 
-"@emotion/styled@^11.8.1":
+"@emotion/styled@^11.3.0", "@emotion/styled@^11.8.1":
   version "11.8.1"
   resolved "https://registry.npmjs.org/@emotion/styled/-/styled-11.8.1.tgz"
   integrity sha512-OghEVAYBZMpEquHZwuelXcRjRJQOVayvbmNR0zr174NHdmMgrNkLC6TljKC5h9lZLkN5WGrdUcrKlOJ4phhoTQ==
@@ -428,7 +428,7 @@
     "@firebase/util" "1.15.3"
     tslib "^2.1.0"
 
-"@firebase/app-compat@0.5.18":
+"@firebase/app-compat@0.5.18", "@firebase/app-compat@0.x":
   version "0.5.18"
   resolved "https://registry.npmjs.org/@firebase/app-compat/-/app-compat-0.5.18.tgz"
   integrity sha512-77H57WuGEsgrv59HdtuhHG+eQdP8di6myz7O93yW6yTZlR/tLSmsCxCq5vHp6AWWDwSV0EVtKUvizXQiQZVBWA==
@@ -439,14 +439,14 @@
     "@firebase/util" "1.15.3"
     tslib "^2.1.0"
 
-"@firebase/app-types@0.9.6":
+"@firebase/app-types@0.9.6", "@firebase/app-types@0.x":
   version "0.9.6"
   resolved "https://registry.npmjs.org/@firebase/app-types/-/app-types-0.9.6.tgz"
   integrity sha512-yPLahy7Esfu2w/yme3msVK4xTkDXQqq6szfQn8yVOQpCKiT5GVFjqNpLbuz6NkX0WuTwUidkmPewW3r4xkvpeg==
   dependencies:
     "@firebase/logger" "0.5.2"
 
-"@firebase/app@0.16.2":
+"@firebase/app@0.16.2", "@firebase/app@0.x":
   version "0.16.2"
   resolved "https://registry.npmjs.org/@firebase/app/-/app-0.16.2.tgz"
   integrity sha512-fyCLPahl3r0Zb7Wzm+JLWcOOH3SaDgAyJzJ8EWIDiv51aNiv+2Pjbpa6myEuP7iXxjmJqrcbVm0GUF7h229T1Q==
@@ -740,7 +740,7 @@
     "@firebase/util" "1.15.3"
     tslib "^2.1.0"
 
-"@firebase/util@1.15.3":
+"@firebase/util@1.15.3", "@firebase/util@1.x":
   version "1.15.3"
   resolved "https://registry.npmjs.org/@firebase/util/-/util-1.15.3.tgz"
   integrity sha512-c/z/gaIlaaLZEuGbE6sLUuJ61tskg1JghvhcNQzW948ASBinbVBBRnZTC4b4yt4LaEtJQkYlyzqLHcutFwEIvA==
@@ -842,7 +842,7 @@
   dependencies:
     "@babel/runtime" "^7.17.2"
 
-"@mui/material@^5.6.4":
+"@mui/material@^5.0.0", "@mui/material@^5.6.4":
   version "5.6.4"
   resolved "https://registry.npmjs.org/@mui/material/-/material-5.6.4.tgz"
   integrity sha512-7TD+u/SExZK2a55w6reX56oPk37gKr/M/XGt156X+m0d9LhzOsW864nkErIX/H8oSkX/6kCimxu1FDsO+gjiVw==
@@ -1070,7 +1070,7 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@^18.0.17":
+"@types/react@*", "@types/react@^17.0.0 || ^18.0.0", "@types/react@^18.0.17":
   version "18.0.17"
   resolved "https://registry.npmjs.org/@types/react/-/react-18.0.17.tgz"
   integrity sha512-38ETy4tL+rn4uQQi7mB81G7V1g0u2ryquNmsVIOKUAEIDK+3CUjZ6rSRpdvS99dNBnkLFL83qfmtLacGOTIhwQ==
@@ -1084,7 +1084,7 @@
   resolved "https://registry.npmjs.org/@types/scheduler/-/scheduler-0.16.2.tgz"
   integrity sha512-hppQEBDmlwhFAXKJX2KnWLYu5yMfi91yazPb2l+lbJiwW+wdo1gNeRA+3RgNSO39WYX2euey41KEwnqesU2Jew==
 
-"@types/styled-components@^5.1.25":
+"@types/styled-components@^5.1.14", "@types/styled-components@^5.1.25":
   version "5.1.25"
   resolved "https://registry.npmjs.org/@types/styled-components/-/styled-components-5.1.25.tgz"
   integrity sha512-fgwl+0Pa8pdkwXRoVPP9JbqF0Ivo9llnmsm+7TCI330kbPIFd9qv1Lrhr37shf4tnxCOSu+/IgqM7uJXLWZZNQ==
@@ -1854,7 +1854,7 @@ re2js@^2.8.3:
   resolved "https://registry.npmjs.org/re2js/-/re2js-2.8.6.tgz"
   integrity sha512-xLgQil4kIUCrAzVk9fRSkxkFNwmygLFjVxXrLc65aE1F0+Zsb8rxumFBy4XKyvgMCTL6kilDq3EZ0piE2dP/Dg==
 
-react-dom@^18.2.0:
+"react-dom@^17.0.0 || ^18.0.0", react-dom@^18.2.0, "react-dom@>= 16.8.0", react-dom@>=16.6.0, react-dom@>=17.0.2:
   version "18.2.0"
   resolved "https://registry.npmjs.org/react-dom/-/react-dom-18.2.0.tgz"
   integrity sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==
@@ -1872,7 +1872,7 @@ react-is@^16.7.0:
   resolved "https://registry.npmjs.org/react-is/-/react-is-16.13.1.tgz"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
-react-is@^17.0.1, react-is@^17.0.2:
+react-is@^17.0.1, react-is@^17.0.2, "react-is@>= 16.8.0":
   version "17.0.2"
   resolved "https://registry.npmjs.org/react-is/-/react-is-17.0.2.tgz"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
@@ -1882,7 +1882,7 @@ react-joystick-component@^6.0.0:
   resolved "https://registry.npmjs.org/react-joystick-component/-/react-joystick-component-6.0.0.tgz"
   integrity sha512-kbhDrPbasELoQcUxG+YNqsjsZDV3xo0TBnGXjv/TekoLZHZmmj/X/Y85YfvEPzWos6C3YmOjQKc5gK59o+jI2w==
 
-react-redux@^7.2.5:
+"react-redux@^7.2.1 || ^8.0.0-beta", react-redux@^7.2.5:
   version "7.2.8"
   resolved "https://registry.npmjs.org/react-redux/-/react-redux-7.2.8.tgz"
   integrity sha512-6+uDjhs3PSIclqoCk0kd6iX74gzrGc3W5zcAjbrFgEdIjRSQObdIwfx80unTkVUYvbQ95Y8Av3OvFHq1w5EOUw==
@@ -1909,7 +1909,7 @@ react-transition-group@^4.4.2:
     loose-envify "^1.4.0"
     prop-types "^15.6.2"
 
-react@^18.2.0:
+"react@^16.8.3 || ^17 || ^18", "react@^16.9.0 || ^17.0.0 || ^18", "react@^17.0.0 || ^18.0.0", react@^18.2.0, "react@>= 16.8.0", react@>=16.6.0, react@>=16.8.0, react@>=17.0.2:
   version "18.2.0"
   resolved "https://registry.npmjs.org/react/-/react-18.2.0.tgz"
   integrity sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==
@@ -1928,7 +1928,7 @@ redux-thunk@^2.4.1:
   resolved "https://registry.npmjs.org/redux-thunk/-/redux-thunk-2.4.1.tgz"
   integrity sha512-OOYGNY5Jy2TWvTL1KgAlVy6dcx3siPJ1wTq741EPyUKfn6W6nChdICjZwCd0p8AZBs5kWpZlbkXW2nE/zjUa+Q==
 
-redux@^4.0.0, redux@^4.1.2:
+redux@^4, redux@^4.0.0, redux@^4.1.2:
   version "4.2.0"
   resolved "https://registry.npmjs.org/redux/-/redux-4.2.0.tgz"
   integrity sha512-oSBmcKKIuIR4ME29/AeNUnl5L+hvBq7OaJWzaptTQJAntaPvxIJqfnjbaEiCzzaIz+XmVILfqAM3Ob0aXLPfjA==
@@ -1983,7 +1983,7 @@ safe-buffer@>=5.1.0, safe-buffer@~5.1.1:
   resolved "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz"
   integrity sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==
 
-sass@^1.42.1:
+sass@*, sass@^1.42.1:
   version "1.51.0"
   resolved "https://registry.npmjs.org/sass/-/sass-1.51.0.tgz"
   integrity sha512-haGdpTgywJTvHC2b91GSq+clTKGbtkkZmVAb82jZQN/wTy6qs8DdFm2lhEQbEwrY0QDRgSQ3xDurqM977C3noA==
@@ -2050,7 +2050,7 @@ strip-ansi@^6.0.0, strip-ansi@^6.0.1:
   dependencies:
     ansi-regex "^5.0.1"
 
-styled-components@^5.3.5:
+styled-components@^5.3.1, styled-components@^5.3.5, "styled-components@>= 2":
   version "5.3.5"
   resolved "https://registry.npmjs.org/styled-components/-/styled-components-5.3.5.tgz"
   integrity sha512-ndETJ9RKaaL6q41B69WudeqLzOpY1A/ET/glXkNZ2T7dPjPqpPCXXQjDFYZWwNnE5co0wX+gTCqx9mfxTmSIPg==
@@ -2132,7 +2132,7 @@ util@^0.10.3:
   dependencies:
     inherits "2.0.3"
 
-vite@^3.0.9:
+vite@^3.0.0, vite@^3.0.9:
   version "3.0.9"
   resolved "https://registry.npmjs.org/vite/-/vite-3.0.9.tgz"
   integrity sha512-waYABTM+G6DBTCpYAxvevpG50UOlZuynR0ckTK5PawNVt7ebX6X7wNXHaGIO6wYYFXSM7/WcuFuO2QzhBB6aMw==

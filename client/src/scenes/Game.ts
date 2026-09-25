@@ -112,7 +112,11 @@ export default class Game extends Phaser.Scene {
 
     this.otherPlayers = this.physics.add.group({ classType: OtherPlayer })
 
-    // 3. Khởi tạo Quản lý Toàn Cảnh Lâu Đài Hogwarts & 4 Phòng Sinh Hoạt Chung
+    // 3. Khởi tạo nến bay ma thuật và ánh sáng Chiaroscuro Hogwarts (tạo các texture ánh sáng trước)
+    this.lightingEffects = new HogwartsLightingEffects(this)
+    this.lightingEffects.init()
+
+    // 4. Khởi tạo Quản lý Toàn Cảnh Lâu Đài Hogwarts & 4 Phòng Sinh Hoạt Chung
     this.roomManager = new HogwartsRoomManager(this, this.myPlayer, this.otherPlayerMap, this.network)
     this.roomManager.init('great_hall')
 
@@ -122,10 +126,6 @@ export default class Game extends Phaser.Scene {
       [this.myPlayer, this.myPlayer.playerContainer],
       this.roomManager.collidersGroup
     )
-
-    // 4. Khởi tạo nến bay ma thuật và ánh sáng Chiaroscuro Hogwarts
-    this.lightingEffects = new HogwartsLightingEffects(this)
-    this.lightingEffects.init()
 
     // 5. Khởi tạo các nhân vật Hogwarts (NPC Giáo sư)
     this.setupGreatHallNPCs()

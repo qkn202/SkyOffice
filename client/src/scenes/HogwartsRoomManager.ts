@@ -79,7 +79,41 @@ export class HogwartsRoomManager {
     )
   }
 
+  private ensureLightingTextures() {
+    if (!this.scene.textures.exists('light_halo_warm')) {
+      const haloCanvas = this.scene.textures.createCanvas('light_halo_warm', 128, 128)
+      if (haloCanvas) {
+        const ctx = haloCanvas.getContext()
+        const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64)
+        grad.addColorStop(0, 'rgba(255, 205, 85, 0.5)')
+        grad.addColorStop(0.4, 'rgba(255, 140, 30, 0.25)')
+        grad.addColorStop(0.8, 'rgba(200, 80, 10, 0.08)')
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+        ctx.fillStyle = grad
+        ctx.fillRect(0, 0, 128, 128)
+        haloCanvas.refresh()
+      }
+    }
+
+    if (!this.scene.textures.exists('light_halo_floo')) {
+      const flooCanvas = this.scene.textures.createCanvas('light_halo_floo', 160, 160)
+      if (flooCanvas) {
+        const ctx = flooCanvas.getContext()
+        const grad = ctx.createRadialGradient(80, 80, 0, 80, 80, 80)
+        grad.addColorStop(0, 'rgba(50, 255, 130, 0.65)')
+        grad.addColorStop(0.35, 'rgba(25, 210, 95, 0.4)')
+        grad.addColorStop(0.7, 'rgba(10, 150, 65, 0.15)')
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+        ctx.fillStyle = grad
+        ctx.fillRect(0, 0, 160, 160)
+        flooCanvas.refresh()
+      }
+    }
+  }
+
   private setupAtmosphericLighting() {
+    this.ensureLightingTextures()
+
     // 1. Lò Sưởi Floo Đại Sảnh
     this.flooLight = this.scene.add
       .image(GH_OFFSET.x + 800, GH_OFFSET.y + 460, 'light_halo_floo')

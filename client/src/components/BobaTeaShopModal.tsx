@@ -116,18 +116,33 @@ export default function BobaTeaShopModal({ onClose }: { onClose: () => void }) {
   
   const launchUrl = `/tiem-tra-nho/?name=${encodeURIComponent(playerName)}&house=${encodeURIComponent(house)}&v=2`
 
-  // Lắng nghe sự kiện từ Iframe khi Barista giao nước hoặc sáng chế món mới
+  // Lắng nghe sự kiện từ Iframe khi Barista giao nước, khách order hoặc viết review
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      const game = phaserGame.scene.keys.game as Game | undefined
+      if (!game || !game.myPlayer) return
+
       if (event.data?.type === 'BOBA_DRINK_SERVED') {
-        const { drinkName, customerName, earning, tip } = event.data
-        const game = phaserGame.scene.keys.game as Game | undefined
-        if (game && game.myPlayer) {
-          // Phát chat thông báo lên đầu nhân vật trong Đại Sảnh SkyOffice
+        const { drinkName, customerName, earning, tip, isPlayerOrder } = event.data
+        if (isPlayerOrder) {
+          game.network.addChatMessage(
+            `vừa nhận được 1 ly [${drinkName}] béo ngậy do chính mình order tại Tiệm Trà Nhỏ! 🧋😋`
+          )
+        } else {
           game.network.addChatMessage(
             `vừa tự tay pha xong 1 ly [${drinkName}] cho ${customerName}! 🧋✨ (+${earning + tip} Galleons)`
           )
         }
+      } else if (event.data?.type === 'BOBA_ORDER_PLACED') {
+        const { drinkName, size, note } = event.data
+        game.network.addChatMessage(
+          `vừa gọi 1 ly [${drinkName} (${size})] tại Tiệm Trà Nhỏ: "${note || 'Pha ngon giúp tớ nhé!'}" 🧋`
+        )
+      } else if (event.data?.type === 'BOBA_REVIEW_SUBMITTED') {
+        const { rating, drink, comment, tip } = event.data
+        game.network.addChatMessage(
+          `vừa chấm ${rating}⭐ cho [${drink}] trong Sổ Lưu Niệm: "${comment}" ${tip > 0 ? `(+tip ${tip}G)` : ''} 🌟`
+        )
       }
     }
 

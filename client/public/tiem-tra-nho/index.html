@@ -117,9 +117,23 @@
           <!-- CỘT TRÁI: DANH SÁCH ĐƠN ĐANG ĐỢI -->
           <aside class="ticket-queue-col">
             <div class="section-title-row">
-              <h3>🛎️ Đơn Khách Đang Chờ</h3>
-              <button class="action-btn-small" id="btnSpawnOrder">+ Thêm Khách</button>
+              <h3>🛎️ Đơn Đang Chờ</h3>
+              <div class="queue-btn-group">
+                <button class="action-btn-small" id="btnSpawnOrder" title="Thêm khách NPC ghé tiệm">+ Khách NPC</button>
+                <button class="action-btn-small player-order-btn" id="btnOpenPlayerOrderModal" title="Nhân vật tự đặt món theo ý thích">🧙‍♂️ Đặt Món</button>
+              </div>
             </div>
+            
+            <!-- BANNER GỌI MÓN RIÊNG CHO NHÂN VẬT -->
+            <button class="player-quick-order-banner" id="bannerOpenPlayerOrder" type="button">
+              <span class="banner-avatar">🧙‍♂️</span>
+              <div class="banner-text">
+                <strong id="bannerPlayerName">Bạn muốn uống gì?</strong>
+                <small>Nhấp để tự chọn công thức & đặt ly riêng!</small>
+              </div>
+              <span class="banner-arrow">➔</span>
+            </button>
+
             <p class="section-desc">Bấm vào vé order để bắt đầu đưa vào bàn pha chế:</p>
             <div class="order-queue-list" id="orderQueueContainer">
               <!-- Render qua JS -->
@@ -543,8 +557,70 @@
             <div class="section-title-row">
               <h3>📖 Sổ Lưu Niệm & Nhận Xét Của Khách Hàng</h3>
               <div class="filter-stars">
-                <button class="star-chip active">Tất cả (150)</button>
-                <button class="star-chip">5 ⭐ (125)</button>
+                <button class="star-chip active" data-filter="all">Tất cả</button>
+                <button class="star-chip" data-filter="student">👑 Học Viên Hogwarts</button>
+                <button class="star-chip" data-filter="5">5 ⭐</button>
+              </div>
+            </div>
+
+            <!-- FORM VIẾT NHẬN XÉT CỦA NHÂN VẬT SKYOFFICE -->
+            <div class="character-review-form-card" id="characterReviewCard">
+              <div class="char-form-header">
+                <div class="char-avatar" id="reviewAuthorAvatar">🧙‍♂️</div>
+                <div class="char-meta">
+                  <h4>✍️ Viết Nhận Xét & Ký Tên Vào Sổ Lưu Niệm</h4>
+                  <small>Người nhận xét: <strong id="charReviewName">Bạn</strong> (<span id="charReviewHouse">GRYFFINDOR</span>)</small>
+                </div>
+              </div>
+
+              <div class="char-form-body">
+                <!-- Chọn sao -->
+                <div class="char-form-field">
+                  <label class="char-field-label">1. Đánh giá chất lượng phục vụ & độ ngon:</label>
+                  <div class="star-picker-interactive" id="starPicker">
+                    <button type="button" class="star-btn active" data-rating="1">★</button>
+                    <button type="button" class="star-btn active" data-rating="2">★</button>
+                    <button type="button" class="star-btn active" data-rating="3">★</button>
+                    <button type="button" class="star-btn active" data-rating="4">★</button>
+                    <button type="button" class="star-btn active" data-rating="5">★</button>
+                    <span class="star-text-status" id="starStatusText">5 / 5 sao (Tuyệt đỉnh xuất sắc! 🌟)</span>
+                  </div>
+                </div>
+
+                <!-- Chọn món đã uống -->
+                <div class="char-form-field">
+                  <label class="char-field-label">2. Món bạn đã thưởng thức tại tiệm:</label>
+                  <select class="char-drink-select" id="charReviewDrinkSelect">
+                    <!-- Tự động load từ menu quán qua JS -->
+                  </select>
+                </div>
+
+                <!-- Cảm nhận -->
+                <div class="char-form-field">
+                  <label class="char-field-label">3. Cảm nhận của bạn về hương vị & tay nghề Barista:</label>
+                  <div class="quick-review-tags">
+                    <button type="button" class="quick-rev-btn" data-text="Trà thơm đậm đà, kem cheese béo ngậy tuyệt đỉnh! 🧋✨">Trà thơm béo ngậy</button>
+                    <button type="button" class="quick-rev-btn" data-text="Trân châu hoàng kim dai dẻo chuẩn vị, uống cực mê! 🌕">Trân châu dai dẻo</button>
+                    <button type="button" class="quick-rev-btn" data-text="Dập nắp cẩn thận, không bị tràn giọt nào. 10 điểm phục vụ! 💯">Dập nắp cẩn thận</button>
+                    <button type="button" class="quick-rev-btn" data-text="Uống một ngụm thấy sảng khoái và ấm lòng trong ngày tuyết rơi! ❄️">Ấm lòng ngày tuyết</button>
+                  </div>
+                  <textarea class="char-review-textarea" id="charReviewInput" rows="2" placeholder="Ghi lại cảm xúc hoặc lời khen tặng dành cho Tiệm Trà Nhỏ..."></textarea>
+                </div>
+
+                <!-- Tip thưởng thêm -->
+                <div class="char-form-field tip-field">
+                  <label class="char-field-label">4. Thưởng Tip thêm cho Barista (tùy tâm):</label>
+                  <div class="tip-options-chips" id="charTipChips">
+                    <button type="button" class="tip-chip active" data-tip="0">0 G</button>
+                    <button type="button" class="tip-chip" data-tip="5">+5 Galleons 🪙</button>
+                    <button type="button" class="tip-chip" data-tip="10">+10 Galleons 🪙</button>
+                    <button type="button" class="tip-chip" data-tip="20">+20 Galleons 🪙</button>
+                  </div>
+                </div>
+
+                <button type="button" class="submit-char-review-btn" id="btnSubmitCharReview">
+                  🌟 Ký Tên & Gửi Nhận Xét Vào Sổ Lưu Niệm!
+                </button>
               </div>
             </div>
 
@@ -585,6 +661,111 @@
       </section>
 
     </main>
+
+    <!-- MODAL ĐẶT MÓN CHO NHÂN VẬT HỌC VIÊN HOGWARTS -->
+    <div class="modal-backdrop" id="playerOrderModal" style="display: none;">
+      <div class="modal-dialog-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-icon">🧋</span>
+            <div>
+              <h3>Đặt Món Cho Nhân Vật</h3>
+              <p class="modal-subtitle">Khách hàng: <strong id="orderCustomerName">Bạn</strong> (<span id="orderCustomerHouse">GRYFFINDOR</span>)</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btnCloseOrderModal" aria-label="Đóng">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- 1. Chọn món từ Menu -->
+          <div class="modal-form-group">
+            <label class="modal-label">1. Chọn Món Trong Thực Đơn Quán:</label>
+            <div class="menu-choice-grid" id="modalMenuChoiceGrid">
+              <!-- Render tự động qua JS từ state.menu -->
+            </div>
+          </div>
+
+          <!-- 2. Chọn Size Ly -->
+          <div class="modal-form-group">
+            <label class="modal-label">2. Kích Thước Ly:</label>
+            <div class="modal-options-row" id="orderSizeOptions">
+              <button type="button" class="opt-btn active" data-size="M">Ly Vừa (M) - Chuẩn</button>
+              <button type="button" class="opt-btn" data-size="L">Ly Lớn (L) (+3 Galleons)</button>
+            </div>
+          </div>
+
+          <!-- 3. Mức Đường & Đá -->
+          <div class="modal-form-row-2col">
+            <div class="modal-form-group">
+              <label class="modal-label">3. Lượng Đường:</label>
+              <div class="modal-options-row" id="orderSugarOptions">
+                <button type="button" class="opt-btn" data-val="0%">0%</button>
+                <button type="button" class="opt-btn" data-val="30%">30%</button>
+                <button type="button" class="opt-btn active" data-val="50%">50%</button>
+                <button type="button" class="opt-btn" data-val="70%">70%</button>
+                <button type="button" class="opt-btn" data-val="100%">100%</button>
+              </div>
+            </div>
+
+            <div class="modal-form-group">
+              <label class="modal-label">4. Lượng Đá:</label>
+              <div class="modal-options-row" id="orderIceOptions">
+                <button type="button" class="opt-btn" data-val="0%">0% (Ấm)</button>
+                <button type="button" class="opt-btn active" data-val="50%">50% (Mát)</button>
+                <button type="button" class="opt-btn" data-val="100%">100% (Lạnh)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Topping Thêm -->
+          <div class="modal-form-group">
+            <label class="modal-label">5. Thêm Topping Yêu Thích (+2 G / loại):</label>
+            <div class="modal-toppings-grid" id="orderToppingsGrid">
+              <label class="modal-check-pill">
+                <input type="checkbox" value="boba_gold" checked>
+                <span>🌕 Trân Châu Hoàng Kim</span>
+              </label>
+              <label class="modal-check-pill">
+                <input type="checkbox" value="boba_star">
+                <span>✨ Trân Châu Tinh Tú</span>
+              </label>
+              <label class="modal-check-pill">
+                <input type="checkbox" value="jelly_moon">
+                <span>🌙 Thạch Trăng Rằm</span>
+              </label>
+              <label class="modal-check-pill">
+                <input type="checkbox" value="cheese_foam" checked>
+                <span>🍦 Kem Cheese Tuyết</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 6. Lời Nhắn Riêng Cho Barista -->
+          <div class="modal-form-group">
+            <label class="modal-label">6. Ghi Chú Riêng Của Nhân Vật (Hiện lên vé order & chat):</label>
+            <div class="quick-note-tags">
+              <button type="button" class="quick-note-btn" data-note="Pha nhiều kem cheese béo thơm giúp tớ nhé! 🧋">Nhiều kem cheese</button>
+              <button type="button" class="quick-note-btn" data-note="Cho mình xin thêm một muỗng trân châu dai dẻo! 🌕">Thêm trân châu</button>
+              <button type="button" class="quick-note-btn" data-note="Pha nhanh giúp mình nha, sắp tới giờ học Bay chổi rồi! 🧹">Giao gấp học Bay</button>
+              <button type="button" class="quick-note-btn" data-note="Uống để lấy sức thức đêm ôn thi Bùa Chú O.W.L. ⚡">Ôn thi O.W.L</button>
+            </div>
+            <input type="text" class="modal-input" id="orderCustomNote" placeholder="Ví dụ: Cho mình thật nhiều trân châu dẻo nhé...">
+          </div>
+
+          <!-- Tổng Giá & Nút Xác Nhận -->
+          <div class="modal-footer-price">
+            <div class="price-summary">
+              <span class="price-lbl">Tổng thanh toán:</span>
+              <strong class="price-num" id="modalOrderTotalPrice">29 Galleons</strong>
+            </div>
+            <div class="modal-btn-group">
+              <button type="button" class="btn-secondary" id="btnCancelOrderModal">Hủy</button>
+              <button type="button" class="btn-primary-order" id="btnConfirmPlaceOrder">🛎️ Gửi Đơn Gọi Món Ngay!</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- TOAST POPUP THÔNG BÁO -->
     <div class="magic-toast" id="magicToast"></div>

@@ -408,6 +408,33 @@ const state = {
   ]
 };
 
+// Khôi phục reviews từ localStorage nếu có
+try {
+  const savedReviews = localStorage.getItem('hpvn_boba_reviews');
+  if (savedReviews) {
+    const parsed = JSON.parse(savedReviews);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      state.reviews = parsed;
+      state.reviewsCount = parsed.length;
+      const sum = parsed.reduce((acc, r) => acc + (r.rating || 5), 0);
+      state.reputation = Math.round((sum / parsed.length) * 10) / 10;
+    }
+  }
+} catch (err) {
+  console.warn('Cannot load reviews from localStorage', err);
+}
+
+// Khôi phục menu từ localStorage nếu có
+try {
+  const savedMenu = localStorage.getItem('hpvn_boba_menu');
+  if (savedMenu) {
+    const parsedMenu = JSON.parse(savedMenu);
+    if (Array.isArray(parsedMenu) && parsedMenu.length > 0) {
+      state.menu = parsedMenu;
+    }
+  }
+} catch (err) {}
+
 // --- 3. TIỆN ÍCH & ĐỒNG BỘ GIAO DIỆN ---
 function showToast(message) {
   const toast = document.getElementById('magicToast');
@@ -477,7 +504,7 @@ function renderOrderQueue() {
     container.innerHTML = `
       <div style="text-align: center; padding: 24px 10px; color: var(--ink-soft); font-size: 0.85rem;">
         <span>🎉 Quán đang hết đơn chờ!</span><br>
-        <small>Hãy bấm nút <strong>"+ Thêm Khách"</strong> để đón khách mới nhé.</small>
+        <small>Hãy bấm nút <strong>"+ Khách NPC"</strong> hoặc <strong>"🧙‍♂️ Đặt Món"</strong> nhé.</small>
       </div>
     `;
     updateActiveTicketRibbon(null);
@@ -486,12 +513,15 @@ function renderOrderQueue() {
 
   state.pendingOrders.forEach((order, idx) => {
     const card = document.createElement('div');
-    card.className = `order-ticket-card ${idx === state.activeOrderIndex ? 'selected' : ''}`;
+    card.className = `order-ticket-card ${idx === state.activeOrderIndex ? 'selected' : ''} ${order.isPlayerOrder ? 'is-player-order' : ''}`;
     card.innerHTML = `
       <div class="ticket-header">
         <span class="cust-avatar">${order.avatar}</span>
         <div>
-          <span class="cust-name">${order.customerName}</span>
+          <span class="cust-name">
+            ${order.customerName}
+            ${order.isPlayerOrder ? '<span class="player-order-badge">🧙‍♂️ ĐƠN CỦA BẠN</span>' : ''}
+          </span>
           <span class="cust-house-tag ${order.house}">${order.houseName}</span>
         </div>
       </div>
@@ -888,18 +918,24 @@ function deliverCraftedCup() {
 
   // Thêm review
   const rating = score >= 85 ? 5 : (score >= 60 ? 4 : 3);
-  state.reviews.unshift({
+  const newRev = {
     author: order.customerName,
     avatar: order.avatar,
+    house: order.houseName,
     rating: rating,
     drink: `🧋 ${order.drinkName} (Size ${order.size})`,
     comment: score >= 90
       ? `Trà ngon xuất sắc! Thao tác pha chế rất điêu luyện, đúng ý mình từng hạt trân châu ❤️.`
       : `Uống khá ngon, phục vụ nhanh nhẹn.`,
     tip: tip,
-    time: 'Vừa xong'
-  });
-  state.reviewsCount++;
+    time: 'Vừa xong',
+    isHogwartsStudent: !!order.isPlayerOrder
+  };
+  state.reviews.unshift(newRev);
+  state.reviewsCount = state.reviews.length;
+  try {
+    localStorage.setItem('hpvn_boba_reviews', JSON.stringify(state.reviews));
+  } catch (e) {}
 
   showToast(`🎉 Giao thành công cho ${order.customerName}! Nhận +${earning} G ${tip > 0 ? `(+${tip} G Tip)` : ''}!`);
 
@@ -913,6 +949,7 @@ function deliverCraftedCup() {
         earning: earning,
         tip: tip,
         score: score,
+        isPlayerOrder: !!order.isPlayerOrder,
         totalGalleons: state.galleons
       }, '*');
     }
@@ -1185,18 +1222,42 @@ function initKitchenControls() {
 
 // --- 7. LOGIC SỔ ĐÁNH GIÁ & NÂNG CẤP ---
 
-function renderReviews() {
+let currentReviewFilter = 'all';
+
+function renderReviews(filter = currentReviewFilter) {
+  currentReviewFilter = filter;
   const container = document.getElementById('reviewsFeedList');
+  if (!container) return;
   container.innerHTML = '';
 
-  state.reviews.forEach(r => {
+  let filtered = state.reviews;
+  if (filter === 'student') {
+    filtered = state.reviews.filter(r => r.isHogwartsStudent || r.avatar === '🧙‍♂️');
+  } else if (filter === '5') {
+    filtered = state.reviews.filter(r => r.rating === 5);
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 24px 10px; color: var(--ink-soft); font-size: 0.85rem;">
+        <span>Chưa có nhận xét nào trong mục này.</span><br>
+        <small>Hãy là người đầu tiên viết cảm nhận nhé! ✍️</small>
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach(r => {
     const card = document.createElement('div');
     card.className = 'review-item-card';
     card.innerHTML = `
       <div class="review-author-avatar">${r.avatar}</div>
       <div class="review-content-col">
         <div class="review-top-meta">
-          <span class="review-author-name">${r.author}</span>
+          <span class="review-author-name">
+            ${r.author}
+            ${(r.isHogwartsStudent || r.avatar === '🧙‍♂️') ? '<span class="student-badge">👑 Học Viên Hogwarts</span>' : ''}
+          </span>
           <span class="review-rating-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
         </div>
         <span class="review-drink-tag">${r.drink} · <em>${r.time}</em></span>
@@ -1210,6 +1271,7 @@ function renderReviews() {
 
 function renderUpgrades() {
   const container = document.getElementById('upgradesList');
+  if (!container) return;
   container.innerHTML = '';
 
   state.upgrades.forEach((up, idx) => {
@@ -1246,12 +1308,377 @@ function renderUpgrades() {
   });
 }
 
+// --- 7b. FORM VIẾT NHẬN XÉT CỦA NHÂN VẬT VÀO SỔ LƯU NIỆM ---
+let currentCharRating = 5;
+let currentCharTip = 0;
+
+function populateReviewDrinkSelect() {
+  const select = document.getElementById('charReviewDrinkSelect');
+  if (!select) return;
+  select.innerHTML = '';
+  state.menu.filter(m => m.active).forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.name;
+    opt.textContent = `${item.name} (${item.price} G)`;
+    select.appendChild(opt);
+  });
+}
+
+function initCharacterReviewControls() {
+  const nameEl = document.getElementById('charReviewName');
+  const houseEl = document.getElementById('charReviewHouse');
+  if (nameEl) nameEl.textContent = state.baristaName;
+  if (houseEl) houseEl.textContent = state.playerHouse.toUpperCase();
+
+  populateReviewDrinkSelect();
+
+  // Chấm sao tương tác
+  const starBtns = document.querySelectorAll('#starPicker .star-btn');
+  const starStatus = document.getElementById('starStatusText');
+
+  const ratingTexts = {
+    1: '1 / 5 sao (Chưa đạt chuẩn! 😢)',
+    2: '2 / 5 sao (Hơi nhạt hoặc ngọt quá! 😕)',
+    3: '3 / 5 sao (Khá ổn, uống được! 👍)',
+    4: '4 / 5 sao (Rất ngon & hài lòng! 😊)',
+    5: '5 / 5 sao (Tuyệt đỉnh xuất sắc! 🌟)'
+  };
+
+  function updateStarUI(val) {
+    currentCharRating = val;
+    starBtns.forEach(btn => {
+      const bVal = parseInt(btn.dataset.rating, 10);
+      btn.classList.toggle('active', bVal <= val);
+    });
+    if (starStatus) starStatus.textContent = ratingTexts[val] || `${val} sao`;
+  }
+
+  starBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      sfx.playIceClink();
+      const val = parseInt(btn.dataset.rating, 10);
+      updateStarUI(val);
+    });
+  });
+
+  // Gợi ý nhanh
+  document.querySelectorAll('.quick-rev-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      sfx.playCupPlace();
+      const textarea = document.getElementById('charReviewInput');
+      if (textarea) {
+        textarea.value = btn.dataset.text;
+        textarea.focus();
+      }
+    });
+  });
+
+  // Chọn tip
+  const tipChips = document.querySelectorAll('#charTipChips .tip-chip');
+  tipChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      sfx.playCupPlace();
+      tipChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentCharTip = parseInt(chip.dataset.tip, 10) || 0;
+    });
+  });
+
+  // Nút gửi nhận xét
+  const submitBtn = document.getElementById('btnSubmitCharReview');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', () => {
+      const inputEl = document.getElementById('charReviewInput');
+      const comment = (inputEl ? inputEl.value.trim() : '') || 'Trà sữa hương vị rất thơm ngon, không gian ấm cúng 5 sao! 🧋✨';
+      const drinkSelect = document.getElementById('charReviewDrinkSelect');
+      const selectedDrink = drinkSelect ? drinkSelect.value : (state.menu[0]?.name || 'Trà Sữa Phép Thuật');
+
+      const newReview = {
+        author: state.baristaName,
+        avatar: '🧙‍♂️',
+        house: state.playerHouse.toUpperCase(),
+        rating: currentCharRating,
+        drink: `🧋 ${selectedDrink}`,
+        comment: comment,
+        tip: currentCharTip,
+        time: 'Vừa xong',
+        isHogwartsStudent: true
+      };
+
+      state.reviews.unshift(newReview);
+      state.reviewsCount = state.reviews.length;
+      if (currentCharTip > 0) {
+        state.totalTips += currentCharTip;
+        state.galleons += currentCharTip;
+      }
+
+      // Cập nhật rating trung bình
+      const sum = state.reviews.reduce((acc, r) => acc + (r.rating || 5), 0);
+      state.reputation = Math.round((sum / state.reviews.length) * 10) / 10;
+
+      // Lưu bền vững vào localStorage
+      try {
+        localStorage.setItem('hpvn_boba_reviews', JSON.stringify(state.reviews));
+      } catch (e) {
+        console.warn('Failed to save reviews', e);
+      }
+
+      sfx.playCash();
+      if (inputEl) inputEl.value = '';
+      updateStarUI(5);
+
+      renderReviews();
+      updateHeaderStats();
+      showToast(`🌟 Cảm ơn ${state.baristaName} đã gửi nhận xét vào Sổ Lưu Niệm!`);
+
+      // Bắn postMessage sang SkyOffice
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: 'BOBA_REVIEW_SUBMITTED',
+            author: state.baristaName,
+            house: state.playerHouse,
+            rating: currentCharRating,
+            drink: selectedDrink,
+            comment: comment,
+            tip: currentCharTip
+          }, '*');
+        }
+      } catch (err) {
+        console.warn('postMessage error:', err);
+      }
+    });
+  }
+
+  // Bộ lọc review
+  const filterChips = document.querySelectorAll('.filter-stars .star-chip');
+  filterChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      sfx.playIceClink();
+      filterChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      renderReviews(chip.dataset.filter || 'all');
+    });
+  });
+}
+
+// --- 7c. LOGIC ĐẶT MÓN CHO NHÂN VẬT (PLAYER ORDER CONTROLS) ---
+let orderSelectedDrink = null;
+let orderSelectedSize = 'M';
+let orderSelectedSugar = '50%';
+let orderSelectedIce = '50%';
+
+function renderModalMenuChoices() {
+  const container = document.getElementById('modalMenuChoiceGrid');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const activeMenu = state.menu.filter(m => m.active);
+  if (activeMenu.length === 0) {
+    container.innerHTML = '<span style="font-size:0.8rem; color:#888;">Quán đang tạm đóng Menu!</span>';
+    return;
+  }
+
+  if (!orderSelectedDrink || !activeMenu.find(m => m.id === orderSelectedDrink.id)) {
+    orderSelectedDrink = activeMenu[0];
+  }
+
+  activeMenu.forEach(item => {
+    const card = document.createElement('div');
+    card.className = `menu-choice-card ${orderSelectedDrink?.id === item.id ? 'active' : ''}`;
+    card.innerHTML = `
+      <span class="choice-icon">${item.icon}</span>
+      <span class="choice-name">${item.name}</span>
+      <span class="choice-price">${item.price} G</span>
+    `;
+
+    card.addEventListener('click', () => {
+      sfx.playCupPlace();
+      orderSelectedDrink = item;
+      renderModalMenuChoices();
+      updateModalOrderPrice();
+    });
+
+    container.appendChild(card);
+  });
+}
+
+function updateModalOrderPrice() {
+  if (!orderSelectedDrink) return;
+  let price = orderSelectedDrink.price;
+  if (orderSelectedSize === 'L') price += 3;
+
+  const checkedTops = document.querySelectorAll('#orderToppingsGrid input:checked');
+  price += checkedTops.length * 2;
+
+  const priceEl = document.getElementById('modalOrderTotalPrice');
+  if (priceEl) priceEl.textContent = `${price} Galleons`;
+}
+
+function initPlayerOrderControls() {
+  const bannerName = document.getElementById('bannerPlayerName');
+  if (bannerName) bannerName.textContent = `${state.baristaName}, bạn muốn uống gì?`;
+
+  const modalCustName = document.getElementById('orderCustomerName');
+  const modalCustHouse = document.getElementById('orderCustomerHouse');
+  if (modalCustName) modalCustName.textContent = state.baristaName;
+  if (modalCustHouse) modalCustHouse.textContent = state.playerHouse.toUpperCase();
+
+  const modal = document.getElementById('playerOrderModal');
+
+  function openOrderModal() {
+    sfx.playIceClink();
+    renderModalMenuChoices();
+    updateModalOrderPrice();
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeOrderModal() {
+    sfx.playCupPlace();
+    if (modal) modal.style.display = 'none';
+  }
+
+  const btnOpen = document.getElementById('btnOpenPlayerOrderModal');
+  const bannerOpen = document.getElementById('bannerOpenPlayerOrder');
+  if (btnOpen) btnOpen.addEventListener('click', openOrderModal);
+  if (bannerOpen) bannerOpen.addEventListener('click', openOrderModal);
+
+  const btnClose = document.getElementById('btnCloseOrderModal');
+  const btnCancel = document.getElementById('btnCancelOrderModal');
+  if (btnClose) btnClose.addEventListener('click', closeOrderModal);
+  if (btnCancel) btnCancel.addEventListener('click', closeOrderModal);
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeOrderModal();
+    });
+  }
+
+  // Chọn size
+  document.querySelectorAll('#orderSizeOptions .opt-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      sfx.playCupPlace();
+      document.querySelectorAll('#orderSizeOptions .opt-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      orderSelectedSize = this.dataset.size;
+      updateModalOrderPrice();
+    });
+  });
+
+  // Chọn đường
+  document.querySelectorAll('#orderSugarOptions .opt-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      sfx.playPump();
+      document.querySelectorAll('#orderSugarOptions .opt-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      orderSelectedSugar = this.dataset.val;
+    });
+  });
+
+  // Chọn đá
+  document.querySelectorAll('#orderIceOptions .opt-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      sfx.playIceClink();
+      document.querySelectorAll('#orderIceOptions .opt-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      orderSelectedIce = this.dataset.val;
+    });
+  });
+
+  // Topping checkbox
+  document.querySelectorAll('#orderToppingsGrid input').forEach(input => {
+    input.addEventListener('change', () => {
+      sfx.playScoop();
+      updateModalOrderPrice();
+    });
+  });
+
+  // Ghi chú nhanh
+  document.querySelectorAll('.quick-note-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      sfx.playCupPlace();
+      const input = document.getElementById('orderCustomNote');
+      if (input) {
+        input.value = this.dataset.note;
+        input.focus();
+      }
+    });
+  });
+
+  // Xác nhận gọi món
+  const btnConfirm = document.getElementById('btnConfirmPlaceOrder');
+  if (btnConfirm) {
+    btnConfirm.addEventListener('click', () => {
+      if (!orderSelectedDrink) {
+        showToast('Vui lòng chọn 1 món thức uống trong Menu!');
+        return;
+      }
+
+      let price = orderSelectedDrink.price;
+      if (orderSelectedSize === 'L') price += 3;
+      const checkedTops = [];
+      document.querySelectorAll('#orderToppingsGrid input:checked').forEach(c => checkedTops.push(c.value));
+      price += checkedTops.length * 2;
+
+      const noteInput = document.getElementById('orderCustomNote');
+      const note = (noteInput ? noteInput.value.trim() : '') || 'Cho mình trân châu dẻo thơm và pha thật ngon nhé!';
+
+      const newOrder = {
+        id: `ORD-VIP-${Date.now().toString().slice(-4)}`,
+        customerName: state.baristaName,
+        avatar: '🧙‍♂️',
+        house: state.playerHouse.slice(0, 4),
+        houseName: state.playerHouse.toUpperCase(),
+        drinkName: orderSelectedDrink.name,
+        size: orderSelectedSize,
+        tea: orderSelectedDrink.baseTea,
+        sugar: orderSelectedSugar,
+        ice: orderSelectedIce,
+        toppings: checkedTops,
+        quote: note,
+        price: price,
+        patience: 100,
+        isPlayerOrder: true
+      };
+
+      state.pendingOrders.unshift(newOrder);
+      state.activeOrderIndex = 0;
+
+      sfx.playCash();
+      closeOrderModal();
+      renderOrderQueue();
+      updateHeaderStats();
+      showToast(`🛎️ Đã đưa vé order của ${state.baristaName} lên Quầy Pha Chế!`);
+
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: 'BOBA_ORDER_PLACED',
+            customerName: state.baristaName,
+            house: state.playerHouse,
+            drinkName: orderSelectedDrink.name,
+            size: orderSelectedSize,
+            sugar: orderSelectedSugar,
+            ice: orderSelectedIce,
+            toppings: checkedTops,
+            note: note,
+            price: price
+          }, '*');
+        }
+      } catch (err) {
+        console.warn('postMessage error:', err);
+      }
+    });
+  }
+}
+
 // --- 8. KHỞI TẠO TỔNG THỂ ---
 window.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initTactileCounterControls();
   initMenuLabControls();
   initKitchenControls();
+  initCharacterReviewControls();
+  initPlayerOrderControls();
 
   renderOrderQueue();
   updateVisualCup();

@@ -201,15 +201,23 @@ class SoundFx {
 
 const sfx = new SoundFx();
 
+// --- ĐỌC PARAMS TỪ SKYOFFICE NẾU CÓ ---
+const urlParams = new URLSearchParams(window.location.search);
+const initialPlayerName = urlParams.get('name') || urlParams.get('player') || 'Bạn';
+const initialHouse = urlParams.get('house') || 'gryffindor';
+const initialGalleons = parseInt(urlParams.get('galleons'), 10) || 350;
+
 // --- 2. TRẠNG THÁI GAME (GAME STATE) ---
 const state = {
-  galleons: 350,
+  galleons: initialGalleons,
   reputation: 4.9,
   reviewsCount: 150,
   cupsSold: 175,
   totalRev: 4250,
   totalTips: 480,
   storeName: 'Tiệm Trà Nhỏ Hogsmeade',
+  baristaName: initialPlayerName,
+  playerHouse: initialHouse,
 
   // Kho nguyên liệu nấu sẵn
   pantry: {
@@ -894,6 +902,23 @@ function deliverCraftedCup() {
   state.reviewsCount++;
 
   showToast(`🎉 Giao thành công cho ${order.customerName}! Nhận +${earning} G ${tip > 0 ? `(+${tip} G Tip)` : ''}!`);
+
+  // Bắn thông điệp ra ngoài SkyOffice nếu đang nhúng trong iframe
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'BOBA_DRINK_SERVED',
+        drinkName: order.drinkName,
+        customerName: order.customerName,
+        earning: earning,
+        tip: tip,
+        score: score,
+        totalGalleons: state.galleons
+      }, '*');
+    }
+  } catch (err) {
+    console.warn('postMessage error:', err);
+  }
 
   state.pendingOrders.splice(state.activeOrderIndex, 1);
   state.activeOrderIndex = 0;

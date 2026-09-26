@@ -28,6 +28,7 @@ import { HogwartsRoomManager, HogwartsRoomId } from './HogwartsRoomManager'
 import { HogwartsLightingEffects } from './hogwarts/HogwartsLightingEffects'
 import { MidAutumnParadeNPC } from './hogwarts/MidAutumnParadeNPC'
 import { LanternManager } from './hogwarts/LanternManager'
+import { BobaTeaStall } from './hogwarts/BobaTeaStall'
 
 export default class Game extends Phaser.Scene {
   network!: Network
@@ -48,6 +49,7 @@ export default class Game extends Phaser.Scene {
   private wandSpellSystem?: WandSpellSystem
   public roomManager!: HogwartsRoomManager
   private midAutumnParadeNPC?: MidAutumnParadeNPC
+  public bobaTeaStall?: BobaTeaStall
   public lanternManager!: LanternManager
 
   constructor() {
@@ -141,10 +143,11 @@ export default class Game extends Phaser.Scene {
       this.roomManager.collidersGroup
     )
 
-    // 5. Khởi tạo các nhân vật Hogwarts (NPC Giáo sư & Bé Rước Đèn Trung Thu)
+    // 5. Khởi tạo các nhân vật Hogwarts (NPC Giáo sư & Bé Rước Đèn Trung Thu & Quầy Trà Sữa)
     this.setupGreatHallNPCs()
     this.setupSortingHat()
     this.midAutumnParadeNPC = new MidAutumnParadeNPC(this, this.myPlayer)
+    this.bobaTeaStall = new BobaTeaStall(this, this.myPlayer)
 
     this.physics.add.overlap(
       this.playerSelector,
@@ -390,6 +393,7 @@ export default class Game extends Phaser.Scene {
     this.wandSpellSystem?.update()
     this.roomManager?.update(t, dt)
     this.midAutumnParadeNPC?.update(dt / 1000)
+    this.bobaTeaStall?.update(dt / 1000)
     if (this.myPlayer && this.network) {
       const nearSortingHat = Phaser.Math.Distance.Between(
         this.myPlayer.x,

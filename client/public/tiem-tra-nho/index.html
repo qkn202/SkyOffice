@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Tiệm Trà Nhỏ Hogwarts · Quán Trà Sữa Phép Thuật 2 Chiều</title>
-  <meta name="description" content="Game mô phỏng tiệm trà sữa phép thuật nhập vai 2 chiều: Barista đứng quầy pha chế & Khách hàng gọi món, thưởng thức và đánh giá.">
+  <title>Tiệm Trà Nhỏ Hogwarts · Mô Phỏng Lập Menu & Pha Chế Thủ Công</title>
+  <meta name="description" content="Game mô phỏng kinh doanh trà sữa: Tự sáng tạo công thức, lập Menu & định giá bán, thực hiện đầy đủ thao tác múc trân châu, rót trà, dập nắp thủ công!">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
             <span class="badge-icon">🧋</span>
             <div>
               <h1 class="store-title" id="storeNameDisplay">Tiệm Trà Nhỏ Hogsmeade</h1>
-              <span class="store-subtitle">Quán Trà Sữa Phép Thuật · Chi nhánh Hogwarts</span>
+              <span class="store-subtitle">Mô Phỏng Lập Menu & Trạm Pha Chế Thủ Công</span>
             </div>
           </div>
         </div>
@@ -30,17 +30,17 @@
         <div class="store-stats">
           <div class="stat-pill" title="Tài sản Galleons">
             <span class="stat-icon">🪙</span>
-            <span class="stat-val" id="galleonBalance">320</span>
+            <span class="stat-val" id="galleonBalance">350</span>
             <span class="stat-lbl">Galleons</span>
           </div>
           <div class="stat-pill" title="Đánh giá quán">
             <span class="stat-icon">⭐</span>
             <span class="stat-val" id="storeRating">4.9</span>
-            <span class="stat-lbl" id="reviewCount">(142 khách)</span>
+            <span class="stat-lbl" id="reviewCount">(150 khách)</span>
           </div>
           <div class="stat-pill" title="Thời tiết hôm nay">
             <span class="stat-icon" id="weatherIcon">❄️</span>
-            <span class="stat-val" id="weatherText">Tuyết Nhẹ</span>
+            <span class="stat-val" id="weatherText">Tuyết Rơi Nhẹ</span>
           </div>
           <button class="sound-toggle-btn" id="soundToggleBtn" aria-label="Bật/Tắt âm thanh" title="Âm thanh game">
             🔊
@@ -48,108 +48,129 @@
         </div>
       </div>
 
-      <!-- THANH CHUYỂN ĐỔI VAI TRÒ 2 CHIỀU (ROLE SWITCHER) -->
-      <nav class="role-nav" aria-label="Chọn góc nhìn vai trò">
-        <button class="role-tab active" data-tab="barista" id="tabBarista">
+      <!-- THANH ĐIỀU HƯỚNG TÍNH NĂNG (FEATURE TABS) -->
+      <nav class="role-nav" aria-label="Chọn tính năng">
+        <!-- TAB 1: QUẦY PHA CHẾ THỦ CÔNG TỪNG BƯỚC -->
+        <button class="role-tab active" data-tab="counter" id="tabCounter">
           <span class="role-icon">🧑‍🍳</span>
           <span class="role-text">
-            <strong>Góc Nhìn Barista</strong>
-            <small>Đứng Quầy Pha Chế</small>
+            <strong>Quầy Pha Chế Thủ Công</strong>
+            <small>Xúc Topping, Rót Trà, Dập Nắp</small>
           </span>
           <span class="badge-count" id="pendingOrdersCount">3</span>
         </button>
 
-        <button class="role-tab" data-tab="customer" id="tabCustomer">
-          <span class="role-icon">🙋‍♂️</span>
+        <!-- TAB 2: PHÒNG SÁNG CHẾ & LẬP MENU -->
+        <button class="role-tab" data-tab="menuLab" id="tabMenuLab">
+          <span class="role-icon">🧪</span>
           <span class="role-text">
-            <strong>Góc Nhìn Khách Hàng</strong>
-            <small>Xem Menu & Gọi Món</small>
+            <strong>Lập Menu & Sáng Chế Món</strong>
+            <small>Phối Công Thức & Định Giá Bán</small>
           </span>
         </button>
 
+        <!-- TAB 3: BẾP NẤU NGUYÊN LIỆU -->
+        <button class="role-tab" data-tab="kitchen" id="tabKitchen">
+          <span class="role-icon">🫕</span>
+          <span class="role-text">
+            <strong>Bếp Nấu Nguyên Liệu</strong>
+            <small>Ủ Trà, Luộc Trân Châu, Đánh Kem</small>
+          </span>
+        </button>
+
+        <!-- TAB 4: SỔ LƯU NIỆM & NÂNG CẤP -->
         <button class="role-tab" data-tab="reviews" id="tabReviews">
           <span class="role-icon">📜</span>
           <span class="role-text">
-            <strong>Sổ Lưu Niệm & Nâng Cấp</strong>
-            <small>Đánh Giá & Lãi Lỗ</small>
+            <strong>Sổ Đánh Giá & Nâng Cấp</strong>
+            <small>Review Của Khách & Mua Máy</small>
           </span>
         </button>
       </nav>
     </header>
 
-    <!-- KHUNG CHÍNH (MAIN CONTENT) -->
+    <!-- KHUNG CHÍNH (MAIN STAGE) -->
     <main class="main-stage">
 
-      <!-- ============================================== -->
-      <!-- TAB 1: GÓC NHÌN BARISTA (NHÂN VIÊN ĐỨNG QUẦY)   -->
-      <!-- ============================================== -->
-      <section class="view-panel active" id="panelBarista">
-        <!-- BẢNG PHẤN KẾ HOẠCH NGÀY (CHALKBOARD) -->
+      <!-- ======================================================== -->
+      <!-- TAB 1: QUẦY PHA CHẾ THỦ CÔNG TƯƠNG TÁC (HANDS-ON COUNTER) -->
+      <!-- ======================================================== -->
+      <section class="view-panel active" id="panelCounter">
         <div class="chalkboard-banner">
           <div class="chalk-header">
-            <span>📋 BẢNG THÔNG BÁO CA TRỰC HÔM NAY</span>
-            <span class="chalk-date" id="currentShiftText">Ca Trực Chiều · Giáo sư & Học sinh ghé đông</span>
+            <span>📋 CA TRỰC BÁN HÀNG · THỰC HIỆN THAO TÁC PHA CHẾ THỦ CÔNG</span>
+            <span class="chalk-date" id="currentShiftText">Khách đang ghé nườm nượp</span>
           </div>
           <div class="chalk-grid">
             <div class="chalk-item">
-              <span class="chalk-label">Dự báo sở thích:</span>
-              <strong id="prefAdvice">Trời tuyết lạnh, khách thích kem cheese dày & vị caramel ngọt ấm.</strong>
+              <span class="chalk-label">Quy trình pha chế chuẩn:</span>
+              <strong>1. Đặt Ly ➔ 2. Múc Topping ➔ 3. Bơm Đường ➔ 4. Rót Trà ➔ 5. Thêm Đá/Kem ➔ 6. Kéo Cần Dập Nắp!</strong>
             </div>
             <div class="chalk-item">
-              <span class="chalk-label">Mục tiêu ca:</span>
-              <strong>Hoàn thành 5 ly · Giữ đánh giá ≥ 4.8 sao</strong>
-            </div>
-            <div class="chalk-item">
-              <span class="chalk-label">Barista đang trực:</span>
-              <strong class="barista-name-tag" id="baristaNameDisplay">Bạn (Phù Thủy Barista)</strong>
+              <span class="chalk-label">Lời khuyên thời tiết:</span>
+              <strong id="prefAdvice">Trời tuyết lạnh, khách thích kem cheese tuyết & ngọt ấm 50%.</strong>
             </div>
           </div>
         </div>
 
-        <div class="barista-workspace-grid">
-          <!-- CỘT TRÁI: DANH SÁCH ĐƠN ĐANG CHỜ (ORDER QUEUE) -->
-          <aside class="orders-sidebar">
+        <div class="hands-on-layout">
+          <!-- CỘT TRÁI: DANH SÁCH ĐƠN ĐANG ĐỢI -->
+          <aside class="ticket-queue-col">
             <div class="section-title-row">
-              <h3>🛎️ Đơn Hàng Đang Chờ</h3>
-              <button class="action-btn-small" id="btnSpawnCustomer" title="Mời thêm khách NPC vào hàng">+ Khách Mới</button>
+              <h3>🛎️ Đơn Khách Đang Chờ</h3>
+              <button class="action-btn-small" id="btnSpawnOrder">+ Thêm Khách</button>
             </div>
-            <p class="section-desc">Bấm vào đơn để bắt đầu đưa vào khay pha chế:</p>
-
+            <p class="section-desc">Bấm vào vé order để bắt đầu đưa vào bàn pha chế:</p>
             <div class="order-queue-list" id="orderQueueContainer">
-              <!-- Sẽ render tự động qua JS -->
-            </div>
-
-            <!-- TỦ NGUYÊN LIỆU TRONG KHO (INVENTORY MINI) -->
-            <div class="pantry-box">
-              <div class="section-title-row">
-                <h4>🍵 Nồi Nấu Cốt Trà & Kho Topping</h4>
-                <button class="action-btn-small" id="btnBrewPantry" title="Nấu thêm các mẻ trà">Nấu Thêm</button>
-              </div>
-              <div class="pantry-items-grid" id="pantryGrid">
-                <!-- JS render -->
-              </div>
+              <!-- Render qua JS -->
             </div>
           </aside>
 
-          <!-- CỘT GIỮA & PHẢI: TRẠM PHA CHẾ TRỰC QUAN (CRAFTING STATION) -->
-          <div class="crafting-workbench">
-            <div class="workbench-header">
-              <div class="active-ticket-info" id="activeTicketInfo">
-                <span class="ticket-status-dot"></span>
-                <span id="activeTicketTitle">Chưa chọn đơn nào. Hãy nhấp vào một đơn hàng bên trái!</span>
+          <!-- KHU VỰC BÀN QUẦY PHA CHẾ THỰC TẾ (TACTILE COUNTERTOP) -->
+          <div class="countertop-workbench">
+            <!-- THANH THÔNG BÁO VÉ ORDER ĐANG LÀM -->
+            <div class="active-ticket-ribbon" id="activeTicketRibbon">
+              <div class="ticket-status-bubble">
+                <span class="status-indicator"></span>
+                <span id="ribbonTicketTitle">Đang pha cho Harry Potter: Hồng Trà Gryffindor (Size L)</span>
               </div>
-              <div class="ticket-note-badge" id="activeTicketNote">Lời nhắn của khách: "Pha ngọt ngào giúp mình nhé!"</div>
+              <div class="ticket-req-tags" id="ribbonTicketReqs">
+                <span class="req-tag">Size L</span>
+                <span class="req-tag">Đường 50%</span>
+                <span class="req-tag">Đá 50%</span>
+                <span class="req-tag">Trân Châu Hoàng Kim</span>
+                <span class="req-tag">Kem Cheese Tuyết</span>
+              </div>
             </div>
 
-            <div class="crafting-arena">
-              <!-- KHU VỰC LY TRÀ TRỰC QUAN -->
-              <div class="cup-display-stage">
-                <div class="cup-visual-wrapper">
-                  <!-- LY THỦY TINH & NƯỚC -->
+            <!-- MẶT BÀN QUẦY GỖ SỒI VỚI CÁC DỤNG CỤ THỰC TẾ -->
+            <div class="wooden-countertop">
+              
+              <!-- 1. KHAY ĐỰNG LY TRỐNG (CUP STACK DISPENSER) -->
+              <div class="tool-station cup-stack-station">
+                <span class="station-label">1. Ngăn Lấy Ly</span>
+                <div class="cup-stack-rack">
+                  <button class="cup-take-btn" data-take-size="M" id="btnTakeCupM" title="Nhấp để lấy ly cỡ M">
+                    <span class="cup-icon">🥤</span>
+                    <small>Ly Vừa (M)</small>
+                  </button>
+                  <button class="cup-take-btn" data-take-size="L" id="btnTakeCupL" title="Nhấp để lấy ly cỡ L">
+                    <span class="cup-icon">🥤</span>
+                    <small>Ly Lớn (L)</small>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 2. BÀN TRUNG TÂM: LY TRÀ TRỰC QUAN ĐANG PHA CHẾ -->
+              <div class="center-cup-station">
+                <div class="station-label">Khu Vực Ly Trà (Đang thao tác)</div>
+
+                <div class="cup-interactive-wrapper">
+                  <!-- LY THỦY TINH VÀ CÁC LỚP CHẤT LỎNG -->
                   <div class="magic-cup" id="magicCup">
                     <!-- Ống hút -->
                     <div class="cup-straw" id="cupStraw"></div>
-                    <!-- Nắp ly -->
+                    <!-- Màng dập nắp -->
                     <div class="cup-lid" id="cupLid"></div>
 
                     <!-- Thân ly -->
@@ -168,321 +189,393 @@
                       <!-- Lớp topping dưới đáy -->
                       <div class="layer-boba-bottom" id="layerBobaBottom"></div>
 
-                      <!-- Tem nhãn dán Barista trên ly -->
+                      <!-- Tem nhãn dán thương hiệu tự tạo -->
                       <div class="cup-stamp-label" id="cupStampLabel">
-                        <span class="stamp-icon">🧋</span>
-                        <span class="stamp-store">HOGSMEADE</span>
-                        <span class="stamp-author" id="stampBaristaText">Pha bởi Bạn</span>
+                        <span class="stamp-icon" id="stampIcon">🧋</span>
+                        <span class="stamp-store" id="stampDrinkName">TRÀ SỮA PHÉP THUẬT</span>
+                        <span class="stamp-author" id="stampAuthor">Tiệm Trà Nhỏ</span>
                       </div>
                     </div>
                   </div>
 
-                  <!-- BÓNG ĐỔ LY -->
+                  <!-- BÓNG ĐỔ -->
                   <div class="cup-shadow"></div>
                 </div>
 
-                <!-- BẢNG TÓM TẮT NGUYÊN LIỆU ĐANG CÓ TRONG LY -->
-                <div class="current-recipe-summary">
-                  <div class="recipe-row">
-                    <span>Size:</span> <strong id="summarySize">Chưa chọn</strong>
-                  </div>
-                  <div class="recipe-row">
-                    <span>Cốt trà:</span> <strong id="summaryTea">Chưa có</strong>
-                  </div>
-                  <div class="recipe-row">
-                    <span>Đường / Đá:</span> <strong id="summarySugarIce">50% / 50%</strong>
-                  </div>
-                  <div class="recipe-row">
-                    <span>Topping:</span> <strong id="summaryToppings">Chưa thêm</strong>
-                  </div>
+                <!-- BẢNG BƯỚC ĐANG LÀM -->
+                <div class="step-guide-indicator" id="stepGuideText">
+                  👉 <em>Bước 1:</em> Nhấp vào ngăn lấy ly để đặt ly lên bàn!
                 </div>
               </div>
 
-              <!-- KHU BẢNG ĐIỀU KHIỂN NGUYÊN LIỆU -->
-              <div class="ingredients-control-panel">
-                <!-- BƯỚC 1: CHỌN CỠ LY -->
-                <div class="ctrl-group">
-                  <label class="ctrl-label">1. Cỡ Ly Phép Thuật:</label>
-                  <div class="btn-pill-group">
-                    <button class="pill-btn active" data-size="M" id="btnSizeM">Cỡ Vừa (M) 350ml</button>
-                    <button class="pill-btn" data-size="L" id="btnSizeL">Cỡ Lớn (L) 500ml</button>
+              <!-- 3. MÁY DẬP NẮP PHÉP THUẬT & KHAY XUẤT NƯỚC (SEALING MACHINE) -->
+              <div class="tool-station sealing-machine-station">
+                <span class="station-label">6. Máy Dập Nắp Phép Thuật</span>
+                <div class="sealer-machine-box">
+                  <div class="sealer-head" id="sealerHead">
+                    <span class="sealer-press-plate"></span>
                   </div>
-                </div>
-
-                <!-- BƯỚC 2: CHỌN CỐT TRÀ -->
-                <div class="ctrl-group">
-                  <label class="ctrl-label">2. Rót Cốt Trà 4 Nhà:</label>
-                  <div class="tea-options-grid">
-                    <button class="tea-card" data-tea="gryffindor">
-                      <span class="tea-swatch gryf"></span>
-                      <div class="tea-info">
-                        <strong>Hồng Trà Gryffindor</strong>
-                        <small>Đỏ ruby · Đậm đà</small>
-                      </div>
-                    </button>
-                    <button class="tea-card" data-tea="slytherin">
-                      <span class="tea-swatch slyth"></span>
-                      <div class="tea-info">
-                        <strong>Lục Trà Slytherin</strong>
-                        <small>Xanh ngọc · The mát</small>
-                      </div>
-                    </button>
-                    <button class="tea-card" data-tea="ravenclaw">
-                      <span class="tea-swatch raven"></span>
-                      <div class="tea-info">
-                        <strong>Trà Lam Ravenclaw</strong>
-                        <small>Hoa đậu biếc · Tinh tế</small>
-                      </div>
-                    </button>
-                    <button class="tea-card" data-tea="hufflepuff">
-                      <span class="tea-swatch huff"></span>
-                      <div class="tea-info">
-                        <strong>Trà Kim Hufflepuff</strong>
-                        <small>Vàng mơ · Béo mật ong</small>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- BƯỚC 3: MỨC ĐƯỜNG & ĐÁ -->
-                <div class="ctrl-group-dual">
-                  <div class="ctrl-subgroup">
-                    <label class="ctrl-label">3. Mức Đường:</label>
-                    <div class="btn-micro-group" id="sugarBtnGroup">
-                      <button class="micro-btn" data-val="0%">0%</button>
-                      <button class="micro-btn" data-val="30%">30%</button>
-                      <button class="micro-btn active" data-val="50%">50%</button>
-                      <button class="micro-btn" data-val="70%">70%</button>
-                      <button class="micro-btn" data-val="100%">100%</button>
-                    </div>
-                  </div>
-
-                  <div class="ctrl-subgroup">
-                    <label class="ctrl-label">4. Lượng Đá:</label>
-                    <div class="btn-micro-group" id="iceBtnGroup">
-                      <button class="micro-btn" data-val="0%">Không đá</button>
-                      <button class="micro-btn active" data-val="50%">Ít đá</button>
-                      <button class="micro-btn" data-val="100%">Đầy đá</button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- BƯỚC 4: THÊM TOPPING -->
-                <div class="ctrl-group">
-                  <label class="ctrl-label">5. Thêm Topping Độc Quyền:</label>
-                  <div class="toppings-toggle-grid" id="toppingsToggleGrid">
-                    <button class="topping-btn" data-top="golden_boba">
-                      <span class="top-icon">🌕</span>
-                      <span>Trân Châu Hoàng Kim</span>
-                    </button>
-                    <button class="topping-btn" data-top="night_star">
-                      <span class="top-icon">✨</span>
-                      <span>Trân Châu Tinh Tú</span>
-                    </button>
-                    <button class="topping-btn" data-top="moon_jelly">
-                      <span class="top-icon">🌙</span>
-                      <span>Thạch Trăng Rằm</span>
-                    </button>
-                    <button class="topping-btn" data-top="cheese_foam">
-                      <span class="top-icon">🍦</span>
-                      <span>Kem Cheese Tuyết</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- HÀNG NÚT THAO TÁC CUỐI CÙNG -->
-                <div class="action-footer-buttons">
-                  <button class="workbench-action-btn secondary" id="btnResetCup">
-                    🗑️ Đổ Đi Làm Lại
+                  <button class="sealer-lever-btn" id="btnPressSealer">
+                    <span class="lever-handle">🕹️</span>
+                    <span>Gạt Cần Dập Nắp!</span>
                   </button>
-                  <button class="workbench-action-btn pulse-glow" id="btnShakeCup">
-                    🪇 Lắc Shaker & Dập Nắp
-                  </button>
-                  <button class="workbench-action-btn primary-deliver" id="btnDeliverOrder">
-                    🛎️ Giao Nước Cho Khách!
+                  <button class="deliver-btn-big" id="btnDeliverCup">
+                    🛎️ Giao Cho Khách!
                   </button>
                 </div>
               </div>
+
+            </div>
+
+            <!-- CÁC HÀNG DỤNG CỤ NGUYÊN LIỆU THỦ CÔNG TRÊN QUẦY -->
+            <div class="ingredients-action-rack">
+              
+              <!-- NHÓM A: ÂU MÚC TOPPING BẰNG MUỖNG -->
+              <div class="action-box">
+                <span class="box-title">🥄 Múc Topping Thả Đáy Ly</span>
+                <div class="action-buttons-grid">
+                  <button class="scoop-btn" data-action="scoop_boba_gold" id="btnScoopGold">
+                    <span class="tool-emoji">🌕</span>
+                    <strong>Trân Châu Hoàng Kim</strong>
+                    <small id="qtyGoldBoba">Còn 45 phần</small>
+                  </button>
+                  <button class="scoop-btn" data-action="scoop_boba_star" id="btnScoopStar">
+                    <span class="tool-emoji">✨</span>
+                    <strong>Trân Châu Tinh Tú</strong>
+                    <small id="qtyStarBoba">Còn 30 phần</small>
+                  </button>
+                  <button class="scoop-btn" data-action="scoop_jelly" id="btnScoopJelly">
+                    <span class="tool-emoji">🌙</span>
+                    <strong>Thạch Trăng Rằm</strong>
+                    <small id="qtyJelly">Còn 28 phần</small>
+                  </button>
+                </div>
+              </div>
+
+              <!-- NHÓM B: CẦN BƠM ĐƯỜNG & SIRO MẬT ONG -->
+              <div class="action-box">
+                <span class="box-title">🍯 Cần Bơm Mức Ngọt (Pump Syrup)</span>
+                <div class="action-buttons-grid pumps-grid">
+                  <button class="pump-btn" data-sugar="0%">
+                    <span class="pump-nozzle">⚪</span>
+                    <strong>0%</strong>
+                    <small>Không đường</small>
+                  </button>
+                  <button class="pump-btn" data-sugar="30%">
+                    <span class="pump-nozzle">🟡</span>
+                    <strong>30%</strong>
+                    <small>1 pump nhẹ</small>
+                  </button>
+                  <button class="pump-btn active" data-sugar="50%">
+                    <span class="pump-nozzle">🟠</span>
+                    <strong>50%</strong>
+                    <small>2 pump vừa</small>
+                  </button>
+                  <button class="pump-btn" data-sugar="70%">
+                    <span class="pump-nozzle">🟤</span>
+                    <strong>70%</strong>
+                    <small>3 pump ngọt</small>
+                  </button>
+                  <button class="pump-btn" data-sugar="100%">
+                    <span class="pump-nozzle">🍯</span>
+                    <strong>100%</strong>
+                    <small>4 pump ngọt lịm</small>
+                  </button>
+                </div>
+              </div>
+
+              <!-- NHÓM C: 4 BÌNH Ủ TRÀ CÓ VÒI GẠT RÓT NƯỚC -->
+              <div class="action-box">
+                <span class="box-title">🫖 Vòi Gạt Rót Cốt Trà 4 Nhà</span>
+                <div class="action-buttons-grid tea-dispensers-grid">
+                  <button class="dispenser-btn gryf" data-pour-tea="gryffindor">
+                    <span class="dispenser-tap">🦁</span>
+                    <strong>Rót Hồng Trà</strong>
+                    <small id="qtyTeaGryf">Còn 15 ly</small>
+                  </button>
+                  <button class="dispenser-btn slyth" data-pour-tea="slytherin">
+                    <span class="dispenser-tap">🐍</span>
+                    <strong>Rót Lục Trà</strong>
+                    <small id="qtyTeaSlyth">Còn 12 ly</small>
+                  </button>
+                  <button class="dispenser-btn raven" data-pour-tea="ravenclaw">
+                    <span class="dispenser-tap">🦅</span>
+                    <strong>Rót Trà Lam</strong>
+                    <small id="qtyTeaRaven">Còn 16 ly</small>
+                  </button>
+                  <button class="dispenser-btn huff" data-pour-tea="hufflepuff">
+                    <span class="dispenser-tap">🦡</span>
+                    <strong>Rót Trà Sữa Kim</strong>
+                    <small id="qtyTeaHuff">Còn 18 ly</small>
+                  </button>
+                </div>
+              </div>
+
+              <!-- NHÓM D: XẺNG XÚC ĐÁ & PHỦ KEM CHEESE -->
+              <div class="action-box">
+                <span class="box-title">❄️ Xúc Đá Viên & Phủ Kem Cheese</span>
+                <div class="action-buttons-grid">
+                  <button class="scoop-btn" data-action="ice_none">
+                    <span class="tool-emoji">🔥</span>
+                    <strong>Không Đá</strong>
+                    <small>Uống ấm</small>
+                  </button>
+                  <button class="scoop-btn" data-action="ice_normal">
+                    <span class="tool-emoji">🧊</span>
+                    <strong>Xúc Đá Viên (50%)</strong>
+                    <small>Mát lạnh lách cách</small>
+                  </button>
+                  <button class="scoop-btn" data-action="ice_full">
+                    <span class="tool-emoji">🏔️</span>
+                    <strong>Đầy Đá (100%)</strong>
+                    <small>Lạnh buốt cực đã</small>
+                  </button>
+                  <button class="scoop-btn cheese-btn" data-action="pour_cheese">
+                    <span class="tool-emoji">🍦</span>
+                    <strong>Phủ Kem Cheese Tuyết</strong>
+                    <small id="qtyCheese">Còn 25 phần</small>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- THANH THAO TÁC PHỤ: ĐỔ ĐI & LẮC SHAKER -->
+            <div class="countertop-bottom-bar">
+              <button class="sub-action-btn discard-btn" id="btnDiscardCup">
+                🗑️ Đổ Đi Làm Lại
+              </button>
+              <button class="sub-action-btn shake-btn" id="btnShakeCup">
+                🪇 Cầm Ly Lắc Đều Shaker Phép Thuật
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ============================================== -->
-      <!-- TAB 2: GÓC NHÌN KHÁCH HÀNG (MENU & ORDER)      -->
-      <!-- ============================================== -->
-      <section class="view-panel" id="panelCustomer">
-        <div class="customer-hero-banner">
-          <div class="customer-banner-content">
-            <h2>📜 Thực Đơn Quán Trà Sữa Hogsmeade</h2>
-            <p>Hôm nay quán được trực ca bởi: <strong class="glow-text" id="custViewBaristaName">Bé Phù Thủy Barista</strong>. Hãy tự tay chọn thức uống yêu thích của bạn!</p>
+      <!-- ======================================================== -->
+      <!-- TAB 2: PHÒNG SÁNG CHẾ & LẬP MENU (R&D DRINK LAB & MENU)  -->
+      <!-- ======================================================== -->
+      <section class="view-panel" id="panelMenuLab">
+        <div class="lab-hero-banner">
+          <div class="lab-banner-content">
+            <h2>🧪 Phòng Nghiên Cứu & Lập Menu Quán Trà Sữa</h2>
+            <p>Tự do kết hợp các loại cốt trà, sữa béo, hương liệu và topping để <strong>tạo ra món trà sữa mới mang tên bạn</strong>, thiết kế tem dán ly và tự quyết định giá bán Galleons!</p>
           </div>
-          <div class="customer-quick-tip">
-            <span>💡 <em>Mẹo:</em> Gõ lời nhắn gửi riêng cho Barista, họ sẽ đọc được ngay trên vé order đấy!</span>
+          <div class="lab-stat-box">
+            <span>Món đang bán trên Menu:</span>
+            <strong id="menuTotalActive">4 / 8 Món</strong>
           </div>
         </div>
 
-        <div class="customer-stage-grid">
-          <!-- DANH SÁCH MENU ĐẶC BIỆT -->
-          <div class="menu-catalog">
-            <h3 class="catalog-heading">⭐ 4 Món Trà Sữa Chữ Ký Của 4 Nhà</h3>
-            <div class="drink-menu-cards-grid" id="drinkMenuCardsGrid">
-              <!-- JS render menu cards -->
+        <div class="menu-lab-grid">
+          <!-- CỘT TRÁI: BẢNG SÁNG CHẾ MÓN MỚI (RECIPE CREATOR) -->
+          <div class="creator-card">
+            <h3>✨ Sáng Chế Món Trà Sữa Mới</h3>
+
+            <!-- 1. Đặt tên món -->
+            <div class="form-row">
+              <label>1. Tên món trà sữa của bạn:</label>
+              <input type="text" class="cute-input" id="customDrinkName" value="Trà Sữa Sư Tử Hoàng Kim" placeholder="Nhập tên món độc quyền...">
             </div>
 
-            <!-- DANH SÁCH ĐƠN HÀNG BẠN ĐÃ ĐẶT VÀ TRẠNG THÁI -->
-            <div class="customer-orders-history">
-              <h3 class="catalog-heading">📦 Đơn Trà Sữa Của Bạn</h3>
-              <div class="my-order-tracker-card" id="myOrderTracker">
-                <div class="tracker-header">
-                  <span class="tracker-id" id="trackerId">#ORDER-001</span>
-                  <span class="tracker-pill preparing" id="trackerStatus">Đang chuẩn bị...</span>
-                </div>
-                <div class="tracker-body">
-                  <div class="tracker-drink-name" id="trackerDrinkName">🦁 Hồng Trà Sư Tử Gryffindor (Size L)</div>
-                  <div class="tracker-sub" id="trackerSub">50% Đường, 50% Đá · Trân Châu Hoàng Kim, Kem Cheese</div>
-                  <div class="tracker-note" id="trackerNote">Ghi chú của bạn: "Pha nhiều trân châu giúp mình nha!"</div>
-                </div>
-                <!-- THANH TIẾN ĐỘ THỜI GIAN THỰC -->
-                <div class="tracker-timeline">
-                  <div class="step-node active" id="node1"><span>1</span> Nhận Đơn</div>
-                  <div class="step-node" id="node2"><span>2</span> Rót Trà</div>
-                  <div class="step-node" id="node3"><span>3</span> Lắc Shaker</div>
-                  <div class="step-node" id="node4"><span>4</span> Sẵn Sàng</div>
-                </div>
-                
-                <!-- NÚT UỐNG & REVIEW KHI ĐƠN ĐÃ XONG -->
-                <div class="tracker-actions" id="trackerActions" style="display: none;">
-                  <button class="drink-btn-enjoy" id="btnEnjoyDrink">🧋 Uống Ngay (+Hồi 30 MP)</button>
-                  <button class="review-btn-open" id="btnOpenReviewModal">⭐ Chấm Sao & Viết Khen Barista</button>
-                </div>
+            <!-- 2. Chọn cốt trà cơ bản -->
+            <div class="form-row">
+              <label>2. Chọn Cốt Trà Nền (Tea Base):</label>
+              <div class="selection-chips-grid" id="baseTeaSelector">
+                <button class="chip-select active" data-val="gryffindor">🦁 Hồng Trà Đậm Đà</button>
+                <button class="chip-select" data-val="slytherin">🐍 Lục Trà Bạc Hà</button>
+                <button class="chip-select" data-val="ravenclaw">🦅 Trà Lam Hoa Đậu Biếc</button>
+                <button class="chip-select" data-val="hufflepuff">🦡 Trà Sữa Bơ Mật Ong</button>
               </div>
             </div>
+
+            <!-- 3. Chọn lớp béo / vị sữa -->
+            <div class="form-row">
+              <label>3. Loại Sữa / Vị Kem Hòa Quyện:</label>
+              <div class="selection-chips-grid" id="milkBlendSelector">
+                <button class="chip-select active" data-val="fresh_milk">🥛 Sữa Tươi Thanh Trùng</button>
+                <button class="chip-select" data-val="condensed">🍯 Sữa Đặc Hoàng Gia</button>
+                <button class="chip-select" data-val="caramel">🍮 Sốt Caramel Khói</button>
+                <button class="chip-select" data-val="coconut">🥥 Cốt Dừa Thơm Béo</button>
+              </div>
+            </div>
+
+            <!-- 4. Chọn Topping Mặc Định -->
+            <div class="form-row">
+              <label>4. Topping Đi Kèm Trong Món:</label>
+              <div class="toppings-checkboxes-grid">
+                <label class="top-checkbox"><input type="checkbox" value="golden_boba" checked> 🌕 Trân Châu Hoàng Kim</label>
+                <label class="top-checkbox"><input type="checkbox" value="night_star"> ✨ Trân Châu Tinh Tú</label>
+                <label class="top-checkbox"><input type="checkbox" value="moon_jelly" checked> 🌙 Thạch Trăng Rằm</label>
+                <label class="top-checkbox"><input type="checkbox" value="cheese_foam"> 🍦 Kem Cheese Tuyết</label>
+              </div>
+            </div>
+
+            <!-- 5. Thiết kế Tem Dán Ly -->
+            <div class="form-row">
+              <label>5. Biểu Tượng Tem Dán Ly:</label>
+              <div class="icon-picker-row" id="stampIconPicker">
+                <button class="icon-pick-btn active" data-icon="🧋">🧋</button>
+                <button class="icon-pick-btn" data-icon="🦁">🦁</button>
+                <button class="icon-pick-btn" data-icon="🐍">🐍</button>
+                <button class="icon-pick-btn" data-icon="🦅">🦅</button>
+                <button class="icon-pick-btn" data-icon="🦡">🦡</button>
+                <button class="icon-pick-btn" data-icon="⚡">⚡</button>
+                <button class="icon-pick-btn" data-icon="✨">✨</button>
+                <button class="icon-pick-btn" data-icon="🌙">🌙</button>
+              </div>
+            </div>
+
+            <!-- 6. Định Giá Bán & Tính Lãi Lỗ (PRICING STRATEGY) -->
+            <div class="pricing-strategy-box">
+              <div class="cost-breakdown">
+                <span>Chi phí nguyên liệu gốc (Cost):</span>
+                <strong id="calcDrinkCost">14 Galleons</strong>
+              </div>
+
+              <div class="price-slider-wrap">
+                <div class="price-slider-header">
+                  <label>Giá bán ra Menu (Galleons):</label>
+                  <strong class="target-price-display" id="displaySellingPrice">26 G</strong>
+                </div>
+                <input type="range" class="cute-slider" id="sellingPriceSlider" min="15" max="50" value="26" step="1">
+              </div>
+
+              <!-- ĐÁNH GIÁ TÂM LÝ KHÁCH HÀNG KHI NHÌN GIÁ NÀY -->
+              <div class="pricing-sentiment" id="pricingSentimentText">
+                😊 <em>Mức giá lý tưởng:</em> Khách hàng cảm thấy rất xứng đáng, doanh thu và uy tín sẽ tăng cao!
+              </div>
+            </div>
+
+            <button class="save-recipe-btn" id="btnSaveNewRecipe">
+              📋 Lưu Món & Đưa Lên Bảng Menu Quán!
+            </button>
           </div>
 
-          <!-- BẢNG TÙY BIẾN ORDER CỦA KHÁCH (ORDER CUSTOMIZER) -->
-          <aside class="customer-order-builder">
-            <div class="builder-card">
-              <h3>📝 Tùy Chỉnh Đơn Của Bạn</h3>
+          <!-- CỘT PHẢI: BẢNG MENU HIỆN TẠI CỦA TIỆM (ACTIVE MENU BOARD) -->
+          <div class="active-menu-board-card">
+            <h3>📜 Bảng Menu Quán Đang Phục Vụ</h3>
+            <p class="section-desc">Bạn có thể bật / tắt hoặc xóa bớt món để tối ưu hóa doanh thu ca bán:</p>
 
-              <div class="builder-field">
-                <label>Tên người đặt:</label>
-                <input type="text" class="cute-input" id="custNameInput" value="HarryPotter" placeholder="Nhập tên phù thủy của bạn...">
-              </div>
-
-              <div class="builder-field">
-                <label>Chọn món cơ bản:</label>
-                <select class="cute-select" id="custBaseDrinkSelect">
-                  <option value="gryffindor">🦁 Hồng Trà Gryffindor Đậm Đà (20 Galleons)</option>
-                  <option value="slytherin">🐍 Lục Trà Slytherin The Mát (20 Galleons)</option>
-                  <option value="ravenclaw">🦅 Trà Lam Ravenclaw Thơm Béo (22 Galleons)</option>
-                  <option value="hufflepuff">🦡 Trà Sữa Bơ Hufflepuff Mật Ong (22 Galleons)</option>
-                </select>
-              </div>
-
-              <div class="builder-field">
-                <label>Kích thước ly:</label>
-                <div class="btn-pill-group">
-                  <button class="pill-btn active" data-cust-size="M" id="custSizeM">Vừa (M) - 0 G</button>
-                  <button class="pill-btn" data-cust-size="L" id="custSizeL">Lớn (L) + 3 G</button>
-                </div>
-              </div>
-
-              <div class="builder-field">
-                <label>Tùy chọn ngọt & đá:</label>
-                <div class="dual-row">
-                  <select class="cute-select" id="custSugarSelect">
-                    <option value="0%">0% Đường (Không ngọt)</option>
-                    <option value="30%">30% Đường (Ít ngọt)</option>
-                    <option value="50%" selected>50% Đường (Vừa vặn)</option>
-                    <option value="70%">70% Đường (Ngọt thơm)</option>
-                    <option value="100%">100% Đường (Ngọt lịm)</option>
-                  </select>
-                  <select class="cute-select" id="custIceSelect">
-                    <option value="0%">0% Đá (Ấm nóng)</option>
-                    <option value="50%" selected>50% Đá (Mát lạnh)</option>
-                    <option value="100%">100% Đá (Lạnh buốt)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="builder-field">
-                <label>Topping yêu thích (+3 Galleons/món):</label>
-                <div class="cust-toppings-grid">
-                  <label class="topping-check"><input type="checkbox" value="golden_boba" checked> 🌕 Trân Châu Hoàng Kim</label>
-                  <label class="topping-check"><input type="checkbox" value="night_star"> ✨ Trân Châu Tinh Tú</label>
-                  <label class="topping-check"><input type="checkbox" value="moon_jelly"> 🌙 Thạch Trăng Rằm</label>
-                  <label class="topping-check"><input type="checkbox" value="cheese_foam" checked> 🍦 Kem Cheese Tuyết</label>
-                </div>
-              </div>
-
-              <div class="builder-field">
-                <label>Lời nhắn gửi riêng cho Barista:</label>
-                <textarea class="cute-textarea" id="custNoteInput" rows="2" placeholder="Ví dụ: Cho mình xin nhiều trân châu và kem béo nhé bạn ơi ❤️..."></textarea>
-              </div>
-
-              <div class="builder-checkout-box">
-                <div class="checkout-total">
-                  <span>Tổng thanh toán:</span>
-                  <strong class="total-price" id="custTotalGalleons">26 Galleons</strong>
-                </div>
-                <button class="order-submit-btn" id="btnSubmitCustomerOrder">
-                  🛎️ Gửi Đơn Đến Quầy Barista!
-                </button>
-              </div>
+            <div class="menu-items-table" id="menuItemsTableContainer">
+              <!-- Render tự động qua JS -->
             </div>
-          </aside>
+          </div>
         </div>
       </section>
 
-      <!-- ============================================== -->
-      <!-- TAB 3: SỔ LƯU NIỆM, ĐÁNH GIÁ & NÂNG CẤP TIỆM   -->
-      <!-- ============================================== -->
+      <!-- ======================================================== -->
+      <!-- TAB 3: BẾP NẤU NGUYÊN LIỆU (KITCHEN & BATCH COOKING)     -->
+      <!-- ======================================================== -->
+      <section class="view-panel" id="panelKitchen">
+        <div class="kitchen-hero-banner">
+          <div class="kitchen-banner-content">
+            <h2>🫕 Bếp Nấu Nguyên Liệu Hogsmeade</h2>
+            <p>Trực tiếp đun nấu các mẻ trân châu đường đen, ủ các bình trà thơm lừng và đánh kem cheese béo ngậy để nạp đầy kho quầy pha chế!</p>
+          </div>
+        </div>
+
+        <div class="kitchen-stations-grid">
+          <!-- 1. VẠC NẤU TRÂN CHÂU HOÀNG KIM & ĐƯỜNG ĐEN -->
+          <div class="kitchen-pot-card">
+            <div class="pot-header">
+              <span class="pot-icon">🫕</span>
+              <div>
+                <h4>Vạc Luộc Trân Châu Hoàng Kim</h4>
+                <small>Thời gian sôi: 5 giây · Được 25 phần</small>
+              </div>
+            </div>
+            <div class="pot-visual boba-pot-visual">
+              <div class="bubbling-liquid" id="potLiquid1"></div>
+            </div>
+            <div class="pot-status" id="potStatus1">Sẵn sàng đun mẻ mới</div>
+            <button class="cook-action-btn" id="btnCookBobaGold">
+              🔥 Đổ Trân Châu & Nấu Mẻ Mới (Tốn 15 G)
+            </button>
+          </div>
+
+          <!-- 2. BÌNH Ủ TRÀ LÁ PHƯƠNG ĐÔNG -->
+          <div class="kitchen-pot-card">
+            <div class="pot-header">
+              <span class="pot-icon">🫖</span>
+              <div>
+                <h4>Bình Ủ Cốt Trà Thảo Mộc</h4>
+                <small>Chiết xuất tinh chất trà · Được 20 ly</small>
+              </div>
+            </div>
+            <div class="pot-visual tea-pot-visual">
+              <div class="bubbling-liquid tea" id="potLiquid2"></div>
+            </div>
+            <div class="pot-status" id="potStatus2">Sẵn sàng ủ mẻ mới</div>
+            <button class="cook-action-btn" id="btnBrewTeaBatch">
+              🌿 Thả Túi Trà & Ủ Cốt Trà (Tốn 12 G)
+            </button>
+          </div>
+
+          <!-- 3. MÁY ĐÁNH BÔNG KEM CHEESE TUYẾT -->
+          <div class="kitchen-pot-card">
+            <div class="pot-header">
+              <span class="pot-icon">🥣</span>
+              <div>
+                <h4>Cối Đánh Kem Cheese Tuyết</h4>
+                <small>Đánh bông phô mai kem xốp · Được 20 phần</small>
+              </div>
+            </div>
+            <div class="pot-visual foam-pot-visual">
+              <div class="bubbling-liquid foam" id="potLiquid3"></div>
+            </div>
+            <div class="pot-status" id="potStatus3">Sẵn sàng đánh mẻ mới</div>
+            <button class="cook-action-btn" id="btnWhipFoamBatch">
+              🍦 Đánh Bông Kem Cheese (Tốn 14 G)
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB 4: SỔ ĐÁNH GIÁ & NÂNG CẤP (REVIEWS & UPGRADES)      -->
+      <!-- ======================================================== -->
       <section class="view-panel" id="panelReviews">
         <div class="reviews-page-grid">
           <!-- CỘT TRÁI: SỔ LƯU NIỆM & REVIEW CỦA KHÁCH -->
           <div class="guestbook-container">
             <div class="section-title-row">
-              <h3>📖 Sổ Lưu Niệm & Đánh Giá Của Khách Hàng</h3>
+              <h3>📖 Sổ Lưu Niệm & Nhận Xét Của Khách Hàng</h3>
               <div class="filter-stars">
-                <button class="star-chip active">Tất cả (142)</button>
-                <button class="star-chip">5 ⭐ (118)</button>
-                <button class="star-chip">4 ⭐ (20)</button>
+                <button class="star-chip active">Tất cả (150)</button>
+                <button class="star-chip">5 ⭐ (125)</button>
               </div>
             </div>
 
-            <!-- DANH SÁCH REVIEWS -->
             <div class="reviews-feed-list" id="reviewsFeedList">
-              <!-- JS render reviews -->
+              <!-- JS render -->
             </div>
           </div>
 
           <!-- CỘT PHẢI: NÂNG CẤP TIỆM & TỔNG KẾT TÀI CHÍNH -->
           <aside class="upgrades-and-finance">
-            <!-- TỔNG KẾT TÀI CHÍNH -->
             <div class="finance-card">
-              <h4>📊 Doanh Thu & Uy Tín Quán</h4>
+              <h4>📊 Hiệu Quả Kinh Doanh & Menu</h4>
               <div class="finance-metrics">
                 <div class="metric-box">
                   <small>Tổng ly đã bán</small>
-                  <strong id="finTotalCups">168 Ly</strong>
+                  <strong id="finTotalCups">175 Ly</strong>
                 </div>
                 <div class="metric-box">
                   <small>Tổng doanh thu</small>
-                  <strong id="finTotalRev">3,850 G</strong>
+                  <strong id="finTotalRev">4,250 G</strong>
                 </div>
                 <div class="metric-box">
                   <small>Tiền Tip nhận thêm</small>
-                  <strong id="finTotalTips">420 G</strong>
+                  <strong id="finTotalTips">480 G</strong>
                 </div>
               </div>
             </div>
 
-            <!-- NÂNG CẤP QUẦY PHÉP THUẬT -->
             <div class="upgrades-card">
-              <h4>🛠️ Nâng Cấp Quán Trà Sữa Hogsmeade</h4>
-              <p class="section-desc">Dùng tiền lời Galleons để đầu tư trang thiết bị ma thuật:</p>
-
+              <h4>🛠️ Nâng Cấp Quán Trà Sữa</h4>
+              <p class="section-desc">Đầu tư trang thiết bị ma thuật giúp quầy làm việc nhanh hơn:</p>
               <div class="upgrade-items-list" id="upgradesList">
                 <!-- JS render -->
               </div>
@@ -495,43 +588,6 @@
 
     <!-- TOAST POPUP THÔNG BÁO -->
     <div class="magic-toast" id="magicToast"></div>
-
-    <!-- MODAL REVIEW CỦA KHÁCH HÀNG -->
-    <div class="modal-overlay" id="reviewModal" hidden>
-      <div class="modal-box">
-        <button class="modal-close-btn" id="btnCloseReviewModal">✕</button>
-        <h3>⭐ Đánh Giá Ly Trà Sữa Của Bạn</h3>
-        <p>Gửi đôi lời cảm nghĩ đến bạn Barista vừa pha nước cho bạn nhé:</p>
-
-        <div class="star-picker" id="starPicker">
-          <span class="pick-star active" data-rating="1">★</span>
-          <span class="pick-star active" data-rating="2">★</span>
-          <span class="pick-star active" data-rating="3">★</span>
-          <span class="pick-star active" data-rating="4">★</span>
-          <span class="pick-star active" data-rating="5">★</span>
-        </div>
-
-        <div class="form-group">
-          <label>Cảm nghĩ / Lời khen:</label>
-          <textarea class="cute-textarea" id="reviewCommentInput" rows="3" placeholder="Trà sữa rất thơm ngon, chuẩn vị, kem béo ngậy..."></textarea>
-        </div>
-
-        <div class="form-group tip-group">
-          <label>Tặng thêm tiền Tip cho Barista:</label>
-          <div class="btn-micro-group" id="tipBtnGroup">
-            <button class="micro-btn" data-tip="0">0 G</button>
-            <button class="micro-btn active" data-tip="5">+5 Galleons</button>
-            <button class="micro-btn" data-tip="10">+10 Galleons</button>
-            <button class="micro-btn" data-tip="20">+20 Galleons</button>
-          </div>
-        </div>
-
-        <button class="submit-review-btn" id="btnSendReview">
-          💌 Gửi Đánh Giá & Tip Galleons
-        </button>
-      </div>
-    </div>
-
   </div>
 
   <script src="app.js"></script>

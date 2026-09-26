@@ -1721,47 +1721,65 @@ function initPlayerOrderControls() {
 let targetCustomerIndexToKick = -1;
 
 function openKickCustomerModal(idx) {
-  sfx.playWhoosh();
-  const order = state.pendingOrders[idx];
-  if (!order) return;
+  try {
+    sfx.playWhoosh();
+    const order = state.pendingOrders[idx];
+    if (!order) return;
 
-  targetCustomerIndexToKick = idx;
-  const modal = document.getElementById('kickCustomerModal');
-  if (!modal) return;
+    targetCustomerIndexToKick = idx;
+    const modal = document.getElementById('kickCustomerModal');
+    if (!modal) return;
 
-  document.getElementById('kickTargetAvatar').textContent = order.avatar || '🧙‍♂️';
-  document.getElementById('kickTargetName').textContent = order.customerName;
-  const houseEl = document.getElementById('kickTargetHouse');
-  const houseStr = (order.houseName || 'HOGWARTS').toUpperCase();
-  houseEl.textContent = houseStr;
-  houseEl.className = `target-house-badge ${houseStr}`;
-  document.getElementById('kickTargetDrink').textContent = `🧋 Đang gọi: ${order.drinkName} (Size ${order.size})`;
-  document.getElementById('kickTargetQuote').textContent = `"${order.quote}"`;
+    const avatarEl = document.getElementById('kickTargetAvatar');
+    if (avatarEl) avatarEl.textContent = order.avatar || '🧙‍♂️';
 
-  // Tùy theo loại yêu cầu, chọn sẵn lý do phù hợp
-  const pills = document.querySelectorAll('#kickReasonsList .kick-reason-pill');
-  pills.forEach(p => p.classList.remove('active'));
-  let matchedRadio = null;
+    const nameEl = document.getElementById('kickTargetName');
+    if (nameEl) nameEl.textContent = order.customerName;
 
-  if (order.demandType === 'pha_phach') {
-    matchedRadio = document.querySelector('input[value*="quấy rối"]');
-  } else if (order.demandType === 'uong_chua') {
-    matchedRadio = document.querySelector('input[value*="Mặc cả"]');
-  } else if (order.demandType === 'hach_dich') {
-    matchedRadio = document.querySelector('input[value*="hách dịch"]');
+    const houseEl = document.getElementById('kickTargetHouse');
+    if (houseEl) {
+      const houseStr = (order.houseName || 'HOGWARTS').toUpperCase();
+      houseEl.textContent = houseStr;
+      houseEl.className = `target-house-badge ${houseStr}`;
+    }
+
+    const drinkEl = document.getElementById('kickTargetDrink');
+    if (drinkEl) drinkEl.textContent = `🧋 Đang gọi: ${order.drinkName} (Size ${order.size})`;
+
+    const quoteEl = document.getElementById('kickTargetQuote');
+    if (quoteEl) quoteEl.textContent = `"${order.quote}"`;
+
+    // Tùy theo loại yêu cầu, chọn sẵn lý do phù hợp
+    const pills = document.querySelectorAll('#kickReasonsList .kick-reason-pill');
+    pills.forEach(p => p.classList.remove('active'));
+
+    const radios = document.querySelectorAll('input[name="kickReason"]');
+    let matchedRadio = null;
+
+    if (radios.length > 0) {
+      if (order.demandType === 'pha_phach') {
+        matchedRadio = Array.from(radios).find(r => r.value.includes('quấy rối'));
+      } else if (order.demandType === 'uong_chua') {
+        matchedRadio = Array.from(radios).find(r => r.value.includes('Mặc cả'));
+      } else if (order.demandType === 'hach_dich') {
+        matchedRadio = Array.from(radios).find(r => r.value.includes('hách dịch'));
+      }
+
+      if (!matchedRadio) {
+        matchedRadio = radios[0];
+      }
+
+      if (matchedRadio) {
+        matchedRadio.checked = true;
+        const parentPill = matchedRadio.closest('.kick-reason-pill');
+        if (parentPill) parentPill.classList.add('active');
+      }
+    }
+
+    modal.style.display = 'flex';
+  } catch (err) {
+    console.error('Error opening kick customer modal:', err);
   }
-
-  if (!matchedRadio) {
-    matchedRadio = document.querySelector('input[name="kickReason"]');
-  }
-
-  if (matchedRadio) {
-    matchedRadio.checked = true;
-    const parentPill = matchedRadio.closest('.kick-reason-pill');
-    if (parentPill) parentPill.classList.add('active');
-  }
-
-  modal.style.display = 'flex';
 }
 
 function closeKickCustomerModal() {

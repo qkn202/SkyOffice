@@ -46,23 +46,169 @@ export function getRoomAtPosition(x: number, y: number): HogwartsRoomId {
   return 'great_hall'
 }
 
+/**
+ * Checks if a given 2D coordinate is within a polygon using the ray-casting algorithm.
+ */
+function pointInPolygon(x: number, y: number, poly: [number, number][]): boolean {
+  const n = poly.length
+  let inside = false
+  let p1 = poly[0]
+  for (let i = 1; i <= n; i++) {
+    const p2 = poly[i % n]
+    if (y > Math.min(p1[1], p2[1])) {
+      if (y <= Math.max(p1[1], p2[1])) {
+        if (x <= Math.max(p1[0], p2[0])) {
+          let xinters = p1[0]
+          if (p1[1] !== p2[1]) {
+            xinters = ((y - p1[1]) * (p2[0] - p1[0])) / (p2[1] - p1[1]) + p1[0]
+          }
+          if (p1[0] === p2[0] || x <= xinters) {
+            inside = !inside
+          }
+        }
+      }
+    }
+    p1 = p2
+  }
+  return inside
+}
+
+// 1. Great Hall Walkable Floor Polygon
+const GH_FLOOR_POLY: [number, number][] = [
+  [1432, 1073],
+  [2155, 1113],
+  [2345, 1127],
+  [2006, 1373],
+  [1894, 1527],
+  [1736, 1538],
+  [1664, 1362],
+  [1268, 1167],
+]
+
+function makeCorridorPoly(
+  p1: [number, number],
+  p2: [number, number],
+  width = 190
+): [number, number][] {
+  const dx = p2[0] - p1[0]
+  const dy = p2[1] - p1[1]
+  const dist = Math.hypot(dx, dy)
+  const nx = -dy / dist
+  const ny = dx / dist
+  const wHalf = width / 2.0
+  return [
+    [p1[0] + wHalf * nx, p1[1] + wHalf * ny],
+    [p2[0] + wHalf * nx, p2[1] + wHalf * ny],
+    [p2[0] - wHalf * nx, p2[1] - wHalf * ny],
+    [p1[0] - wHalf * nx, p1[1] - wHalf * ny],
+  ]
+}
+
+// 2. Corridors
+const CORRIDOR_POLYS: [number, number][][] = [
+  makeCorridorPoly([1350, 1120], [1120, 720], 190),  // Spoke 1: Gryffindor
+  makeCorridorPoly([1700, 1450], [1120, 1690], 190), // Spoke 2: Slytherin
+  makeCorridorPoly([2250, 1120], [2280, 720], 190),  // Spoke 3: Ravenclaw
+  makeCorridorPoly([1950, 1450], [2280, 1690], 190), // Spoke 4: Hufflepuff
+]
+
+// 3. 4 House Common Room Floor Polygons
+const HOUSE_ROOM_POLYS: [number, number][][] = [
+  // Gryffindor Tower
+  [
+    [720, 520],
+    [1340, 520],
+    [1340, 680],
+    [1202, 673],
+    [1038, 767],
+    [720, 680],
+  ],
+  // Slytherin Dungeon
+  [
+    [720, 1720],
+    [1084, 1602],
+    [1156, 1778],
+    [1340, 1720],
+    [1340, 1880],
+    [1080, 2060],
+    [720, 1880],
+  ],
+  // Ravenclaw Tower
+  [
+    [2260, 520],
+    [2820, 520],
+    [2820, 680],
+    [2560, 770],
+    [2375, 727],
+    [2185, 713],
+  ],
+  // Hufflepuff Basement
+  [
+    [2336, 1613],
+    [2820, 1720],
+    [2820, 1880],
+    [2560, 2060],
+    [2260, 1880],
+    [2224, 1767],
+  ],
+]
+
+const ALL_WALKABLE_POLYS: [number, number][][] = [
+  GH_FLOOR_POLY,
+  ...CORRIDOR_POLYS,
+  ...HOUSE_ROOM_POLYS,
+]
+
+/**
+ * Checks whether the coordinate (x, y) is on an authentic walkable floor of Hogwarts.
+ */
+export function isWalkablePosition(x: number, y: number): boolean {
+  for (const poly of ALL_WALKABLE_POLYS) {
+    if (pointInPolygon(x, y, poly)) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * Helper to place a chain of solid physics zone colliders along a wall/rail segment.
+ */
+function addWallLine(
+  m: HogwartsRoomManager,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  step = 22,
+  size = 28
+) {
+  const dx = x2 - x1
+  const dy = y2 - y1
+  const dist = Math.hypot(dx, dy)
+  if (dist === 0) return
+  const count = Math.max(1, Math.ceil(dist / step))
+  for (let i = 0; i <= count; i++) {
+    const t = i / count
+    const px = Math.round(x1 + dx * t)
+    const py = Math.round(y1 + dy * t)
+    m.addStaticZoneCollider(px, py, size, size)
+  }
+}
+
 export function setupWorldColliders(m: HogwartsRoomManager) {
-  // 1. Outer Castle Boundaries
+  // 1. Outer Canvas Boundaries (Safety Perimeter)
   m.addStaticZoneCollider(1800, 70, 3600, 140)    // Top perimeter
   m.addStaticZoneCollider(1800, 2350, 3600, 100)  // Bottom perimeter
   m.addStaticZoneCollider(70, 1200, 140, 2400)    // Left perimeter
   m.addStaticZoneCollider(3530, 1200, 140, 2400)   // Right perimeter
 
-  // 2. Great Hall Interior Walls & Tables (Hub Origin: 1112, 816)
+  // 2. Great Hall Interior Tables & Furniture (Hub Origin: 1112, 816)
   const gx = GH_OFFSET.x
   const gy = GH_OFFSET.y
 
   // High Table Dais (y: 816 + 110 = 926)
   m.addStaticZoneCollider(gx + 688, gy + 110, 1000, 200)
-
-  // Middle pillars along left & right walls (leaving open corridors at top & bottom)
-  m.addStaticZoneCollider(gx + 80, gy + 480, 80, 160)   // West middle wall
-  m.addStaticZoneCollider(gx + 1290, gy + 480, 80, 160) // East middle wall
 
   // Ban Giám Hiệu
   m.addStaticZoneCollider(gx + 670, gy + 365, 60, 20)
@@ -78,17 +224,61 @@ export function setupWorldColliders(m: HogwartsRoomManager) {
   m.addStaticZoneCollider(gx + 690, gy + 560, 180, 14) // Gryffindor
   m.addStaticZoneCollider(gx + 820, gy + 625, 180, 14) // Slytherin
 
-  // 3. Gryffindor Hearth & Walls (Top-Left Wing: 540, 320)
-  m.addStaticZoneCollider(1200, 590, 140, 100)
+  // 3. Great Hall Outer Stone Walls (leaves 4 open doorways connecting to bridges)
+  addWallLine(m, 1432, 1073, 2155, 1113) // Top wall between Spoke 1 and Spoke 3
+  addWallLine(m, 1268, 1167, 1664, 1362) // West wall between Spoke 1 and Spoke 2
+  addWallLine(m, 2345, 1127, 2006, 1373) // East wall between Spoke 3 and Spoke 4
+  addWallLine(m, 1736, 1538, 1894, 1527) // South entrance threshold between Spoke 2 and Spoke 4
 
-  // 4. Slytherin Serpent Hearth & Walls (Bottom-Left Wing: 540, 1520)
-  m.addStaticZoneCollider(1200, 1790, 140, 100)
+  // 4. The 4 Grand Bridge Balustrades / Railings (Prevents falling into sky/lake)
+  // Spoke 1: Great Hall -> Gryffindor
+  addWallLine(m, 1268, 1167, 1038, 767)  // Left rail
+  addWallLine(m, 1432, 1073, 1202, 673)  // Right rail
 
-  // 5. Ravenclaw Statue & Walls (Top-Right Wing: 2020, 320)
-  m.addStaticZoneCollider(2680, 590, 140, 100)
+  // Spoke 2: Great Hall -> Slytherin
+  addWallLine(m, 1736, 1538, 1156, 1778) // Left rail
+  addWallLine(m, 1664, 1362, 1084, 1602) // Right rail
 
-  // 6. Hufflepuff Barrel Hearth & Walls (Bottom-Right Wing: 2020, 1520)
-  m.addStaticZoneCollider(2680, 1790, 140, 100)
+  // Spoke 3: Great Hall -> Ravenclaw
+  addWallLine(m, 2155, 1113, 2185, 713)  // Left rail
+  addWallLine(m, 2345, 1127, 2375, 727)  // Right rail
+
+  // Spoke 4: Great Hall -> Hufflepuff
+  addWallLine(m, 2006, 1373, 2336, 1613) // Left rail
+  addWallLine(m, 1894, 1527, 2224, 1767) // Right rail
+
+  // 5. Gryffindor Common Room Walls (leaves open doorway for Spoke 1)
+  addWallLine(m, 720, 520, 1340, 520)   // Back wall
+  addWallLine(m, 720, 520, 720, 680)    // Left wall
+  addWallLine(m, 720, 680, 1038, 767)   // Front-left wall up to bridge left rail
+  addWallLine(m, 1202, 673, 1340, 680)  // Front-right wall from bridge right rail
+  addWallLine(m, 1340, 520, 1340, 680)  // Right wall
+  m.addStaticZoneCollider(1200, 590, 120, 80) // Hearth fireplace
+
+  // 6. Slytherin Common Room Walls (leaves open doorway for Spoke 2)
+  addWallLine(m, 720, 1720, 1084, 1602)  // Back-left wall up to bridge right rail
+  addWallLine(m, 1156, 1778, 1340, 1720) // Back-right wall from bridge left rail
+  addWallLine(m, 720, 1720, 720, 1880)   // Left wall
+  addWallLine(m, 720, 1880, 1080, 2060)  // Front-left wall
+  addWallLine(m, 1080, 2060, 1340, 1880) // Front-right wall
+  addWallLine(m, 1340, 1720, 1340, 1880) // Right wall
+  m.addStaticZoneCollider(1200, 1790, 120, 80) // Hearth fireplace
+
+  // 7. Ravenclaw Common Room Walls (leaves open doorway for Spoke 3)
+  addWallLine(m, 2260, 520, 2820, 520)  // Back wall
+  addWallLine(m, 2260, 520, 2185, 713)  // Left wall up to bridge left rail
+  addWallLine(m, 2375, 727, 2560, 770)  // Front-left wall from bridge right rail
+  addWallLine(m, 2560, 770, 2820, 680)  // Front-right wall
+  addWallLine(m, 2820, 520, 2820, 680)  // Right wall
+  m.addStaticZoneCollider(2680, 590, 120, 80) // Statue & library
+
+  // 8. Hufflepuff Common Room Walls (leaves open doorway for Spoke 4)
+  addWallLine(m, 2336, 1613, 2820, 1720) // Back-right wall
+  addWallLine(m, 2224, 1767, 2260, 1880) // Left wall from bridge right rail
+  addWallLine(m, 2260, 1880, 2560, 2060) // Front-left wall
+  addWallLine(m, 2560, 2060, 2820, 1880) // Front-right wall
+  addWallLine(m, 2820, 1720, 2820, 1880) // Right wall
+  m.addStaticZoneCollider(2680, 1790, 120, 80) // Barrel hearth
 }
 
 export function setupWorldChairs(m: HogwartsRoomManager) {
@@ -131,19 +321,19 @@ export function setupWorldChairs(m: HogwartsRoomManager) {
   ]
   ghChairs.forEach((p) => m.addInteractiveChair(p.x, p.y, p.dir, p.depth))
 
-  // Gryffindor Armchairs
-  m.addInteractiveChair(1230, 780, 'left', 780)
-  m.addInteractiveChair(1320, 820, 'up', 820)
+  // Gryffindor Armchairs (Front of Hearth)
+  m.addInteractiveChair(1150, 660, 'left', 660)
+  m.addInteractiveChair(1250, 660, 'right', 660)
 
-  // Slytherin Leather Chairs
-  m.addInteractiveChair(1230, 1980, 'left', 1980)
-  m.addInteractiveChair(1320, 2020, 'up', 2020)
+  // Slytherin Leather Chairs (Front of Serpent Hearth)
+  m.addInteractiveChair(1150, 1860, 'left', 1860)
+  m.addInteractiveChair(1250, 1860, 'right', 1860)
 
-  // Ravenclaw Library Chairs
-  m.addInteractiveChair(2350, 780, 'right', 780)
-  m.addInteractiveChair(2260, 820, 'up', 820)
+  // Ravenclaw Library Chairs (Front of Bust & Bookshelves)
+  m.addInteractiveChair(2620, 660, 'left', 660)
+  m.addInteractiveChair(2740, 660, 'right', 660)
 
-  // Hufflepuff Hearth Chairs
-  m.addInteractiveChair(2350, 1980, 'right', 1980)
-  m.addInteractiveChair(2260, 2020, 'up', 2020)
+  // Hufflepuff Hearth Chairs (Front of Barrel Hearth)
+  m.addInteractiveChair(2620, 1860, 'left', 1860)
+  m.addInteractiveChair(2740, 1860, 'right', 1860)
 }

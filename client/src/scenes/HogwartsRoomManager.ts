@@ -190,10 +190,7 @@ export class HogwartsRoomManager {
     const spawn = ROOM_SPAWNS[targetRoomId] || ROOM_SPAWNS.great_hall
 
     if (!playAnimation) {
-      this.myPlayer.setPosition(spawn.x, spawn.y)
-      if (this.myPlayer.playerContainer) {
-        this.myPlayer.playerContainer.setPosition(spawn.x, spawn.y - 30)
-      }
+      this.myPlayer.setSafePosition(spawn.x, spawn.y)
       this.onRoomChanged(targetRoomId)
       return
     }
@@ -201,10 +198,7 @@ export class HogwartsRoomManager {
     this.isTeleporting = true
     this.scene.cameras.main.fade(280, 6, 15, 12, false, (_cam: any, progress: number) => {
       if (progress >= 1) {
-        this.myPlayer.setPosition(spawn.x, spawn.y)
-        if (this.myPlayer.playerContainer) {
-          this.myPlayer.playerContainer.setPosition(spawn.x, spawn.y - 30)
-        }
+        this.myPlayer.setSafePosition(spawn.x, spawn.y)
         this.onRoomChanged(targetRoomId)
         this.scene.cameras.main.fadeIn(300, 6, 15, 12)
         this.scene.time.delayedCall(400, () => {

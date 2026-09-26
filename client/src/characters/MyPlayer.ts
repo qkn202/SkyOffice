@@ -15,6 +15,7 @@ import { ItemType } from '../../../types/Items'
 import { NavKeys } from '../../../types/KeyboardState'
 import { JoystickMovement } from '../components/Joystick'
 import { openURL } from '../utils/helpers'
+import { isWalkablePosition } from '../scenes/hogwarts/RoomDefinitions'
 
 export default class MyPlayer extends Player {
   private playContainerBody: Phaser.Physics.Arcade.Body
@@ -22,6 +23,9 @@ export default class MyPlayer extends Player {
   private baseCharacterTexture: string
   private house = ''
   public joystickMovement?: JoystickMovement
+  private lastSafeX: number
+  private lastSafeY: number
+
   constructor(
     scene: Phaser.Scene,
     x: number,
@@ -33,6 +37,17 @@ export default class MyPlayer extends Player {
     super(scene, x, y, texture, id, frame)
     this.baseCharacterTexture = texture
     this.playContainerBody = this.playerContainer.body as Phaser.Physics.Arcade.Body
+    this.lastSafeX = x
+    this.lastSafeY = y
+  }
+
+  public setSafePosition(x: number, y: number) {
+    this.lastSafeX = x
+    this.lastSafeY = y
+    this.setPosition(x, y)
+    if (this.playerContainer) {
+      this.playerContainer.setPosition(x, y - 30)
+    }
   }
 
   setPlayerName(name: string) {
@@ -181,6 +196,17 @@ export default class MyPlayer extends Player {
           return
         }
 
+        // 1. Boundary enforcement: verify player remains strictly on authentic castle floor
+        if (isWalkablePosition(this.x, this.y)) {
+          this.lastSafeX = this.x
+          this.lastSafeY = this.y
+        } else {
+          this.setPosition(this.lastSafeX, this.lastSafeY)
+          this.playContainerBody.setVelocity(0, 0)
+          this.playerContainer.setPosition(this.lastSafeX, this.lastSafeY - 30)
+          this.setVelocity(0, 0)
+        }
+
         const speed = 200
         let vx = 0
         let vy = 0
@@ -215,7 +241,11 @@ export default class MyPlayer extends Player {
         this.playContainerBody.velocity.setLength(speed)
 
         // update animation according to velocity and send new location and anim to server
-        if (vx !== 0 || vy !== 0) network.updatePlayer(this.x, this.y, this.anims.currentAnim.key)
+        if (vx !== 0 || vy !== 0) {
+          if (isWalkablePosition(this.x, this.y)) {
+            network.updatePlayer(this.x, this.y, this.anims.currentAnim.key)
+          }
+        }
         if (vx > 0) {
           this.play(`${this.playerTexture}_run_right`, true)
         } else if (vx < 0) {
@@ -232,7 +262,9 @@ export default class MyPlayer extends Player {
           if (this.anims.currentAnim.key !== newAnim) {
             this.play(newAnim, true)
             // send new location and anim to server
-            network.updatePlayer(this.x, this.y, this.anims.currentAnim.key)
+            if (isWalkablePosition(this.x, this.y)) {
+              network.updatePlayer(this.x, this.y, this.anims.currentAnim.key)
+            }
           }
         }
         break

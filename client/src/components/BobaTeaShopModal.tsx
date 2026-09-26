@@ -710,6 +710,28 @@ export default function BobaTeaShopModal({ onClose }: { onClose: () => void }) {
           >
             📜 Menu Đặc Biệt & Thưởng Thức
           </button>
+          <a
+            href="/tiem-tra-nho/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              marginLeft: 'auto',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'linear-gradient(135deg, #ef6f8e, #c24c69)',
+              color: '#fff',
+              textDecoration: 'none',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              padding: '6px 14px',
+              borderRadius: '999px',
+              boxShadow: '0 2px 8px rgba(239, 111, 142, 0.4)',
+              cursor: 'pointer',
+            }}
+          >
+            🚀 Mở Tiệm Trà Nhỏ 2 Chiều (Tab Mới)
+          </a>
         </TabsRow>
 
         {/* Body Content */}

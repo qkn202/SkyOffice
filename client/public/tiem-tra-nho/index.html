@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260926_v5">
+  <link rel="stylesheet" href="style.css?v=20260926_autocraft_v6">
 </head>
 <body>
   <div class="app-wrapper">
@@ -158,6 +158,9 @@
                 </div>
               </div>
               <div class="ribbon-actions-right">
+                <button class="auto-craft-btn" id="btnAutoCraft" type="button" title="Tự động chạy chuỗi animation lấy, rót và mix nguyên liệu làm ly trà sữa">
+                  <span>⚡ Tự Động Pha Chế (Animation)</span>
+                </button>
                 <button class="kick-customer-btn" id="btnKickActiveCustomer" type="button" title="Đuổi khách / Từ chối phục vụ nếu yêu cầu quá đáng hoặc thái độ khó chịu">
                   <span class="kick-btn-icon">🚫</span>
                   <span>Từ Chối / Đuổi Khách</span>
@@ -230,6 +233,19 @@
                 <!-- BẢNG BƯỚC ĐANG LÀM -->
                 <div class="step-guide-indicator" id="stepGuideText">
                   👉 <em>Bước 1:</em> Nhấp vào ngăn lấy ly để đặt ly lên bàn!
+                </div>
+
+                <!-- CÁC NÚT THAO TÁC TRỰC TIẾP TRÊN BÀN QUẦY -->
+                <div class="cup-actions-row">
+                  <button class="sub-action-btn stir-btn" id="btnStirCup" type="button" title="Dùng đũa phép khuấy đều hòa quyện trà sữa">
+                    🪄 Khuấy Đũa Phép
+                  </button>
+                  <button class="sub-action-btn shake-btn" id="btnShakeCup" type="button" title="Cầm bình lắc shaker lắc đều cực đã">
+                    🪇 Lắc Shaker
+                  </button>
+                  <button class="sub-action-btn discard-btn" id="btnDiscardCup" type="button" title="Đổ ly bỏ đi nếu pha sai">
+                    🗑️ Đổ Đi Làm Lại
+                  </button>
                 </div>
               </div>
 
@@ -363,19 +379,6 @@
                 </div>
               </div>
 
-            </div>
-
-            <!-- THANH THAO TÁC PHỤ: ĐỔ ĐI, KHUẤY ĐŨA PHÉP & LẮC SHAKER -->
-            <div class="countertop-bottom-bar">
-              <button class="sub-action-btn discard-btn" id="btnDiscardCup" title="Đổ ly bỏ đi nếu pha sai">
-                🗑️ Đổ Đi Làm Lại
-              </button>
-              <button class="sub-action-btn stir-btn" id="btnStirCup" title="Dùng đũa phép khuấy đều hòa quyện trà sữa">
-                🪄 Khuấy Đũa Phép Phù Thủy
-              </button>
-              <button class="sub-action-btn shake-btn" id="btnShakeCup" title="Cầm bình lắc shaker lắc đều cực đã">
-                🪇 Lắc Bình Shaker
-              </button>
             </div>
           </div>
         </div>
@@ -873,6 +876,6 @@
     <div class="magic-toast" id="magicToast"></div>
   </div>
 
-  <script src="app.js?v=20260926_v5"></script>
+  <script src="app.js?v=20260926_autocraft_v6"></script>
 </body>
 </html>

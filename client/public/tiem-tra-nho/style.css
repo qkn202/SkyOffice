@@ -69,8 +69,7 @@ body {
    MÁI HIÊN QUÁN TRÀ SỮA LƯỢN SÓNG (AWNING CANOPY)
    --------------------------------------------------------- */
 .store-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 50;
   background: var(--bg-cream);
   box-shadow: 0 4px 14px rgba(58, 35, 23, 0.06);
@@ -301,11 +300,11 @@ body {
 .chalkboard-banner {
   background: var(--chalk-bg);
   color: var(--chalk-text);
-  border: 5px solid var(--counter-wood);
-  border-radius: 14px;
-  padding: 10px 16px;
+  border: 3px solid var(--counter-wood);
+  border-radius: 12px;
+  padding: 6px 14px;
   box-shadow: var(--shadow-md);
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .chalk-header {
@@ -578,11 +577,14 @@ body {
 
 /* MẶT BÀN QUẦY GỖ SỒI */
 .wooden-countertop {
+  position: sticky;
+  top: 8px;
+  z-index: 25;
   background: linear-gradient(180deg, #965d37 0%, #703f20 100%);
   border: 4px solid #572e15;
   border-radius: 18px;
-  padding: 18px;
-  box-shadow: inset 0 2px 10px rgba(0,0,0,0.3), 0 8px 20px rgba(58, 35, 23, 0.2);
+  padding: 14px 18px;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.3), 0 8px 24px rgba(58, 35, 23, 0.35);
   display: grid;
   grid-template-columns: 140px 1fr 180px;
   gap: 14px;
@@ -590,8 +592,49 @@ body {
   color: #fff;
 }
 
+.cup-actions-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.auto-craft-btn {
+  background: linear-gradient(135deg, #ffd166, #f39c12);
+  color: #3b220c;
+  border: 2px solid #fff;
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(243, 156, 18, 0.4);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.auto-craft-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 16px rgba(243, 156, 18, 0.6);
+  background: linear-gradient(135deg, #ffe082, #ffa000);
+}
+
+.auto-craft-btn.crafting-in-progress {
+  background: linear-gradient(135deg, #7b2cbf, #9d4edd);
+  color: #fff;
+  border-color: #ffd166;
+  animation: pulseMixBtn 1s infinite alternate;
+  pointer-events: none;
+}
+
 @media (max-width: 760px) {
   .wooden-countertop {
+    position: relative;
+    top: 0;
     grid-template-columns: 1fr;
   }
 }

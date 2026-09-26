@@ -1162,8 +1162,95 @@ function animMagicMix() {
   }
 }
 
+// 8. TỰ ĐỘNG PHA CHẾ VỚI CHUỖI ANIMATION ĐẦY ĐỦ (FULL AUTO-CRAFT ANIMATION)
+let isAutoCrafting = false;
+async function autoCraftCurrentOrder() {
+  if (isAutoCrafting) return;
+  if (state.pendingOrders.length === 0) {
+    showToast('Hiện không có đơn hàng nào đang chờ!');
+    return;
+  }
+  const order = state.pendingOrders[state.activeOrderIndex];
+  if (!order) return;
+
+  isAutoCrafting = true;
+  const btnAuto = document.getElementById('btnAutoCraft');
+  if (btnAuto) {
+    btnAuto.disabled = true;
+    btnAuto.classList.add('crafting-in-progress');
+    btnAuto.innerHTML = '⏳ <em>Đang tự động pha chế...</em>';
+  }
+
+  showToast(`⚡ Đang tự động pha chế [${order.drinkName}] cho ${order.customerName}...`);
+
+  // Bước 1: Lấy ly
+  resetCraftingCup();
+  animTakeCup(order.size || 'M');
+  await new Promise(r => setTimeout(r, 600));
+
+  // Bước 2: Múc Topping
+  const tops = order.toppings || ['boba_gold'];
+  for (const top of tops) {
+    if (top === 'boba_gold' || top === 'golden_boba') {
+      animScoopTopping('boba_gold', 'Trân Châu Hoàng Kim');
+    } else if (top === 'boba_star' || top === 'night_star') {
+      animScoopTopping('boba_star', 'Trân Châu Tinh Tú');
+    } else if (top === 'jelly_moon' || top === 'moon_jelly') {
+      animScoopTopping('jelly_moon', 'Thạch Trăng Rằm');
+    } else if (top === 'cheese_foam') {
+      animPourCheeseFoam();
+    }
+    await new Promise(r => setTimeout(r, 700));
+  }
+
+  // Bước 3: Bơm Siro Đường
+  animPumpSyrup(order.sugar || '50%');
+  await new Promise(r => setTimeout(r, 650));
+
+  // Bước 4: Rót Cốt Trà
+  animPourTea(order.tea || 'gryffindor');
+  await new Promise(r => setTimeout(r, 800));
+
+  // Bước 5: Thêm Đá
+  if (order.ice && order.ice !== '0%') {
+    animAddIce(order.ice === '100%' ? 'ice_full' : 'ice_normal');
+    await new Promise(r => setTimeout(r, 700));
+  }
+
+  // Bước 6: Khuấy Đũa Phép Phù Thủy (Mix Nguyên Liệu)
+  animMagicMix();
+  await new Promise(r => setTimeout(r, 1200));
+
+  // Bước 7: Dập Nắp
+  sfx.playSealClamp();
+  const head = document.getElementById('sealerHead');
+  if (head) {
+    head.classList.add('pressed');
+    setTimeout(() => head.classList.remove('pressed'), 250);
+  }
+  state.craftingCup.sealed = true;
+  updateVisualCup();
+  await new Promise(r => setTimeout(r, 550));
+
+  // Bước 8: Giao Cho Khách (+Tip)
+  deliverCraftedCup();
+
+  if (btnAuto) {
+    btnAuto.disabled = false;
+    btnAuto.classList.remove('crafting-in-progress');
+    btnAuto.innerHTML = '<span>⚡ Tự Động Pha Chế (Animation)</span>';
+  }
+  isAutoCrafting = false;
+}
+
 // Bắt sự kiện thao tác thủ công trên quầy
 function initTactileCounterControls() {
+  // Nút Tự Động Pha Chế Toàn Bộ (Full Auto Animation)
+  const btnAuto = document.getElementById('btnAutoCraft');
+  if (btnAuto) {
+    btnAuto.addEventListener('click', autoCraftCurrentOrder);
+  }
+
   // 1. Lấy Ly đặt lên quầy
   document.getElementById('btnTakeCupM').addEventListener('click', () => animTakeCup('M'));
   document.getElementById('btnTakeCupL').addEventListener('click', () => animTakeCup('L'));

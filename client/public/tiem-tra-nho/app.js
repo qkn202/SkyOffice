@@ -198,6 +198,28 @@ class SoundFx {
     }
   }
 
+  // Tiếng khuấy đũa phép hòa quyện ly trà (magical chime & swirl)
+  playMagicStir() {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const freqs = [440, 554.37, 659.25, 880, 1108.73, 1318.51];
+    freqs.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.25, now + idx * 0.08 + 0.16);
+      gain.gain.setValueAtTime(0.18, now + idx * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.18);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + idx * 0.08);
+      osc.stop(now + idx * 0.08 + 0.18);
+    });
+  }
+
   // Tiếng bùa chú quét đuổi khách (whoosh & zap)
   playWhoosh() {
     if (!this.enabled) return;
@@ -365,6 +387,7 @@ const state = {
     ice: '0%',
     toppings: new Set(),
     shaken: false,
+    blended: false,
     sealed: false,
     customName: 'TRÀ SỮA PHÉP THUẬT'
   },
@@ -686,6 +709,9 @@ function updateVisualCup() {
   liquidEl.className = 'layer-tea-liquid';
   if (cup.tea) {
     liquidEl.classList.add(cup.tea);
+    if (cup.blended) {
+      liquidEl.classList.add('blended-milk-tea');
+    }
     liquidEl.style.height = cup.toppings.has('cheese_foam') ? '74%' : '84%';
   } else {
     liquidEl.style.height = '0%';
@@ -712,6 +738,24 @@ function updateVisualCup() {
     foamEl.classList.remove('active');
   }
 
+  // Nút khuấy & lắc sẵn sàng
+  const btnStir = document.getElementById('btnStirCup');
+  const btnShake = document.getElementById('btnShakeCup');
+  if (btnStir) {
+    if (cup.tea && !cup.blended) {
+      btnStir.classList.add('ready-to-mix');
+    } else {
+      btnStir.classList.remove('ready-to-mix');
+    }
+  }
+  if (btnShake) {
+    if (cup.tea && !cup.blended) {
+      btnShake.classList.add('ready-to-mix');
+    } else {
+      btnShake.classList.remove('ready-to-mix');
+    }
+  }
+
   // Dập nắp
   if (cup.sealed) {
     lidEl.classList.add('sealed');
@@ -725,143 +769,476 @@ function updateVisualCup() {
   stampNameEl.textContent = cup.customName || 'TRÀ SỮA PHÉP THUẬT';
 
   // Hướng dẫn bước tiếp theo
-  if (cup.toppings.size === 0) {
+  if (!cup.hasCupOnTable) {
+    guideEl.innerHTML = `👉 <em>Bước 1:</em> Nhấp lấy 1 chiếc Ly (Size M hoặc L) đặt lên quầy!`;
+  } else if (cup.toppings.size === 0) {
     guideEl.innerHTML = `👉 <em>Bước 2:</em> Dùng muỗng múc trân châu/thạch thả vào đáy ly!`;
   } else if (!cup.sugar) {
     guideEl.innerHTML = `👉 <em>Bước 3:</em> Bấm cần bơm siro đường theo yêu cầu khách!`;
   } else if (!cup.tea) {
     guideEl.innerHTML = `👉 <em>Bước 4:</em> Nhấp vòi gạt rót cốt trà vào ly!`;
   } else if (cup.ice === '0%' && !cup.toppings.has('cheese_foam')) {
-    guideEl.innerHTML = `👉 <em>Bước 5:</em> Xúc đá viên hoặc phủ kem cheese!`;
+    guideEl.innerHTML = `👉 <em>Bước 5:</em> Xúc đá viên hoặc phủ kem cheese tuyết!`;
+  } else if (!cup.blended) {
+    guideEl.innerHTML = `👉 <em>Bước 6:</em> 🪄 Bấm "Khuấy Đũa Phép" hoặc nhấp ly để hòa quyện (+3G Tip)!`;
   } else if (!cup.sealed) {
-    guideEl.innerHTML = `👉 <em>Bước 6:</em> Kéo cần máy dập nắp phép thuật (CẬP)!`;
+    guideEl.innerHTML = `👉 <em>Bước 7:</em> Kéo cần máy dập nắp phép thuật (CẠCH)!`;
   } else {
-    guideEl.innerHTML = `🎉 <em>Bước 7:</em> Ly trà sữa đã hoàn tất! Bấm "Giao Cho Khách" ngay!`;
+    guideEl.innerHTML = `🎉 <em>Bước 8:</em> Ly trà sữa đã hoàn tất! Bấm "Giao Cho Khách" ngay!`;
+  }
+}
+
+// ==========================================
+// CÁC HÀM ANIMATION PHA CHẾ THỦ CÔNG
+// ==========================================
+
+// 1. Animation Lấy Ly đặt lên mặt quầy
+function animTakeCup(size) {
+  sfx.playCupPlace();
+  const layer = document.getElementById('craftingAnimLayer');
+  const cupEl = document.getElementById('magicCup');
+  if (layer) {
+    const flying = document.createElement('div');
+    flying.className = 'anim-flying-cup';
+    flying.textContent = size === 'L' ? '🥤' : '🧋';
+    layer.appendChild(flying);
+    setTimeout(() => {
+      flying.remove();
+      if (cupEl) {
+        cupEl.classList.add('cup-landed-bounce');
+        setTimeout(() => cupEl.classList.remove('cup-landed-bounce'), 400);
+      }
+    }, 380);
+  }
+  state.craftingCup.hasCupOnTable = true;
+  state.craftingCup.size = size;
+  state.craftingCup.blended = false;
+  document.querySelectorAll('.cup-take-btn').forEach(b => b.classList.remove('selected'));
+  const activeBtn = size === 'M' ? document.getElementById('btnTakeCupM') : document.getElementById('btnTakeCupL');
+  if (activeBtn) activeBtn.classList.add('selected');
+  updateVisualCup();
+  showToast(`🥤 Đã lấy 1 Ly ${size === 'M' ? 'Vừa (Size M)' : 'Lớn (Size L)'} đặt lên quầy!`);
+}
+
+// 2. Animation Múc Topping thả vào đáy ly
+function animScoopTopping(topKey, label) {
+  if (!state.craftingCup.hasCupOnTable) { showToast('Hãy lấy ly đặt lên quầy trước!'); return; }
+  if (state.pantry[topKey] <= 0) { showToast(`Hết ${label} rồi, hãy vào Bếp để nấu thêm!`); return; }
+
+  state.pantry[topKey]--;
+  state.craftingCup.toppings.add(topKey);
+  updateHeaderStats();
+
+  const layer = document.getElementById('craftingAnimLayer');
+  if (layer) {
+    const scoop = document.createElement('div');
+    scoop.className = 'anim-scoop-tool';
+    const variantClass = topKey === 'boba_gold' ? 'golden' : (topKey === 'boba_star' ? 'night_star' : 'moon_jelly');
+    const icon = topKey === 'boba_gold' ? '🌕' : (topKey === 'boba_star' ? '⭐' : '🌙');
+    scoop.innerHTML = `
+      <div class="scoop-handle"></div>
+      <div class="scoop-bowl ${variantClass}">${icon}</div>
+    `;
+    layer.appendChild(scoop);
+
+    // Nghiêng muỗng trút topping
+    setTimeout(() => {
+      scoop.classList.add('tilting');
+      sfx.playScoop();
+
+      // Thả 4 hạt rơi vào ly
+      for (let i = 0; i < 4; i++) {
+        setTimeout(() => {
+          const drop = document.createElement('div');
+          drop.className = `anim-dropping-particle pearl ${variantClass}`;
+          drop.style.left = `${38 + (i * 8) + (Math.random() * 6 - 3)}%`;
+          layer.appendChild(drop);
+          setTimeout(() => drop.remove(), 450);
+        }, i * 65);
+      }
+    }, 180);
+
+    // Thu muỗng về
+    setTimeout(() => {
+      scoop.classList.add('retracting');
+    }, 450);
+
+    setTimeout(() => {
+      scoop.remove();
+      updateVisualCup();
+    }, 620);
+  } else {
+    sfx.playScoop();
+    updateVisualCup();
+  }
+  showToast(`🥄 Đang múc ${label} thả vào đáy ly!`);
+}
+
+// 3. Animation Bơm Siro Đường
+function animPumpSyrup(sugarLevel) {
+  if (!state.craftingCup.hasCupOnTable) { showToast('Hãy lấy ly đặt lên quầy trước!'); return; }
+  sfx.playPump();
+  state.craftingCup.sugar = sugarLevel;
+
+  document.querySelectorAll('.pump-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.querySelector(`.pump-btn[data-sugar="${sugarLevel}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const layer = document.getElementById('craftingAnimLayer');
+  if (layer) {
+    const pump = document.createElement('div');
+    pump.className = 'anim-pump-tool';
+    pump.innerHTML = `
+      <div class="pump-plunger"></div>
+      <div class="pump-body">
+        <span class="pump-badge">${sugarLevel}</span>
+        <div class="pump-nozzle-tip"></div>
+      </div>
+    `;
+    layer.appendChild(pump);
+
+    // Nhấn pít-tông
+    setTimeout(() => {
+      pump.classList.add('pressing');
+      // Dòng siro phun xuống
+      const stream = document.createElement('div');
+      stream.className = 'anim-syrup-stream';
+      layer.appendChild(stream);
+
+      // Điểm tóe siro đáy
+      setTimeout(() => {
+        const splash = document.createElement('div');
+        splash.className = 'anim-syrup-splash';
+        layer.appendChild(splash);
+        setTimeout(() => splash.remove(), 350);
+      }, 150);
+
+      setTimeout(() => stream.remove(), 360);
+    }, 120);
+
+    // Mờ dần và thu hồi
+    setTimeout(() => {
+      pump.classList.add('fading');
+    }, 400);
+
+    setTimeout(() => {
+      pump.remove();
+      updateVisualCup();
+    }, 550);
+  } else {
+    updateVisualCup();
+  }
+  showToast(`🍯 Đã bơm siro đường: ${sugarLevel}!`);
+}
+
+// 4. Animation Rót Cốt Trà Từ Bình Ủ
+function animPourTea(teaKey) {
+  if (!state.craftingCup.hasCupOnTable) { showToast('Hãy lấy ly đặt lên quầy trước!'); return; }
+  const pantryKey = `tea_${teaKey}`;
+  if (state.pantry[pantryKey] <= 0) {
+    showToast(`Bình ${getTeaName(teaKey)} đã cạn! Hãy vào tab Bếp để ủ thêm nhé.`);
+    return;
+  }
+
+  sfx.playPourTea();
+  state.pantry[pantryKey]--;
+  state.craftingCup.tea = teaKey;
+  state.craftingCup.customName = getTeaName(teaKey).toUpperCase();
+  state.craftingCup.blended = false; // reset khi rót trà mới
+  updateHeaderStats();
+
+  const layer = document.getElementById('craftingAnimLayer');
+  if (layer) {
+    const crest = teaKey === 'gryffindor' ? '🦁' : (teaKey === 'slytherin' ? '🐍' : (teaKey === 'ravenclaw' ? '🦅' : '🦡'));
+    const teapot = document.createElement('div');
+    teapot.className = `anim-teapot-tool ${teaKey}`;
+    teapot.innerHTML = `
+      <div class="teapot-body">
+        <span class="teapot-crest">${crest}</span>
+        <div class="teapot-spout"></div>
+        <div class="teapot-handle"></div>
+      </div>
+    `;
+    layer.appendChild(teapot);
+
+    // Nghiêng bình rót
+    setTimeout(() => {
+      teapot.classList.add('pouring');
+      const stream = document.createElement('div');
+      stream.className = `anim-tea-stream ${teaKey}`;
+      layer.appendChild(stream);
+
+      // Bọt hơi nước bốc lên
+      for (let i = 0; i < 2; i++) {
+        setTimeout(() => {
+          const steam = document.createElement('div');
+          steam.className = 'anim-steam-puff';
+          steam.textContent = i % 2 === 0 ? '♨️' : '✨';
+          steam.style.left = `${45 + (i * 10)}%`;
+          layer.appendChild(steam);
+          setTimeout(() => steam.remove(), 600);
+        }, 120 + i * 150);
+      }
+
+      setTimeout(() => stream.remove(), 550);
+    }, 150);
+
+    // Thu bình trà về
+    setTimeout(() => {
+      teapot.classList.add('retracting');
+    }, 550);
+
+    setTimeout(() => {
+      teapot.remove();
+      updateVisualCup();
+    }, 720);
+  } else {
+    updateVisualCup();
+  }
+  showToast(`🫖 Đang nghiêng ấm rót ${getTeaName(teaKey)} thơm lừng vào ly...`);
+}
+
+// 5. Animation Xúc Đá Viên
+function animAddIce(action) {
+  if (!state.craftingCup.hasCupOnTable) { showToast('Hãy lấy ly đặt lên quầy trước!'); return; }
+  if (action === 'ice_none') {
+    state.craftingCup.ice = '0%';
+    updateVisualCup();
+    showToast('🔥 Tùy chọn không đá (uống ấm)!');
+    return;
+  }
+
+  const iceLevel = action === 'ice_full' ? '100%' : '50%';
+  state.craftingCup.ice = iceLevel;
+  sfx.playIceClink();
+
+  const layer = document.getElementById('craftingAnimLayer');
+  if (layer) {
+    const scoop = document.createElement('div');
+    scoop.className = 'anim-ice-scoop-tool';
+    scoop.innerHTML = `
+      <div class="ice-scoop-handle"></div>
+      <div class="ice-scoop-bowl">🧊</div>
+    `;
+    layer.appendChild(scoop);
+
+    // Nghiêng xúc đá
+    setTimeout(() => {
+      scoop.classList.add('tilting');
+      const count = iceLevel === '100%' ? 3 : 2;
+      for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+          const drop = document.createElement('div');
+          drop.className = 'anim-dropping-particle ice-cube';
+          drop.textContent = '🧊';
+          drop.style.left = `${38 + (i * 12)}%`;
+          layer.appendChild(drop);
+          setTimeout(() => drop.remove(), 420);
+        }, i * 80);
+      }
+    }, 150);
+
+    setTimeout(() => scoop.classList.add('retracting'), 450);
+    setTimeout(() => {
+      scoop.remove();
+      updateVisualCup();
+    }, 620);
+  } else {
+    updateVisualCup();
+  }
+  showToast(action === 'ice_full' ? '🏔️ Đã xúc đầy đá viên lạnh buốt!' : '🧊 Đã xúc xẻng đá viên vừa mát!');
+}
+
+// 6. Animation Phủ Kem Cheese Tuyết
+function animPourCheeseFoam() {
+  if (!state.craftingCup.hasCupOnTable) { showToast('Hãy lấy ly đặt lên quầy trước!'); return; }
+  if (state.pantry.cheese_foam <= 0) { showToast('Hết kem cheese rồi!'); return; }
+  sfx.playPourTea();
+  state.pantry.cheese_foam--;
+  state.craftingCup.toppings.add('cheese_foam');
+  updateHeaderStats();
+
+  const layer = document.getElementById('craftingAnimLayer');
+  if (layer) {
+    const pitcher = document.createElement('div');
+    pitcher.className = 'anim-cream-pitcher';
+    pitcher.textContent = '🥛';
+    layer.appendChild(pitcher);
+
+    setTimeout(() => {
+      pitcher.classList.add('sweeping');
+      const ribbon = document.createElement('div');
+      ribbon.className = 'anim-foam-ribbon';
+      layer.appendChild(ribbon);
+      setTimeout(() => ribbon.remove(), 400);
+    }, 150);
+
+    setTimeout(() => pitcher.classList.add('retracting'), 450);
+    setTimeout(() => {
+      pitcher.remove();
+      updateVisualCup();
+    }, 620);
+  } else {
+    updateVisualCup();
+  }
+  showToast('🍦 Đã phủ lớp bọt Kem Cheese Tuyết mịn màng bồng bềnh!');
+}
+
+// 7. Animation Khuấy Trộn Bằng Đũa Phép Phù Thủy (Mix Nguyên Liệu)
+function animMagicMix() {
+  if (!state.craftingCup.hasCupOnTable) {
+    showToast('Hãy đặt ly lên quầy trước khi khuấy!');
+    return;
+  }
+  if (!state.craftingCup.tea) {
+    showToast('Ly chưa có trà! Hãy rót trà trước khi khuấy trộn nhé.');
+    return;
+  }
+  if (state.craftingCup.blended) {
+    showToast('✨ Ly trà sữa này đã được khuấy hòa quyện hoàn hảo rồi!');
+    return;
+  }
+
+  sfx.playMagicStir();
+  const cupEl = document.getElementById('magicCup');
+  const liquidEl = document.getElementById('liquidLayer');
+  const layer = document.getElementById('craftingAnimLayer');
+
+  if (cupEl) cupEl.classList.add('stirring-active');
+  if (liquidEl) liquidEl.classList.add('mixing-vortex');
+
+  if (layer) {
+    // Đũa phép phù thủy cắm vào ly khuấy theo quỹ đạo 3D
+    const wand = document.createElement('div');
+    wand.className = 'anim-magic-wand';
+    wand.innerHTML = `
+      <div class="wand-stick">
+        <div class="wand-tip-sparkle">✨</div>
+      </div>
+    `;
+    layer.appendChild(wand);
+
+    // Bắn bụi sao phép thuật tỏa ra vòng tròn
+    for (let i = 0; i < 9; i++) {
+      setTimeout(() => {
+        const star = document.createElement('div');
+        star.className = 'anim-swirl-sparkle';
+        star.textContent = ['✨', '⭐', '💫', '🌟'][i % 4];
+        const angle = (i / 9) * 2 * Math.PI;
+        const dist = 35 + Math.random() * 20;
+        star.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+        star.style.setProperty('--ty', `${Math.sin(angle) * dist - 15}px`);
+        star.style.left = '50%';
+        star.style.top = '40%';
+        layer.appendChild(star);
+        setTimeout(() => star.remove(), 520);
+      }, i * 90);
+    }
+
+    setTimeout(() => {
+      wand.remove();
+      if (cupEl) cupEl.classList.remove('stirring-active');
+      if (liquidEl) liquidEl.classList.remove('mixing-vortex');
+
+      state.craftingCup.blended = true;
+      state.craftingCup.shaken = true;
+      updateVisualCup();
+
+      // Badge hoàn thành
+      const badge = document.createElement('div');
+      badge.className = 'anim-blend-success-badge';
+      badge.textContent = '✨ Hòa Quyện 100% ✨';
+      layer.appendChild(badge);
+      setTimeout(() => badge.remove(), 1200);
+
+      sfx.playCash();
+      showToast('🪄 Đũa phép đã hòa quyện hoàn hảo trà, sữa và trân châu! (+3 G Tip thưởng)');
+    }, 1050);
+  } else {
+    state.craftingCup.blended = true;
+    state.craftingCup.shaken = true;
+    updateVisualCup();
+    showToast('🪄 Đã khuấy đều ly trà sữa!');
   }
 }
 
 // Bắt sự kiện thao tác thủ công trên quầy
 function initTactileCounterControls() {
   // 1. Lấy Ly đặt lên quầy
-  document.getElementById('btnTakeCupM').addEventListener('click', function() {
-    sfx.playCupPlace();
-    state.craftingCup.hasCupOnTable = true;
-    state.craftingCup.size = 'M';
-    document.querySelectorAll('.cup-take-btn').forEach(b => b.classList.remove('selected'));
-    this.classList.add('selected');
-    updateVisualCup();
-    showToast('🥤 Đã đặt 1 Ly Vừa (Size M) lên mặt quầy!');
-  });
-
-  document.getElementById('btnTakeCupL').addEventListener('click', function() {
-    sfx.playCupPlace();
-    state.craftingCup.hasCupOnTable = true;
-    state.craftingCup.size = 'L';
-    document.querySelectorAll('.cup-take-btn').forEach(b => b.classList.remove('selected'));
-    this.classList.add('selected');
-    updateVisualCup();
-    showToast('🥤 Đã đặt 1 Ly Lớn (Size L) lên mặt quầy!');
-  });
+  document.getElementById('btnTakeCupM').addEventListener('click', () => animTakeCup('M'));
+  document.getElementById('btnTakeCupL').addEventListener('click', () => animTakeCup('L'));
 
   // 2. Múc Topping
   document.getElementById('btnScoopGold').addEventListener('click', () => {
-    if (!state.craftingCup.hasCupOnTable) { showToast('Hãy lấy ly đặt lên quầy trước!'); return; }
-    if (state.pantry.boba_gold <= 0) { showToast('Hết trân châu hoàng kim rồi, hãy vào Bếp để nấu thêm!'); return; }
-    sfx.playScoop();
-    state.pantry.boba_gold--;
-    state.craftingCup.toppings.add('boba_gold');
-    updateVisualCup();
-    updateHeaderStats();
-    showToast('🥄 Đã múc 1 muỗng Trân Châu Hoàng Kim thả đáy ly!');
+    animScoopTopping('boba_gold', 'Trân Châu Hoàng Kim');
   });
 
   document.getElementById('btnScoopStar').addEventListener('click', () => {
-    if (!state.craftingCup.hasCupOnTable) { showToast('Hãy lấy ly đặt lên quầy trước!'); return; }
-    if (state.pantry.boba_star <= 0) { showToast('Hết trân châu tinh tú rồi!'); return; }
-    sfx.playScoop();
-    state.pantry.boba_star--;
-    state.craftingCup.toppings.add('boba_star');
-    updateVisualCup();
-    updateHeaderStats();
-    showToast('🥄 Đã múc 1 muỗng Trân Châu Tinh Tú thả đáy ly!');
+    animScoopTopping('boba_star', 'Trân Châu Tinh Tú');
   });
 
   document.getElementById('btnScoopJelly').addEventListener('click', () => {
-    if (!state.craftingCup.hasCupOnTable) { showToast('Hãy lấy ly đặt lên quầy trước!'); return; }
-    if (state.pantry.jelly_moon <= 0) { showToast('Hết thạch trăng rằm rồi!'); return; }
-    sfx.playScoop();
-    state.pantry.jelly_moon--;
-    state.craftingCup.toppings.add('jelly_moon');
-    updateVisualCup();
-    updateHeaderStats();
-    showToast('🥄 Đã múc 1 muỗng Thạch Trăng Rằm thả đáy ly!');
+    animScoopTopping('jelly_moon', 'Thạch Trăng Rằm');
   });
 
   // 3. Bơm đường (Pump Syrup)
   document.querySelectorAll('.pump-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-      if (!state.craftingCup.hasCupOnTable) { showToast('Hãy lấy ly đặt lên quầy trước!'); return; }
-      sfx.playPump();
-      document.querySelectorAll('.pump-btn').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      state.craftingCup.sugar = this.dataset.sugar;
-      updateVisualCup();
-      showToast(`🍯 Đã bơm lượng đường: ${state.craftingCup.sugar}!`);
+      animPumpSyrup(this.dataset.sugar);
     });
   });
 
   // 4. Rót cốt trà từ 4 bình ủ
   document.querySelectorAll('.dispenser-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-      if (!state.craftingCup.hasCupOnTable) { showToast('Hãy lấy ly đặt lên quầy trước!'); return; }
-      const teaKey = this.dataset.pourTea;
-      const pantryKey = `tea_${teaKey}`;
-      if (state.pantry[pantryKey] <= 0) {
-        showToast(`Bình ${getTeaName(teaKey)} đã cạn! Hãy vào tab Bếp để ủ thêm nhé.`);
-        return;
-      }
-      sfx.playPourTea();
-      state.pantry[pantryKey]--;
-      state.craftingCup.tea = teaKey;
-      state.craftingCup.customName = getTeaName(teaKey).toUpperCase();
-      updateVisualCup();
-      updateHeaderStats();
-      showToast(`🫖 Đang gạt vòi rót ${getTeaName(teaKey)} róc rách vào ly...`);
+      animPourTea(this.dataset.pourTea);
     });
   });
 
   // 5. Xúc đá & Phủ kem cheese
   document.querySelectorAll('.action-box .scoop-btn[data-action]').forEach(btn => {
     btn.addEventListener('click', function() {
-      if (!state.craftingCup.hasCupOnTable) { showToast('Hãy lấy ly đặt lên quầy trước!'); return; }
       const action = this.dataset.action;
-      if (action === 'ice_none') {
-        state.craftingCup.ice = '0%';
-        updateVisualCup();
-        showToast('🔥 Tùy chọn không đá (uống ấm)!');
-      } else if (action === 'ice_normal') {
-        sfx.playIceClink();
-        state.craftingCup.ice = '50%';
-        updateVisualCup();
-        showToast('🧊 Đã xúc xẻng đá viên vừa mát!');
-      } else if (action === 'ice_full') {
-        sfx.playIceClink();
-        state.craftingCup.ice = '100%';
-        updateVisualCup();
-        showToast('🏔️ Đã xúc đầy đá viên lạnh buốt!');
-      } else if (action === 'pour_cheese') {
-        if (state.pantry.cheese_foam <= 0) { showToast('Hết kem cheese rồi!'); return; }
-        sfx.playPourTea();
-        state.pantry.cheese_foam--;
-        state.craftingCup.toppings.add('cheese_foam');
-        updateVisualCup();
-        updateHeaderStats();
-        showToast('🍦 Đã phủ lớp bọt Kem Cheese Tuyết mịn màng bồng bềnh!');
+      if (action === 'pour_cheese') {
+        animPourCheeseFoam();
+      } else {
+        animAddIce(action);
       }
     });
   });
 
-  // 6. Kéo cần gạt dập nắp
+  // 6. Khuấy Đũa Phép Phù Thủy & Lắc Shaker
+  const btnStir = document.getElementById('btnStirCup');
+  if (btnStir) {
+    btnStir.addEventListener('click', animMagicMix);
+  }
+  document.getElementById('btnShakeCup').addEventListener('click', function() {
+    if (!state.craftingCup.hasCupOnTable || !state.craftingCup.tea) {
+      showToast('Hãy rót trà vào ly trước khi lắc!');
+      return;
+    }
+    sfx.playShaker();
+    const cupEl = document.getElementById('magicCup');
+    cupEl.classList.add('shaking');
+    state.craftingCup.shaken = true;
+    showToast('🪇 Đang lắc đều bình shaker...');
+    setTimeout(() => {
+      cupEl.classList.remove('shaking');
+      animMagicMix();
+    }, 600);
+  });
+
+  // Nhấp vào ly trực tiếp cũng có thể khuấy đũa phép!
+  const cupEl = document.getElementById('magicCup');
+  if (cupEl) {
+    cupEl.addEventListener('click', () => {
+      if (state.craftingCup.hasCupOnTable && state.craftingCup.tea && !state.craftingCup.blended) {
+        animMagicMix();
+      }
+    });
+  }
+
+  // 7. Kéo cần gạt dập nắp
   document.getElementById('btnPressSealer').addEventListener('click', function() {
     if (!state.craftingCup.hasCupOnTable) { showToast('Chưa có ly nào trên bàn!'); return; }
     if (!state.craftingCup.tea) { showToast('Ly chưa có nước trà! Hãy rót trà trước khi dập nắp.'); return; }
@@ -874,20 +1251,6 @@ function initTactileCounterControls() {
     state.craftingCup.sealed = true;
     updateVisualCup();
     showToast('🕹️ CẠCH! Màng nắp đã dập kín miệng ly và dán tem hoàn chỉnh!');
-  });
-
-  // 7. Cầm ly lắc shaker
-  document.getElementById('btnShakeCup').addEventListener('click', function() {
-    if (!state.craftingCup.hasCupOnTable || !state.craftingCup.tea) {
-      showToast('Hãy rót trà vào ly trước khi lắc!');
-      return;
-    }
-    sfx.playShaker();
-    const cupEl = document.getElementById('magicCup');
-    cupEl.classList.add('shaking');
-    state.craftingCup.shaken = true;
-    showToast('🪇 Đang lắc đều trà, đường, đá và hương vị hòa quyện!');
-    setTimeout(() => cupEl.classList.remove('shaking'), 600);
   });
 
   // 8. Đổ đi làm lại
@@ -918,6 +1281,7 @@ function resetCraftingCup() {
     toppings: new Set(),
     shaken: false,
     sealed: false,
+    blended: false,
     customName: 'TRÀ SỮA PHÉP THUẬT'
   };
   document.querySelectorAll('.cup-take-btn').forEach(b => b.classList.remove('selected'));
@@ -946,6 +1310,9 @@ function deliverCraftedCup() {
   if (score >= 90) {
     tip = Math.floor(Math.random() * 6) + 4; // Tip 4-9 G
   }
+  if (cup.blended) {
+    tip += 3; // Thưởng thêm 3G vì đã dùng đũa phép khuấy hòa quyện
+  }
 
   state.galleons += (earning + tip);
   state.cupsSold++;
@@ -963,8 +1330,8 @@ function deliverCraftedCup() {
     rating: rating,
     drink: `🧋 ${order.drinkName} (Size ${order.size})`,
     comment: score >= 90
-      ? `Trà ngon xuất sắc! Thao tác pha chế rất điêu luyện, đúng ý mình từng hạt trân châu ❤️.`
-      : `Uống khá ngon, phục vụ nhanh nhẹn.`,
+      ? (cup.blended ? `Trà sữa hòa quyện sánh mịn tuyệt đỉnh nhờ đũa phép khuấy đều! Đúng ý mình từng hạt trân châu ❤️.` : `Trà ngon xuất sắc! Thao tác pha chế rất điêu luyện, đúng ý mình từng hạt trân châu ❤️.`)
+      : (cup.blended ? `Nước uống thơm ngon hòa quyện, phục vụ nhiệt tình!` : `Uống khá ngon, phục vụ nhanh nhẹn.`),
     tip: tip,
     time: 'Vừa xong',
     isHogwartsStudent: !!order.isPlayerOrder

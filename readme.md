@@ -206,7 +206,6 @@ Nút 🎮 tại thanh công cụ dưới màn hình mở cổng kết nối tớ
 | `F` | **Mở Mạng Lưới Floo** | Dịch chuyển nhanh bằng bột Floo qua lò sưởi |
 | `B` | **Sách Thần Chú & Cử Chỉ** | Xem mẫu vẽ cử chỉ ma thuật và danh mục phép thuật |
 | `L` | **Thả Thiên Đăng Ước Nguyện** | Viết lời chúc và thả đèn lồng bay lên trời đêm Trung Thu |
-| `N` | **Bật / Tắt Nhạc Nền (BGM)** | Bật hoặc tắt giai điệu nhạc nền Trung Thu & Hogwarts |
 | `H` | **Vẫy tay chào** | Gửi biểu cảm nhanh tới các phù thủy xung quanh |
 | `Enter` | **Mở khung Chat** | Gửi tin nhắn văn bản toàn sảnh hoặc nội bộ Nhà |
 | `ESC` | **Đóng bảng / Thoát** | Đóng modal đang mở hoặc thoát chế độ ngồi |

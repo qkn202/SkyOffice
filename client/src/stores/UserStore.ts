@@ -29,15 +29,8 @@ export const userSlice = createSlice({
     showJoystick: true,
     hpvnProfile: null as null | IHpvnProfile,
     assignedHouse: '' as House | '',
-    bgmMuted: false,
   },
   reducers: {
-    toggleBgmMuted: (state) => {
-      state.bgmMuted = !state.bgmMuted
-    },
-    setBgmMuted: (state, action: PayloadAction<boolean>) => {
-      state.bgmMuted = action.payload
-    },
     toggleBackgroundMode: (state) => {
       const newMode =
         state.backgroundMode === BackgroundMode.DAY ? BackgroundMode.NIGHT : BackgroundMode.DAY
@@ -77,8 +70,6 @@ export const userSlice = createSlice({
 })
 
 export const {
-  toggleBgmMuted,
-  setBgmMuted,
   toggleBackgroundMode,
   setSessionId,
   setVideoConnected,

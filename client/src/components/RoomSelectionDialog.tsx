@@ -19,6 +19,8 @@ const Backdrop = styled.div`
   flex-direction: column;
   gap: 28px;
   align-items: center;
+  z-index: 100;
+  pointer-events: auto;
 `
 
 const Wrapper = styled.div`
@@ -31,6 +33,7 @@ const Wrapper = styled.div`
   padding: 36px 48px;
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(255, 215, 0, 0.25);
+  pointer-events: auto;
 
   @media (max-width: 650px) {
     padding: 24px 18px;
@@ -80,6 +83,9 @@ const EnterButton = styled(Button)`
     color: #ffffff;
     box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
     text-transform: none;
+    cursor: pointer;
+    touch-action: manipulation;
+    pointer-events: auto;
 
     &:hover {
       background: linear-gradient(135deg, #6d28d9 0%, #4338ca 100%);

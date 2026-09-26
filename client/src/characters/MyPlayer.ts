@@ -69,6 +69,13 @@ export default class MyPlayer extends Player {
     this.joystickMovement = movement
   }
 
+  actionTriggered = false
+  currentInteractType: 'stand' | 'chair' | 'computer' | 'whiteboard' | null = null
+
+  triggerAction() {
+    this.actionTriggered = true
+  }
+
   update(
     playerSelector: PlayerSelector,
     cursors: NavKeys,
@@ -79,8 +86,30 @@ export default class MyPlayer extends Player {
     if (!cursors) return
 
     const item = playerSelector.selectedItem
-    const isJustDownE = Phaser.Input.Keyboard.JustDown(keyE)
-    const isJustDownR = Phaser.Input.Keyboard.JustDown(keyR)
+
+    const interactType =
+      this.playerBehavior === PlayerBehavior.SITTING
+        ? 'stand'
+        : item?.itemType === ItemType.CHAIR
+        ? 'chair'
+        : item?.itemType === ItemType.COMPUTER
+        ? 'computer'
+        : item?.itemType === ItemType.WHITEBOARD
+        ? 'whiteboard'
+        : null
+
+    if (this.currentInteractType !== interactType) {
+      this.currentInteractType = interactType
+      window.dispatchEvent(
+        new CustomEvent('skyoffice:interact-changed', { detail: interactType })
+      )
+    }
+
+    const isJustDownE = Phaser.Input.Keyboard.JustDown(keyE) || this.actionTriggered
+    const isJustDownR =
+      Phaser.Input.Keyboard.JustDown(keyR) ||
+      (this.actionTriggered && item?.itemType === ItemType.COMPUTER)
+    this.actionTriggered = false
 
     if (
       isJustDownR ||

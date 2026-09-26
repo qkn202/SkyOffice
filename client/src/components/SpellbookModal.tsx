@@ -265,7 +265,7 @@ export default function SpellbookModal({ onClose }: SpellbookModalProps) {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(280px, 340px) 1fr',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             flex: 1,
             overflowY: 'auto',
           }}

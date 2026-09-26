@@ -11,6 +11,7 @@ const SortingCeremony = lazy(() => import('./components/SortingCeremony'))
 import Chat from './components/Chat'
 import HelperButtonGroup from './components/HelperButtonGroup'
 import MobileVirtualJoystick from './components/MobileVirtualJoystick'
+import MobileActionPad from './components/MobileActionPad'
 const Backdrop = styled.div`
   position: absolute;
   height: 100%;
@@ -65,12 +66,15 @@ function App() {
           <SortingCeremony />
         </Suspense>
       )}
-      {/* Luôn hiển thị cần điều khiển ảo khi đã vào game */}
+      {/* Luôn hiển thị cần điều khiển ảo và nút tương tác cảm ứng khi đã vào game */}
       {loggedIn && !computerDialogOpen && !whiteboardDialogOpen && (
-        <MobileVirtualJoystick />
+        <>
+          <MobileVirtualJoystick />
+          <MobileActionPad />
+        </>
       )}
-      {/* Render HelperButtonGroup if no dialogs are opened. */}
-      {!computerDialogOpen && !whiteboardDialogOpen && <HelperButtonGroup />}
+      {/* Render HelperButtonGroup chỉ khi đã vào game và không có dialog nào mở */}
+      {loggedIn && !computerDialogOpen && !whiteboardDialogOpen && <HelperButtonGroup />}
       {isReconnecting && (
         <div
           role="status"

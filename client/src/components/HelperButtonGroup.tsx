@@ -31,43 +31,56 @@ type MiniGameInvite = { gameId: MiniGameId; roomCode: string; invitedBy: string;
 
 const Backdrop = styled.div<{ $modalOpen: boolean }>`
   position: fixed;
-  z-index: ${(props) => (props.$modalOpen ? 5000 : 'auto')};
+  z-index: ${(props) => (props.$modalOpen ? 5000 : 2400)};
   display: flex;
-  gap: 10px;
+  gap: 8px;
   bottom: 16px;
   right: 16px;
   align-items: flex-end;
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
 
   .wrapper-group {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   @media (max-width: 650px) {
-    left: 12px;
-    right: 12px;
-    bottom: 136px;
-    justify-content: flex-end;
-    gap: 8px;
+    right: 10px;
+    bottom: 16px;
+    gap: 6px;
   }
 `
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  align-items: flex-end;
 
   @media (max-width: 650px) {
-    flex-wrap: wrap;
+    flex-wrap: wrap-reverse;
     justify-content: flex-end;
     gap: 6px;
-    min-width: 0;
+    max-width: 216px;
   }
 `
 
 const StyledFab = styled(Fab)<{ target?: string }>`
+  touch-action: manipulation;
+  cursor: pointer;
+
   &:hover {
     color: #1ea2df;
+  }
+
+  @media (max-width: 650px) {
+    width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
   }
 `
 
@@ -152,8 +165,8 @@ export default function HelperButtonGroup() {
     }
   }, [])
 
-  // Keep the floating toolbar out of the login form while the player is choosing a name.
-  if (roomJoined && !loggedIn) return null
+  // Chỉ hiển thị toolbar khi đã vào phòng và đã đăng nhập hoàn tất.
+  if (!roomJoined || !loggedIn) return null
 
   const inviteMiniGame = (gameId: MiniGameId, roomCode: string) => {
     const bootstrap = phaserGame.scene.keys.bootstrap as Bootstrap | undefined

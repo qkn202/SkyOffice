@@ -14,6 +14,16 @@ body {
   box-sizing: inherit;
 }
 
+button,
+[role='button'],
+.MuiButton-root,
+.MuiButtonBase-root,
+a {
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
 #phaser-container {
   canvas {
     display: block;

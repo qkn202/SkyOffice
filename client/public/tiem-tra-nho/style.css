@@ -2737,23 +2737,33 @@ body {
   align-items: center;
 }
 
-.spoon-handle {
-  width: 42px;
-  height: 6px;
+.spoon-handle, .scoop-handle {
+  width: 44px;
+  height: 7px;
   background: linear-gradient(90deg, #785a3c, #b38f6b);
   border-radius: 4px;
 }
 
-.spoon-bowl {
-  width: 28px;
-  height: 24px;
+.spoon-bowl, .scoop-bowl {
+  width: 30px;
+  height: 26px;
   background: radial-gradient(circle at 35% 35%, #ffd166, #9c6c1d);
   border-radius: 50% 50% 40% 40%;
   display: grid;
   place-items: center;
-  font-size: 1rem;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  font-size: 1.05rem;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.35);
   margin-left: -4px;
+}
+
+.scoop-bowl.golden {
+  background: radial-gradient(circle at 35% 35%, #ffd166, #c58d09);
+}
+.scoop-bowl.night_star {
+  background: radial-gradient(circle at 35% 35%, #d946ef, #4a044e);
+}
+.scoop-bowl.moon_jelly {
+  background: radial-gradient(circle at 35% 35%, #38bdf8, #0c4a6e);
 }
 
 /* Hạt boba / thạch rơi vào ly */

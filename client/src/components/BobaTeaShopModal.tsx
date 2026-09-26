@@ -114,7 +114,7 @@ export default function BobaTeaShopModal({ onClose }: { onClose: () => void }) {
   const playerName = user.currentPlayerName || user.hpvnProfile?.username || 'Bạn'
   const house = user.assignedHouse || user.hpvnProfile?.house || 'gryffindor'
   
-  const launchUrl = `/tiem-tra-nho/?name=${encodeURIComponent(playerName)}&house=${encodeURIComponent(house)}&v=2`
+  const launchUrl = `/tiem-tra-nho/?name=${encodeURIComponent(playerName)}&house=${encodeURIComponent(house)}&v=anim_v5`
 
   // Lắng nghe sự kiện từ Iframe khi Barista giao nước, khách order hoặc viết review
   useEffect(() => {

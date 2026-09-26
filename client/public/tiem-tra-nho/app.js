@@ -1715,6 +1715,8 @@ function initPlayerOrderControls() {
       }
     });
   }
+}
+
 // --- 7d. LOGIC ĐUỔI KHÁCH & TỪ CHỐI PHỤC VỤ (EXPEL CUSTOMER CONTROLS) ---
 let targetCustomerIndexToKick = -1;
 

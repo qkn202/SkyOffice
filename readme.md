@@ -21,7 +21,7 @@
 12. [Cấu Trúc Thư Mục (Project Structure)](#-cấu-trúc-thư-mục-project-structure)
 13. [Hướng Dẫn Cài Đặt & Khởi Chạy (Quickstart & Setup)](#-hướng-dẫn-cài-đặt--khởi-chạy-quickstart--setup)
 14. [Quy Trình Tái Tạo Bản Đồ (Map Generation Workflow)](#-quy-trình-tái-tạo-bản-đồ-map-generation-workflow)
-15. [Triển Khai Production 24/7 (Deployment Guide)](#-triển-khai-production-247-deployment-guide)
+15. [Triển Khai Production (Deployment Guide)](#-triển-khai-production-deployment-guide)
 
 ---
 
@@ -369,11 +369,24 @@ Frontend và multiplayer server được triển khai tách biệt. Vercel phụ
   - **Cấu hình:** File `render.yaml` (Render Blueprint), Node Web Service gói **Free** tại khu vực Singapore.
   - **Health Check:** `https://skyoffice-server-m7o7.onrender.com/health` (trả về `{"status":"ok","service":"skyoffice"}`).
   - **Endpoint phía client:** `VITE_SERVER_URL` ghi đè URL mặc định; khi chạy local, mặc định là `ws://localhost:2567`.
-  - **Lưu ý cấu hình production:** Kiểm tra bundle Vercel ngày 2026-09-25 cho thấy `VITE_SERVER_URL` đang được build thành `wss://scholarships-rev-active-byte.trycloudflare.com`, dù `client/.env.production` trỏ tới Render. Vì vậy bản Vercel hiện tại vẫn phụ thuộc vào Cloudflare Tunnel/máy đang chạy tunnel; Render đang phản hồi health check nhưng chưa phải endpoint trong bundle production. Muốn tắt máy cá nhân, đổi biến `VITE_SERVER_URL` trong Vercel Production thành URL Render ở trên rồi deploy lại.
+  - **Trạng thái production (2026-09-26):** Đã cập nhật biến `VITE_SERVER_URL` của môi trường **Production** trên Vercel thành `wss://skyoffice-server-m7o7.onrender.com` và triển khai lại thành công. Bundle đang phát hành đã dùng Render và không còn chứa địa chỉ Cloudflare Tunnel tạm thời.
+  - **Đã kiểm tra:** Health check trả HTTP 200; client kết nối được lobby; hai client vào cùng phòng, nhìn thấy nhau và đồng bộ vị trí thành công. Website không còn phụ thuộc vào máy cá nhân chạy tunnel.
 
-### 2. Giới Hạn Cần Biết
+### 2. Cấu Hình Kết Nối Production
+
+Trong Vercel, mở dự án `hpvn-social` → **Settings → Environment Variables**, đặt biến cho môi trường **Production**:
+
+```env
+VITE_SERVER_URL=wss://skyoffice-server-m7o7.onrender.com
+```
+
+Sau mỗi lần thay đổi biến này, **Redeploy** bản Production rồi tải lại website. Vite đóng gói giá trị vào JavaScript lúc build; chỉ sửa `client/.env.production` trên máy cá nhân không thay thế được biến đang cấu hình trên Vercel.
+
+Không đặt URL `*.trycloudflare.com` vào cấu hình Production vì đường hầm này phụ thuộc vào máy đang chạy nó. Nếu mở website bằng liên kết có tham số `?server=...`, hãy bỏ tham số đó để dùng endpoint Production.
+
+### 3. Giới Hạn Cần Biết
 - **Không phụ thuộc máy cá nhân:** Client production kết nối đến server Render; tắt máy phát triển không làm server trên Render dừng.
-- **Render Free không đảm bảo chạy liên tục:** Service ngủ sau 15 phút không nhận traffic vào server. Khi request hoặc kết nối WebSocket mới đánh thức service, cold start có thể mất khoảng một phút. Render cũng có thể khởi động lại instance.
+- **Render Free không đảm bảo chạy liên tục:** Service ngủ sau 15 phút không nhận traffic vào server. Khi request hoặc kết nối WebSocket mới đánh thức service, cold start có thể mất khoảng một phút. Hãy giữ trang mở để client tự thử lại hoặc bấm **Thử kết nối lại**. Render cũng có thể khởi động lại instance. Xem [giới hạn Render Free](https://render.com/docs/free#spinning-down-on-idle).
 - **Kết nối có thể bị ngắt:** Sau deploy, restart hoặc sự cố mạng, client cần kết nối lại. Trạng thái phòng Colyseus đang lưu trong bộ nhớ server, nên người chơi có thể phải vào lại và vị trí sẽ về spawn mặc định.
 - **Dữ liệu bền vững:** Firebase Firestore chỉ lưu các dữ liệu được ghi rõ ràng như hồ sơ, điểm Nhà và lịch sử trao thưởng; trạng thái phòng/vị trí nhân vật hiện không được lưu vào Firestore.
 - **Muốn server luôn sẵn sàng:** Dùng compute plan không sleep (có phí) hoặc chuyển Colyseus lên một máy chủ cloud luôn chạy. Render Free phù hợp thử nghiệm/hobby hơn là cam kết uptime 24/7.

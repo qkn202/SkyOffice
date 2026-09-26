@@ -143,6 +143,11 @@ export default function BobaTeaShopModal({ onClose }: { onClose: () => void }) {
         game.network.addChatMessage(
           `vừa chấm ${rating}⭐ cho [${drink}] trong Sổ Lưu Niệm: "${comment}" ${tip > 0 ? `(+tip ${tip}G)` : ''} 🌟`
         )
+      } else if (event.data?.type === 'BOBA_CUSTOMER_EXPELLED') {
+        const { customerName, shout } = event.data
+        game.network.addChatMessage(
+          `vừa thẳng thừng tống tiễn [${customerName}] ra khỏi Tiệm Trà Nhỏ! 🚫🧹 "${shout || 'Quán từ chối yêu cầu vô lý!'}"`
+        )
       }
     }
 

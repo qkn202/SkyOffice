@@ -197,6 +197,25 @@ class SoundFx {
       osc.stop(now + i * 0.1 + 0.08);
     }
   }
+
+  // Tiếng bùa chú quét đuổi khách (whoosh & zap)
+  playWhoosh() {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(650, now);
+    osc.frequency.exponentialRampToValueAtTime(70, now + 0.3);
+    gain.gain.setValueAtTime(0.28, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  }
 }
 
 const sfx = new SoundFx();
@@ -311,9 +330,11 @@ const state = {
       sugar: '70%',
       ice: '100%',
       toppings: ['boba_star'],
-      quote: 'Làm nhanh lên, thiếu gia nhà Malfoy không thích chờ đợi!',
+      quote: 'Làm không đường nhưng phải ngọt lịm! Nhanh lên không thiếu gia mách ba tao đóng cửa tiệm!',
       price: 24,
-      patience: 85
+      patience: 85,
+      isUnreasonable: true,
+      demandType: 'hach_dich'
     },
     {
       id: 'ORD-103',
@@ -513,17 +534,21 @@ function renderOrderQueue() {
 
   state.pendingOrders.forEach((order, idx) => {
     const card = document.createElement('div');
-    card.className = `order-ticket-card ${idx === state.activeOrderIndex ? 'selected' : ''} ${order.isPlayerOrder ? 'is-player-order' : ''}`;
+    card.className = `order-ticket-card ${idx === state.activeOrderIndex ? 'selected' : ''} ${order.isPlayerOrder ? 'is-player-order' : ''} ${order.isUnreasonable ? 'is-unreasonable' : ''}`;
     card.innerHTML = `
       <div class="ticket-header">
-        <span class="cust-avatar">${order.avatar}</span>
-        <div>
-          <span class="cust-name">
-            ${order.customerName}
-            ${order.isPlayerOrder ? '<span class="player-order-badge">🧙‍♂️ ĐƠN CỦA BẠN</span>' : ''}
-          </span>
-          <span class="cust-house-tag ${order.house}">${order.houseName}</span>
+        <div class="cust-info-group">
+          <span class="cust-avatar">${order.avatar}</span>
+          <div>
+            <span class="cust-name">
+              ${order.customerName}
+              ${order.isPlayerOrder ? '<span class="player-order-badge">🧙‍♂️ ĐƠN CỦA BẠN</span>' : ''}
+              ${order.isUnreasonable ? '<span class="unreasonable-badge" title="Yêu cầu kỳ quặc hoặc quá đáng!">⚠️ QUÁ ĐÁNG</span>' : ''}
+            </span>
+            <span class="cust-house-tag ${order.house}">${order.houseName}</span>
+          </div>
         </div>
+        <button class="ticket-kick-quick-btn" title="Từ chối phục vụ khách này" data-idx="${idx}" type="button">🚫 Đuổi</button>
       </div>
       <div class="ticket-drink-title">🧋 ${order.drinkName} (Size ${order.size})</div>
       <div class="ticket-specs">
@@ -536,6 +561,15 @@ function renderOrderQueue() {
         <div class="patience-fill" style="width: ${order.patience}%"></div>
       </div>
     `;
+
+    // Nút đuổi nhanh trên từng vé
+    const quickKickBtn = card.querySelector('.ticket-kick-quick-btn');
+    if (quickKickBtn) {
+      quickKickBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openKickCustomerModal(idx);
+      });
+    }
 
     card.addEventListener('click', () => {
       sfx.playIceClink();
@@ -554,14 +588,18 @@ function renderOrderQueue() {
 function updateActiveTicketRibbon(order) {
   const titleEl = document.getElementById('ribbonTicketTitle');
   const reqsEl = document.getElementById('ribbonTicketReqs');
+  const kickBtn = document.getElementById('btnKickActiveCustomer');
 
   if (!order) {
     titleEl.textContent = 'Chưa chọn đơn nào. Hãy nhấp vào một vé bên trái!';
     reqsEl.innerHTML = '';
+    if (kickBtn) kickBtn.style.display = 'none';
     return;
   }
 
-  titleEl.innerHTML = `Đang pha cho <strong>${order.customerName}</strong>: ${order.drinkName} (Size ${order.size})`;
+  if (kickBtn) kickBtn.style.display = 'inline-flex';
+
+  titleEl.innerHTML = `Đang pha cho <strong>${order.customerName}</strong>: ${order.drinkName} (Size ${order.size}) ${order.isUnreasonable ? '<span class="unreasonable-badge">⚠️ QUÁ ĐÁNG</span>' : ''}`;
   reqsEl.innerHTML = `
     <span class="req-tag">Size ${order.size}</span>
     <span class="req-tag">Đường ${order.sugar}</span>
@@ -971,7 +1009,13 @@ function spawnCustomerOrder() {
     { name: 'Neville Longbottom', avatar: '🌱', house: 'huff', houseName: 'Hufflepuff', drinkName: 'Trà Kim Hufflepuff', tea: 'hufflepuff', quote: 'Cho mình nhiều vị mật ong ngọt ấm nhé!' },
     { name: 'Ginny Weasley', avatar: '🦁', house: 'gryf', houseName: 'Gryffindor', drinkName: 'Hồng Trà Gryffindor', tea: 'gryffindor', quote: 'Pha nhanh giúp mình nha, sắp có trận tập Quidditch rồi.' },
     { name: 'Cho Chang', avatar: '🦅', house: 'raven', houseName: 'Ravenclaw', drinkName: 'Trà Lam Ravenclaw', tea: 'ravenclaw', quote: 'Ít đường nhiều đá giúp mình nhé bạn Barista!' },
-    { name: 'Pansy Parkinson', avatar: '🎀', house: 'slyth', houseName: 'Slytherin', drinkName: 'Lục Trà Slytherin', tea: 'slytherin', quote: 'Thêm thạch trăng rằm và kem cheese đậm vị.' }
+    { name: 'Pansy Parkinson', avatar: '🎀', house: 'slyth', houseName: 'Slytherin', drinkName: 'Lục Trà Slytherin', tea: 'slytherin', quote: 'Thêm thạch trăng rằm và kem cheese đậm vị.' },
+    // KHÁCH YÊU CẦU QUÁ ĐÁNG / THÁI ĐỘ HÁCH DỊCH / PHÁ PHÁCH:
+    { name: 'Draco Malfoy', avatar: '🐍', house: 'slyth', houseName: 'Slytherin', drinkName: 'Lục Trà Slytherin', tea: 'slytherin', quote: 'Đòi không đường nhưng phải ngọt lịm! Nhanh lên không thiếu gia mách ba tao đóng cửa tiệm!', isUnreasonable: true, demandType: 'hach_dich' },
+    { name: 'Peeves Con Ma', avatar: '👻', house: 'huff', houseName: 'Hogwarts', drinkName: 'Trà Sữa Ma Quái', tea: 'hufflepuff', quote: 'Lấy cho ta 1 ly trà thả đầy bùn và ốc sên, không thì ta ném phấn vào đầu!', isUnreasonable: true, demandType: 'pha_phach' },
+    { name: 'Rita Skeeter', avatar: '🪲', house: 'raven', houseName: 'Nhật Báo', drinkName: 'Trà Lam Ravenclaw', tea: 'ravenclaw', quote: 'Pha trà kèm tin đồn mật, và dĩ nhiên ta là phóng viên nổi tiếng nên phải MIỄN PHÍ!', isUnreasonable: true, demandType: 'uong_chua' },
+    { name: 'Gilderoy Lockhart', avatar: '✨', house: 'raven', houseName: 'Ravenclaw', drinkName: 'Trà Sữa Nụ Cười Vàng', tea: 'ravenclaw', quote: 'Ta trả tiền bằng chữ ký và nụ cười quyến rũ được giải tuần san Phù Thủy nhé!', isUnreasonable: true, demandType: 'uong_chua' },
+    { name: 'Bà Pince Thủ Thư', avatar: '📚', house: 'gryf', houseName: 'Thư Viện', drinkName: 'Hồng Trà Gryffindor', tea: 'gryffindor', quote: 'Uống trà cấm phát ra tiếng rột rột, cấm nhai trân châu lóp bóp làm ồn!', isUnreasonable: true, demandType: 'kho_tinh' }
   ];
 
   const randomNpc = npcs[Math.floor(Math.random() * npcs.length)];
@@ -994,7 +1038,9 @@ function spawnCustomerOrder() {
     toppings: [topsPool[Math.floor(Math.random() * topsPool.length)]],
     quote: randomNpc.quote,
     price: 26,
-    patience: 100
+    patience: 100,
+    isUnreasonable: !!randomNpc.isUnreasonable,
+    demandType: randomNpc.demandType || 'normal'
   };
 
   state.pendingOrders.push(order);
@@ -1669,6 +1715,192 @@ function initPlayerOrderControls() {
       }
     });
   }
+// --- 7d. LOGIC ĐUỔI KHÁCH & TỪ CHỐI PHỤC VỤ (EXPEL CUSTOMER CONTROLS) ---
+let targetCustomerIndexToKick = -1;
+
+function openKickCustomerModal(idx) {
+  sfx.playWhoosh();
+  const order = state.pendingOrders[idx];
+  if (!order) return;
+
+  targetCustomerIndexToKick = idx;
+  const modal = document.getElementById('kickCustomerModal');
+  if (!modal) return;
+
+  document.getElementById('kickTargetAvatar').textContent = order.avatar || '🧙‍♂️';
+  document.getElementById('kickTargetName').textContent = order.customerName;
+  const houseEl = document.getElementById('kickTargetHouse');
+  const houseStr = (order.houseName || 'HOGWARTS').toUpperCase();
+  houseEl.textContent = houseStr;
+  houseEl.className = `target-house-badge ${houseStr}`;
+  document.getElementById('kickTargetDrink').textContent = `🧋 Đang gọi: ${order.drinkName} (Size ${order.size})`;
+  document.getElementById('kickTargetQuote').textContent = `"${order.quote}"`;
+
+  // Tùy theo loại yêu cầu, chọn sẵn lý do phù hợp
+  const pills = document.querySelectorAll('#kickReasonsList .kick-reason-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  let matchedRadio = null;
+
+  if (order.demandType === 'pha_phach') {
+    matchedRadio = document.querySelector('input[value*="quấy rối"]');
+  } else if (order.demandType === 'uong_chua') {
+    matchedRadio = document.querySelector('input[value*="Mặc cả"]');
+  } else if (order.demandType === 'hach_dich') {
+    matchedRadio = document.querySelector('input[value*="hách dịch"]');
+  }
+
+  if (!matchedRadio) {
+    matchedRadio = document.querySelector('input[name="kickReason"]');
+  }
+
+  if (matchedRadio) {
+    matchedRadio.checked = true;
+    const parentPill = matchedRadio.closest('.kick-reason-pill');
+    if (parentPill) parentPill.classList.add('active');
+  }
+
+  modal.style.display = 'flex';
+}
+
+function closeKickCustomerModal() {
+  sfx.playCupPlace();
+  const modal = document.getElementById('kickCustomerModal');
+  if (modal) modal.style.display = 'none';
+  targetCustomerIndexToKick = -1;
+}
+
+function initKickCustomerControls() {
+  const modal = document.getElementById('kickCustomerModal');
+  const btnClose = document.getElementById('btnCloseKickModal');
+  const btnCancel = document.getElementById('btnCancelKickModal');
+  const btnConfirm = document.getElementById('btnConfirmKickCustomer');
+  const btnKickActive = document.getElementById('btnKickActiveCustomer');
+
+  if (btnKickActive) {
+    btnKickActive.addEventListener('click', () => {
+      if (state.pendingOrders.length === 0 || state.activeOrderIndex < 0) {
+        showToast('Không có đơn nào đang chọn để từ chối!');
+        return;
+      }
+      openKickCustomerModal(state.activeOrderIndex);
+    });
+  }
+
+  if (btnClose) btnClose.addEventListener('click', closeKickCustomerModal);
+  if (btnCancel) btnCancel.addEventListener('click', closeKickCustomerModal);
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeKickCustomerModal();
+    });
+  }
+
+  // Chuyển radio reason pills
+  const reasonPills = document.querySelectorAll('#kickReasonsList .kick-reason-pill');
+  reasonPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      reasonPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const radio = pill.querySelector('input');
+      if (radio) radio.checked = true;
+    });
+  });
+
+  // Chọn câu khẩu hiệu tống tiễn
+  const shoutBtns = document.querySelectorAll('#quickExpelShouts .expel-shout-btn');
+  const shoutInput = document.getElementById('kickCustomShout');
+  shoutBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      sfx.playCupPlace();
+      shoutBtns.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      if (shoutInput) shoutInput.value = this.dataset.shout;
+    });
+  });
+
+  // Xác nhận đuổi khách
+  if (btnConfirm) {
+    btnConfirm.addEventListener('click', () => {
+      if (targetCustomerIndexToKick < 0 || targetCustomerIndexToKick >= state.pendingOrders.length) {
+        closeKickCustomerModal();
+        return;
+      }
+
+      const targetOrder = state.pendingOrders[targetCustomerIndexToKick];
+      const selectedRadio = document.querySelector('input[name="kickReason"]:checked');
+      const reason = selectedRadio ? selectedRadio.value : 'Yêu cầu quá vô lý!';
+      const shout = (shoutInput ? shoutInput.value.trim() : '') || 'Tiệm Trà Nhỏ xin phép từ chối phục vụ!';
+
+      // Âm thanh bùa chú quét đuổi khách
+      sfx.playWhoosh();
+
+      // Nếu đang pha ly này trên bàn, dọn ly
+      if (state.activeOrderIndex === targetCustomerIndexToKick) {
+        resetCraftingCup();
+      }
+
+      // Xóa khách khỏi danh sách chờ
+      state.pendingOrders.splice(targetCustomerIndexToKick, 1);
+      if (state.activeOrderIndex >= state.pendingOrders.length) {
+        state.activeOrderIndex = Math.max(0, state.pendingOrders.length - 1);
+      }
+
+      closeKickCustomerModal();
+      renderOrderQueue();
+      updateHeaderStats();
+
+      // Phản ứng cay cú hài hước của khách bị đuổi
+      let customerComeback = 'Hừ! Quán này chảnh quá, ta không bao giờ thèm quay lại!';
+      if (targetOrder.customerName.includes('Draco')) {
+        customerComeback = 'Draco Malfoy: "Mày dám đuổi tao?! Ba tao sẽ nghe về chuyện này, tiệm mày sẽ bị đóng cửa!" 🐍💨';
+      } else if (targetOrder.customerName.includes('Peeves')) {
+        customerComeback = 'Peeves: "Ái chà chà! Bị chổi ma thuật quét bay rồi, lêu lêu quán bủn xỉn!" 👻💨';
+      } else if (targetOrder.customerName.includes('Rita')) {
+        customerComeback = 'Rita Skeeter: "Các người sẽ hối hận vì dám từ chối nhà báo nổi tiếng của Nhật Báo Tiên Tri!" 🪲📰';
+      } else if (targetOrder.customerName.includes('Lockhart')) {
+        customerComeback = 'Gilderoy Lockhart: "Thật đáng tiếc cho các bạn vì bỏ lỡ cơ hội nhận chữ ký vàng của ta!" ✨📸';
+      }
+
+      showToast(`🧹 Đã từ chối phục vụ và tống tiễn ${targetOrder.customerName}! (${customerComeback})`);
+
+      // Khách xung quanh và học sinh Hogwarts gửi lời khen ủng hộ quán vào Sổ Lưu Niệm
+      const supportReview = {
+        author: 'Khách Hàng Văn Minh',
+        avatar: '🧙‍♂️',
+        house: 'HOGWARTS',
+        rating: 5,
+        drink: `Ủng hộ tẩy chay yêu cầu quá đáng!`,
+        comment: `Rất khâm phục bản lĩnh của Barista khi dũng cảm đuổi ${targetOrder.customerName}! Giữ không gian văn minh, ấm cúng cho mọi người. 👏✨`,
+        tip: 5,
+        time: 'Vừa xong',
+        isHogwartsStudent: true
+      };
+      state.reviews.unshift(supportReview);
+      state.reviewsCount = state.reviews.length;
+      state.totalTips += 5;
+      state.galleons += 5;
+      try {
+        localStorage.setItem('hpvn_boba_reviews', JSON.stringify(state.reviews));
+      } catch (e) {}
+
+      renderReviews();
+      updateHeaderStats();
+
+      // Bắn sự kiện sang SkyOffice qua postMessage
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: 'BOBA_CUSTOMER_EXPELLED',
+            customerName: targetOrder.customerName,
+            reason: reason,
+            quote: targetOrder.quote,
+            shout: shout
+          }, '*');
+        }
+      } catch (err) {
+        console.warn('postMessage error:', err);
+      }
+    });
+  }
 }
 
 // --- 8. KHỞI TẠO TỔNG THỂ ---
@@ -1679,6 +1911,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initKitchenControls();
   initCharacterReviewControls();
   initPlayerOrderControls();
+  initKickCustomerControls();
 
   renderOrderQueue();
   updateVisualCup();

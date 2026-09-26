@@ -2371,3 +2371,290 @@ body {
   box-shadow: 0 6px 16px rgba(239, 111, 142, 0.5);
 }
 
+/* ---------------------------------------------------------
+   NÚT & MODAL ĐUỔI KHÁCH / TỪ CHỐI PHỤC VỤ (EXPEL CUSTOMER)
+   --------------------------------------------------------- */
+.ribbon-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 250px;
+}
+
+.ribbon-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Nút đuổi khách trên ribbon */
+.kick-customer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #e04b40, #a8271e);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(224, 75, 64, 0.35);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.kick-customer-btn:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #f0564b, #ba2b21);
+  box-shadow: 0 5px 14px rgba(224, 75, 64, 0.45);
+}
+
+.kick-btn-icon {
+  font-size: 1rem;
+}
+
+/* Nút đuổi nhanh trên vé order */
+.ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cust-info-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ticket-kick-quick-btn {
+  background: #fff;
+  border: 1.5px solid #e04b40;
+  color: #e04b40;
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ticket-kick-quick-btn:hover {
+  background: #e04b40;
+  color: #fff;
+  transform: scale(1.08);
+}
+
+/* Huy hiệu yêu cầu quá đáng */
+.unreasonable-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #d9381e, #8c1d0b);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+  animation: pulseUnreasonable 1.8s infinite ease-in-out;
+}
+
+@keyframes pulseUnreasonable {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.05); }
+}
+
+/* Modal Đuổi Khách */
+.kick-modal-card {
+  max-width: 520px;
+  border: 3px solid #8c1d0b;
+}
+
+.kick-modal-header {
+  background: linear-gradient(90deg, #3d0c0c, #591616, #3d0c0c);
+  border-bottom: 2px solid #8c1d0b;
+}
+
+.kick-modal-header h3 {
+  color: #ff9d94 !important;
+}
+
+.kick-target-card {
+  background: #fff;
+  border: 2px solid #ebd9c5;
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  box-shadow: var(--shadow-sm);
+}
+
+.kick-target-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ffebe9;
+  border: 2px solid #e04b40;
+  font-size: 1.8rem;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.kick-target-meta {
+  flex: 1;
+}
+
+.target-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.target-title-row h4 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--ink-dark);
+}
+
+.target-house-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: #eee;
+  color: #555;
+}
+
+.target-house-badge.SLYTHERIN { background: #eaf3ed; color: var(--slyth-green); }
+.target-house-badge.GRYFFINDOR { background: #fbebee; color: var(--gryf-red); }
+.target-house-badge.RAVENCLAW { background: #eef3f8; color: var(--raven-blue); }
+.target-house-badge.HUFFLEPUFF { background: #fbf5e6; color: var(--huff-gold); }
+
+.kick-target-drink {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #784729;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.kick-target-quote {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #c2382b;
+  background: #fff3f2;
+  border-left: 3px solid #e04b40;
+  padding: 4px 8px;
+  border-radius: 4px;
+  line-height: 1.3;
+}
+
+/* Reasons list */
+.kick-reasons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kick-reason-pill {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fff;
+  border: 1.5px solid var(--line-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.kick-reason-pill:hover {
+  border-color: #e04b40;
+  background: #fffbfb;
+}
+
+.kick-reason-pill:has(input:checked), .kick-reason-pill.active {
+  border-color: #e04b40;
+  background: #fff5f4;
+  box-shadow: 0 2px 6px rgba(224, 75, 64, 0.15);
+}
+
+.kick-reason-pill input {
+  margin-top: 3px;
+  accent-color: #e04b40;
+}
+
+.reason-text strong {
+  display: block;
+  font-size: 0.84rem;
+  color: var(--ink-dark);
+}
+
+.reason-text small {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+/* Quick expel shouts */
+.quick-expel-shouts {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.expel-shout-btn {
+  background: #fff;
+  border: 1px solid var(--line-border);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.expel-shout-btn:hover {
+  border-color: #e04b40;
+  color: #e04b40;
+}
+
+.expel-shout-btn.active {
+  background: #ffebe9;
+  border-color: #e04b40;
+  color: #c2382b;
+}
+
+.btn-kick-confirm {
+  background: linear-gradient(135deg, #e04b40, #8c1d0b);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 9px 22px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(224, 75, 64, 0.45);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-kick-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(224, 75, 64, 0.6);
+}
+
+

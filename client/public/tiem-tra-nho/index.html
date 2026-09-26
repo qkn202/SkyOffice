@@ -144,16 +144,24 @@
           <div class="countertop-workbench">
             <!-- THANH THÔNG BÁO VÉ ORDER ĐANG LÀM -->
             <div class="active-ticket-ribbon" id="activeTicketRibbon">
-              <div class="ticket-status-bubble">
-                <span class="status-indicator"></span>
-                <span id="ribbonTicketTitle">Đang pha cho Harry Potter: Hồng Trà Gryffindor (Size L)</span>
+              <div class="ribbon-main-info">
+                <div class="ticket-status-bubble">
+                  <span class="status-indicator"></span>
+                  <span id="ribbonTicketTitle">Đang pha cho Harry Potter: Hồng Trà Gryffindor (Size L)</span>
+                </div>
+                <div class="ticket-req-tags" id="ribbonTicketReqs">
+                  <span class="req-tag">Size L</span>
+                  <span class="req-tag">Đường 50%</span>
+                  <span class="req-tag">Đá 50%</span>
+                  <span class="req-tag">Trân Châu Hoàng Kim</span>
+                  <span class="req-tag">Kem Cheese Tuyết</span>
+                </div>
               </div>
-              <div class="ticket-req-tags" id="ribbonTicketReqs">
-                <span class="req-tag">Size L</span>
-                <span class="req-tag">Đường 50%</span>
-                <span class="req-tag">Đá 50%</span>
-                <span class="req-tag">Trân Châu Hoàng Kim</span>
-                <span class="req-tag">Kem Cheese Tuyết</span>
+              <div class="ribbon-actions-right">
+                <button class="kick-customer-btn" id="btnKickActiveCustomer" type="button" title="Đuổi khách / Từ chối phục vụ nếu yêu cầu quá đáng hoặc thái độ khó chịu">
+                  <span class="kick-btn-icon">🚫</span>
+                  <span>Từ Chối / Đuổi Khách</span>
+                </button>
               </div>
             </div>
 
@@ -762,6 +770,91 @@
               <button type="button" class="btn-secondary" id="btnCancelOrderModal">Hủy</button>
               <button type="button" class="btn-primary-order" id="btnConfirmPlaceOrder">🛎️ Gửi Đơn Gọi Món Ngay!</button>
             </div>
+          </div>
+        </div>
+    <!-- MODAL ĐUỔI KHÁCH / TỪ CHỐI PHỤC VỤ (EXPEL CUSTOMER MODAL) -->
+    <div class="modal-backdrop" id="kickCustomerModal" style="display: none;">
+      <div class="modal-dialog-card kick-modal-card">
+        <div class="modal-header kick-modal-header">
+          <div class="modal-title-group">
+            <span class="modal-icon">🚫</span>
+            <div>
+              <h3>Từ Chối Phục Vụ & Đuổi Khách</h3>
+              <p class="modal-subtitle">Bảo vệ quyền lợi Barista & trật tự Tiệm Trà Nhỏ</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btnCloseKickModal" aria-label="Đóng">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Thông tin khách bị từ chối -->
+          <div class="kick-target-card" id="kickTargetCard">
+            <div class="kick-target-avatar" id="kickTargetAvatar">🐍</div>
+            <div class="kick-target-meta">
+              <div class="target-title-row">
+                <h4 id="kickTargetName">Draco Malfoy</h4>
+                <span class="target-house-badge" id="kickTargetHouse">SLYTHERIN</span>
+              </div>
+              <span class="kick-target-drink" id="kickTargetDrink">🧋 Đang gọi: Lục Trà Slytherin (Size M)</span>
+              <p class="kick-target-quote" id="kickTargetQuote">"Làm nhanh lên, thiếu gia nhà Malfoy không thích chờ đợi!"</p>
+            </div>
+          </div>
+
+          <!-- Chọn lý do từ chối -->
+          <div class="modal-form-group">
+            <label class="modal-label">Lý do quán từ chối phục vụ:</label>
+            <div class="kick-reasons-list" id="kickReasonsList">
+              <label class="kick-reason-pill active">
+                <input type="radio" name="kickReason" value="Yêu cầu quá vô lý, không tuân thủ quy tắc pha chế!" checked>
+                <div class="reason-text">
+                  <strong>😤 Yêu cầu quá vô lý / đòi hỏi kỳ quặc</strong>
+                  <small>Đòi hỏi những thứ không thể pha chế hoặc vi phạm quy tắc ma thuật.</small>
+                </div>
+              </label>
+
+              <label class="kick-reason-pill">
+                <input type="radio" name="kickReason" value="Thái độ hách dịch, giục giã và thiếu tôn trọng Barista!">
+                <div class="reason-text">
+                  <strong>🤬 Thái độ hách dịch / trịch thượng</strong>
+                  <small>Coi thường Barista, to tiếng giục giã làm ảnh hưởng khách khác.</small>
+                </div>
+              </label>
+
+              <label class="kick-reason-pill">
+                <input type="radio" name="kickReason" value="Khách quấy rối, phá phách trật tự tiệm trà!">
+                <div class="reason-text">
+                  <strong>👻 Quấy rối / phá phách (Peeves/Dementor)</strong>
+                  <small>Cần dùng chổi bùa chú quét thẳng ra khỏi quán ngay lập tức!</small>
+                </div>
+              </label>
+
+              <label class="kick-reason-pill">
+                <input type="radio" name="kickReason" value="Mặc cả đòi uống chùa, không chịu thanh toán Galleons sòng phẳng!">
+                <div class="reason-text">
+                  <strong>💸 Mặc cả vô lối / Muốn uống chùa</strong>
+                  <small>Đòi bớt giá, trả bằng nụ cười hoặc dọa dẫm báo chí.</small>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Khẩu hiệu tống tiễn -->
+          <div class="modal-form-group">
+            <label class="modal-label">Lời tuyên bố của Barista:</label>
+            <div class="quick-expel-shouts" id="quickExpelShouts">
+              <button type="button" class="expel-shout-btn active" data-shout="Tiệm Trà Nhỏ xin phép từ chối phục vụ những yêu cầu quá đáng như vậy!">"Từ chối yêu cầu quá đáng!"</button>
+              <button type="button" class="expel-shout-btn" data-shout="Xin mời bạn rời khỏi tiệm, quán không tiếp người thô lỗ!">"Mời rời khỏi tiệm!"</button>
+              <button type="button" class="expel-shout-btn" data-shout="Expelliarmus! Hãy biến khỏi quầy pha chế của ta ngay!">"Expelliarmus! Biến ngay!"</button>
+            </div>
+            <input type="text" class="modal-input" id="kickCustomShout" value="Tiệm Trà Nhỏ xin phép từ chối phục vụ những yêu cầu quá đáng như vậy!">
+          </div>
+
+          <!-- Nút hành động -->
+          <div class="modal-footer-price">
+            <button type="button" class="btn-secondary" id="btnCancelKickModal">Bỏ qua (Tiếp tục pha)</button>
+            <button type="button" class="btn-kick-confirm" id="btnConfirmKickCustomer">
+              🧹 Quét Bùa Đuổi Khách Ngay!
+            </button>
           </div>
         </div>
       </div>

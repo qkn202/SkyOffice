@@ -25,7 +25,6 @@ const SpellbookModal = lazy(() => import('./SpellbookModal'))
 const MaraudersMap = lazy(() => import('./MaraudersMap'))
 const FlooNetworkModal = lazy(() => import('./FlooNetworkModal'))
 const WishLanternModal = lazy(() => import('./WishLanternModal'))
-const BobaTeaShopModal = lazy(() => import('./BobaTeaShopModal'))
 
 type MiniGameId = 'seven-potters' | 'undercover-hogwarts'
 type MiniGameInvite = { gameId: MiniGameId; roomCode: string; invitedBy: string; isHost: boolean; readyPlayers: string[]; readySessionIds: string[] } | null
@@ -94,7 +93,6 @@ export default function HelperButtonGroup() {
   const [showMaraudersMap, setShowMaraudersMap] = useState(false)
   const [showFlooModal, setShowFlooModal] = useState(false)
   const [showWishLantern, setShowWishLantern] = useState(false)
-  const [showBobaShop, setShowBobaShop] = useState(false)
   const [currentRoom, setCurrentRoom] = useState<HogwartsRoomId>('great_hall')
   const showJoystick = useAppSelector((state) => state.user.showJoystick)
   const loggedIn = useAppSelector((state) => state.user.loggedIn)
@@ -131,11 +129,9 @@ export default function HelperButtonGroup() {
     }
     const handleToggleFloo = () => setShowFlooModal((prev) => !prev)
     const handleToggleWishLantern = () => setShowWishLantern((prev) => !prev)
-    const handleToggleBobaShop = () => setShowBobaShop((prev) => !prev)
     window.addEventListener('skyoffice:room-changed', handleRoomChanged)
     window.addEventListener('skyoffice:toggle-floo-modal', handleToggleFloo)
     window.addEventListener('skyoffice:toggle-wish-lantern', handleToggleWishLantern)
-    window.addEventListener('skyoffice:toggle-boba-shop', handleToggleBobaShop)
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger hotkeys if typing in chat or any input field
@@ -154,8 +150,6 @@ export default function HelperButtonGroup() {
         setShowFlooModal((prev) => !prev)
       } else if (e.key === 'l' || e.key === 'L') {
         setShowWishLantern((prev) => !prev)
-      } else if (e.key === 't' || e.key === 'T') {
-        setShowBobaShop((prev) => !prev)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -167,7 +161,6 @@ export default function HelperButtonGroup() {
       window.removeEventListener('skyoffice:room-changed', handleRoomChanged)
       window.removeEventListener('skyoffice:toggle-floo-modal', handleToggleFloo)
       window.removeEventListener('skyoffice:toggle-wish-lantern', handleToggleWishLantern)
-      window.removeEventListener('skyoffice:toggle-boba-shop', handleToggleBobaShop)
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [])
@@ -218,7 +211,6 @@ export default function HelperButtonGroup() {
           />
         )}
         {showWishLantern && <WishLanternModal onClose={() => setShowWishLantern(false)} />}
-        {showBobaShop && <BobaTeaShopModal onClose={() => setShowBobaShop(false)} />}
         {showMiniGames && (
           <MiniGamesDialog
             invite={miniGameInvite}
@@ -260,24 +252,7 @@ export default function HelperButtonGroup() {
             </StyledFab>
           </Tooltip>
         )}
-        {roomJoined && (
-          <Tooltip title="Tiệm Trà Sữa Phép Thuật (Phím T)">
-            <StyledFab
-              id="boba-tea-shop-button"
-              aria-label="Tiệm Trà Sữa Phép Thuật"
-              size="small"
-              style={{
-                background: 'linear-gradient(135deg, #4a2810, #2c1608)',
-                color: '#ffd875',
-                border: '1.5px solid #e5a93b',
-                boxShadow: '0 4px 15px rgba(229, 169, 59, 0.35)',
-              }}
-              onClick={() => setShowBobaShop(true)}
-            >
-              <span style={{ fontSize: 18 }}>🧋</span>
-            </StyledFab>
-          </Tooltip>
-        )}
+
         {roomJoined && (
           <Tooltip title="Mạng Lưới Lò Sưởi Floo (Phím F)">
             <StyledFab
